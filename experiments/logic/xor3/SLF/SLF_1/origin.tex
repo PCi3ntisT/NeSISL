@@ -1,0 +1,120 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [identity,below of=b] (c) {c};
+\node [constant,below of=c] (n10996) {n10996};
+\node [sigmoid,right of=a] (n10981) {n10981};
+\node [sigmoid,below of=n10981] (n10982) {n10982};
+\node [sigmoid,below of=n10982] (n10983) {n10983};
+\node [sigmoid,below of=n10983] (n10984) {n10984};
+\node [sigmoid,below of=n10984] (n10985) {n10985};
+\node [sigmoid,below of=n10985] (n10986) {n10986};
+\node [sigmoid,below of=n10986] (n10987) {n10987};
+\node [sigmoid,below of=n10987] (n10988) {n10988};
+\node [sigmoid,below of=n10988] (n10989) {n10989};
+\node [sigmoid,right of=n10981] (n10990) {n10990};
+\node [sigmoid,below of=n10990] (n10991) {n10991};
+\node [sigmoid,below of=n10991] (n10992) {n10992};
+\node [sigmoid,below of=n10992] (n10993) {n10993};
+\node [sigmoid,right of=n10990] (n10994) {n10994};
+\node [sigmoid,below of=n10994] (n10995) {n10995};
+\node [sigmoid,right of=n10994] (x) {x};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(n10986) edge node {0,19} (n10993)
+(n10986) edge node {0,25} (n10992)
+(n10986) edge node {0,08} (n10991)
+(n10986) edge node {-0,21} (n10990)
+(n10985) edge node {-0,14} (n10993)
+(n10985) edge node {-0,09} (n10992)
+(n10985) edge node {0,22} (n10991)
+(n10985) edge node {0,2} (n10990)
+(a) edge node {-0,03} (n10989)
+(a) edge node {-0,04} (n10988)
+(a) edge node {0,27} (n10987)
+(a) edge node {-0,04} (n10986)
+(a) edge node {0,18} (n10985)
+(a) edge node {0,1} (n10984)
+(a) edge node {0,13} (n10983)
+(a) edge node {0,22} (n10982)
+(a) edge node {-0,11} (n10981)
+(n10988) edge node {0,1} (n10993)
+(n10988) edge node {-0,13} (n10991)
+(n10988) edge node {0,18} (n10992)
+(n10988) edge node {0,05} (n10990)
+(n10987) edge node {0,05} (n10993)
+(n10987) edge node {0,07} (n10992)
+(n10987) edge node {-0,29} (n10991)
+(n10987) edge node {0,13} (n10990)
+(n10990) edge node {-0,24} (n10995)
+(n10990) edge node {0,23} (n10994)
+(n10989) edge node {0,15} (n10992)
+(n10989) edge node {-0,14} (n10993)
+(n10989) edge node {-0,2} (n10990)
+(n10989) edge node {0,17} (n10991)
+(n10992) edge node {-0,2} (n10995)
+(n10992) edge node {0,29} (n10994)
+(n10991) edge node {0,13} (n10994)
+(n10991) edge node {-0,02} (n10995)
+(n10994) edge node {0,2} (x)
+(n10993) edge node {-0,22} (n10994)
+(n10993) edge node {-0,09} (n10995)
+(n10995) edge node {-0,15} (x)
+(c) edge node {-0,03} (n10982)
+(c) edge node {0,09} (n10981)
+(c) edge node {-0,01} (n10989)
+(c) edge node {0,3} (n10988)
+(c) edge node {-0,04} (n10987)
+(c) edge node {0,18} (n10986)
+(c) edge node {-0,2} (n10985)
+(c) edge node {-0,05} (n10984)
+(c) edge node {-0,25} (n10983)
+(b) edge node {-0,24} (n10981)
+(b) edge node {-0,27} (n10989)
+(b) edge node {0,14} (n10988)
+(b) edge node {-0,06} (n10987)
+(b) edge node {0,17} (n10986)
+(b) edge node {0,21} (n10985)
+(b) edge node {0} (n10984)
+(b) edge node {0,16} (n10983)
+(b) edge node {-0,2} (n10982)
+(n10996) edge node {-0,11} (n10988)
+(n10996) edge node {0,07} (n10987)
+(n10996) edge node {-0,03} (n10986)
+(n10996) edge node {-0,18} (n10985)
+(n10996) edge node {-0,11} (n10992)
+(n10996) edge node {-0,04} (n10991)
+(n10996) edge node {-0,06} (n10990)
+(n10996) edge node {-0,17} (n10989)
+(n10996) edge node {-0,2} (x)
+(n10996) edge node {-0,06} (n10984)
+(n10996) edge node {-0,29} (n10983)
+(n10996) edge node {0,24} (n10982)
+(n10996) edge node {-0,27} (n10981)
+(n10996) edge node {-0,2} (n10995)
+(n10996) edge node {0,19} (n10994)
+(n10996) edge node {0,12} (n10993)
+(n10982) edge node {-0,2} (n10990)
+(n10982) edge node {-0,22} (n10993)
+(n10982) edge node {-0,1} (n10992)
+(n10982) edge node {0,16} (n10991)
+(n10981) edge node {0,07} (n10993)
+(n10981) edge node {-0,04} (n10992)
+(n10981) edge node {0,11} (n10991)
+(n10981) edge node {-0,08} (n10990)
+(n10984) edge node {-0,26} (n10992)
+(n10984) edge node {-0,19} (n10991)
+(n10984) edge node {-0,26} (n10990)
+(n10984) edge node {-0,07} (n10993)
+(n10983) edge node {-0,22} (n10991)
+(n10983) edge node {0,25} (n10990)
+(n10983) edge node {-0,23} (n10993)
+(n10983) edge node {0,08} (n10992)
+;\end{tikzpicture}
+\end{document}

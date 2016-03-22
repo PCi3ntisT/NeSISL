@@ -1,0 +1,86 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [identity,below of=b] (c) {c};
+\node [identity,below of=c] (d) {d};
+\node [identity,below of=d] (e) {e};
+\node [constant,below of=e] (n38) {n38};
+\node [sigmoid,right of=a] (n33) {n33};
+\node [sigmoid,right of=n33] (n34) {n34};
+\node [sigmoid,right of=n34] (n35) {n35};
+\node [sigmoid,right of=n35] (n36) {n36};
+\node [sigmoid,right of=n36] (n37) {n37};
+\node [sigmoid,right of=n37] (x) {x};
+\node [sigmoid,below of=x] (y) {y};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(n38) edge node {-3,87} (y)
+(n38) edge node {-2,79} (n33)
+(n38) edge node {-2,78} (n34)
+(n38) edge node {-2,63} (n35)
+(n38) edge node {-2,56} (n36)
+(n38) edge node {-2,62} (n37)
+(n38) edge node {-6,85} (x)
+(a) edge node {-10,32} (y)
+(a) edge node {-1,39} (n33)
+(a) edge node {15,87} (x)
+(a) edge node {-1,57} (n36)
+(a) edge node {-1,25} (n37)
+(a) edge node {-1,53} (n34)
+(a) edge node {-1,61} (n35)
+(n34) edge node {-0,89} (y)
+(n34) edge node {-0,2} (x)
+(n34) edge node {-0,02} (n37)
+(n34) edge node {0,02} (n36)
+(n34) edge node {-0,13} (n35)
+(n33) edge node {-1,49} (y)
+(n33) edge node {-0,11} (x)
+(n33) edge node {-0,09} (n37)
+(n33) edge node {-0,16} (n36)
+(n33) edge node {-0,06} (n35)
+(n33) edge node {-0,1} (n34)
+(c) edge node {-1,03} (n34)
+(c) edge node {-1,14} (n35)
+(c) edge node {-2,84} (y)
+(c) edge node {-1,45} (n33)
+(c) edge node {-1,51} (x)
+(c) edge node {-1,13} (n36)
+(c) edge node {-1,44} (n37)
+(n36) edge node {-0,6} (y)
+(n36) edge node {-0,06} (x)
+(n36) edge node {0,16} (n37)
+(b) edge node {-0,94} (n33)
+(b) edge node {-1,03} (n34)
+(b) edge node {-0,91} (x)
+(b) edge node {-23,93} (y)
+(b) edge node {-0,76} (n37)
+(b) edge node {-1,05} (n35)
+(b) edge node {-0,92} (n36)
+(n35) edge node {-1,05} (y)
+(n35) edge node {0,08} (x)
+(n35) edge node {-0,09} (n37)
+(n35) edge node {0,06} (n36)
+(e) edge node {-1,24} (n35)
+(e) edge node {-1,56} (n34)
+(e) edge node {-1,18} (n37)
+(e) edge node {-1,41} (n36)
+(e) edge node {0,52} (x)
+(e) edge node {-1,42} (n33)
+(e) edge node {34,38} (y)
+(d) edge node {-0,73} (n34)
+(d) edge node {-0,28} (n33)
+(d) edge node {-0,8} (n36)
+(d) edge node {-0,74} (n35)
+(d) edge node {5,65} (y)
+(d) edge node {-1,05} (x)
+(d) edge node {-0,5} (n37)
+(n37) edge node {0,03} (y)
+(n37) edge node {-0,14} (x)
+;\end{tikzpicture}
+\end{document}

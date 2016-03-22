@@ -1,0 +1,18 @@
+INPUT FACTS
+a
+b
+c
+d
+e
+OUTPUT FACTS
+x
+y
+RULES
+w :- a, b, c.
+w :- b, c.
+q :- a, b, c, d.
+q :- d, a.
+r :- a, b, c, d.!
+x :- e.
+x :- not(w).
+y :- a, b, c.

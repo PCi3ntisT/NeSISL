@@ -1,0 +1,26 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [constant,below of=b] (n5) {n5};
+\node [sigmoid,right of=a] (n3) {n3};
+\node [sigmoid,below of=n3] (n4) {n4};
+\node [sigmoid,right of=n3] (x) {x};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(n4) edge node {0,24} (x)
+(b) edge node {0,24} (n4)
+(b) edge node {-0,09} (n3)
+(n5) edge node {-0,2} (x)
+(n5) edge node {-0,09} (n4)
+(n5) edge node {0,12} (n3)
+(a) edge node {0,15} (n4)
+(a) edge node {0,14} (n3)
+(n3) edge node {-0,2} (x)
+;\end{tikzpicture}
+\end{document}

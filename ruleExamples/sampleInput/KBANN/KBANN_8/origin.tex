@@ -1,0 +1,88 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [identity,below of=b] (c) {c};
+\node [identity,below of=c] (d) {d};
+\node [identity,below of=d] (e) {e};
+\node [constant,below of=e] (n213) {n213};
+\node [sigmoid,right of=a] (w') {w'};
+\node [sigmoid,below of=w'] (q') {q'};
+\node [sigmoid,below of=q'] (q'') {q''};
+\node [sigmoid,below of=q''] (r) {r};
+\node [sigmoid,below of=r] (w'') {w''};
+\node [sigmoid,below of=w''] (x'') {x''};
+\node [sigmoid,right of=w'] (q) {q};
+\node [sigmoid,below of=q] (w) {w};
+\node [sigmoid,right of=q] (x') {x'};
+\node [sigmoid,right of=x'] (x) {x};
+\node [sigmoid,below of=x] (y) {y};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(x') edge node {0,11} (y)
+(x') edge node {0,03} (x)
+(w) edge node {-0,29} (x')
+(n213) edge node {-6,07} (y)
+(n213) edge node {-2,27} (w)
+(n213) edge node {-1,88} (x)
+(n213) edge node {-2,26} (q)
+(n213) edge node {-8} (r)
+(n213) edge node {-7,72} (q'')
+(n213) edge node {-4,3} (q')
+(n213) edge node {-4,01} (w')
+(n213) edge node {-1,86} (x')
+(n213) edge node {-2,3} (x'')
+(n213) edge node {-6,16} (w'')
+(q) edge node {-0,27} (x')
+(w') edge node {0,17} (w)
+(w') edge node {0,26} (q)
+(q'') edge node {0,27} (q)
+(q'') edge node {-0,25} (w)
+(q') edge node {-0,1} (w)
+(q') edge node {-0,15} (q)
+(a) edge node {0,07} (w'')
+(a) edge node {1} (r)
+(a) edge node {-0,04} (q'')
+(a) edge node {-0,14} (q')
+(a) edge node {0,04} (x'')
+(a) edge node {-0,1} (w')
+(a) edge node {1,2} (y)
+(c) edge node {-0,24} (x'')
+(c) edge node {0,28} (w'')
+(c) edge node {1} (r)
+(c) edge node {-0,05} (q'')
+(c) edge node {0,25} (q')
+(c) edge node {0,08} (w')
+(c) edge node {0,88} (y)
+(b) edge node {-0,27} (x'')
+(b) edge node {0,09} (w'')
+(b) edge node {1} (r)
+(b) edge node {0,23} (q'')
+(b) edge node {0,28} (q')
+(b) edge node {-0,02} (w')
+(b) edge node {1,05} (y)
+(e) edge node {0,14} (x'')
+(e) edge node {0,03} (w')
+(e) edge node {0,22} (w'')
+(e) edge node {0,26} (q'')
+(e) edge node {-0,14} (q')
+(d) edge node {-0,12} (x'')
+(d) edge node {0,24} (w'')
+(d) edge node {1} (r)
+(d) edge node {-0,03} (q'')
+(d) edge node {0,26} (q')
+(d) edge node {0,09} (w')
+(w'') edge node {-0,28} (w)
+(w'') edge node {0,02} (q)
+(r) edge node {0,07} (w)
+(r) edge node {0,01} (q)
+(x'') edge node {-0,06} (w)
+(x'') edge node {1,27} (x)
+(x'') edge node {0,11} (q)
+;\end{tikzpicture}
+\end{document}

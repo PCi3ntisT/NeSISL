@@ -1,0 +1,31 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [identity,below of=b] (c) {c};
+\node [constant,below of=c] (n120) {n120};
+\node [sigmoid,right of=a] (p) {p};
+\node [sigmoid,below of=p] (w) {w};
+\node [sigmoid,right of=p] (x) {x};
+\node [sigmoid,below of=x] (y) {y};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(a) edge node {-0,88} (p)
+(a) edge node {1,17} (w)
+(b) edge node {1,08} (w)
+(b) edge node {0,24} (p)
+(w) edge node {0,26} (y)
+(w) edge node {0,21} (x)
+(p) edge node {-0,09} (y)
+(p) edge node {0,14} (x)
+(c) edge node {-0,25} (w)
+(c) edge node {-0,85} (p)
+(n120) edge node {-4,09} (p)
+(n120) edge node {-4,23} (w)
+;\end{tikzpicture}
+\end{document}

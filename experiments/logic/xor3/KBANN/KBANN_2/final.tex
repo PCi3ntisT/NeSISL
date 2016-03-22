@@ -1,0 +1,37 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=2.5cm]
+\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]
+\tikzstyle{constant}=[neuron, fill=white!50];
+\tikzstyle{sigmoid}=[neuron, fill=red!50];
+\tikzstyle{identity}=[neuron, fill=green!50];
+\node [identity] (a) {a};
+\node [identity,below of=a] (b) {b};
+\node [identity,below of=b] (c) {c};
+\node [constant,below of=c] (n7822) {n7822};
+\node [sigmoid,right of=a] (w') {w'};
+\node [sigmoid,below of=w'] (w'') {w''};
+\node [sigmoid,below of=w''] (w''') {w'''};
+\node [sigmoid,right of=w'] (w) {w};
+\node [sigmoid,right of=w] (x) {x};
+\path[every node/.style={sloped,anchor=south,auto=false}]
+(w') edge node {32,04} (w)
+(w''') edge node {29,04} (w)
+(w'') edge node {33,94} (w)
+(n7822) edge node {-247,43} (w')
+(n7822) edge node {-55,08} (w)
+(n7822) edge node {-208,52} (w''')
+(n7822) edge node {-273,86} (w'')
+(w) edge node {-8,27} (x)
+(b) edge node {366,13} (w')
+(b) edge node {407,75} (w'')
+(b) edge node {307,65} (w''')
+(a) edge node {-204,67} (w''')
+(a) edge node {-241,68} (w')
+(a) edge node {-270,23} (w'')
+(c) edge node {123,03} (w')
+(c) edge node {136,38} (w'')
+(c) edge node {105,56} (w''')
+;\end{tikzpicture}
+\end{document}

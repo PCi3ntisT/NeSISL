@@ -1,0 +1,8 @@
+INPUT FACTS
+a
+b
+OUTPUT FACTS
+x
+RULES
+w1 :- a, not(b).
+w2 :- not(a), b.
