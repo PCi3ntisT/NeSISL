@@ -31,6 +31,11 @@ public class Identity  implements ActivationFunction {
     }
 
     @Override
+    public double getFirstDerivationAtFunctionValue(double functionValue, Parameters parameter) {
+        return 1;
+    }
+
+    @Override
     public String getName() {
         return "identity";
     }

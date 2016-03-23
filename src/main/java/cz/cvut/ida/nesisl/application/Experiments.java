@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class Experiments {
 
     public static void main(String arg[]) {
-        String numberOfRepeats = "10";
+        String numberOfRepeats = "1";
         String[] domains = new String[]{
                 //"logic" + File.separator + "and3",
                 //"logic" + File.separator + "dnf4",

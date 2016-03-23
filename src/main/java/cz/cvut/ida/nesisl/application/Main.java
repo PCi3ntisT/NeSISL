@@ -89,9 +89,9 @@ public class Main {
         Double omega = 4.0;
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
-        Double treshold = 0.1;
-        Long lengthOfOpenList = 1000l;
-        Long numberOfSuccessors = 200l;
+        Double treshold = 0.0000002;
+        Long lengthOfOpenList = 4l;
+        Long numberOfSuccessors = 2l;
 
         TopGenSettings tgSetting = new TopGenSettings(treshold, numberOfSuccessors, lengthOfOpenList);
 

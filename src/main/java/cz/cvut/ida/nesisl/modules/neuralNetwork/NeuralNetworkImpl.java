@@ -7,7 +7,6 @@ import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.ConstantOne;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -177,6 +176,10 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public Long getLayerNumber(Node node) {
+        // TODO tady aby nebyla tahle osklivost, tak odladit kde se vzala ta chyba
+        if (null == hiddenNodeLayer.get(node)) {
+            actualizeNodeLayerIndexes();
+        }
         return hiddenNodeLayer.get(node);
     }
 
@@ -207,29 +210,29 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public void addNodeAtLayerStateful(Node node, long layerNumber) {
         assert !hiddenNodeLayer.containsKey(node);
-        if(layerNumber >= 0){
+        if (layerNumber >= 0) {
             if (!network.containsKey(layerNumber) || null == network.get(layerNumber)) {
                 network.put(layerNumber, new LinkedList<>());
             }
             network.get(layerNumber).add(node);
             updateHiddenNodeLayerIndex(node, layerNumber);
             numberOfHiddenNodes++;
-        }else{ // layerNumber < 0
+        } else { // layerNumber < 0
             for (long idx = getMaximalNumberOfHiddenLayer(); idx >= 0; idx--) {
-                network.put(idx - layerNumber,network.get(idx));
+                network.put(idx - layerNumber, network.get(idx));
             }
             ArrayList<Node> list = new ArrayList<>();
             list.add(node);
             network.put(0l, list);
             actualizeNodeLayerIndexes();
-            numberOfHiddenLayers += - layerNumber;
+            numberOfHiddenLayers += -layerNumber;
         }
     }
 
     private void actualizeNodeLayerIndexes() {
         hiddenNodeLayer.clear();
-        LongStream.range(0,getMaximalNumberOfHiddenLayer() + 1).forEach(idx ->
-            getHiddenNodesInLayer(idx).forEach(node -> hiddenNodeLayer.put(node,idx))
+        LongStream.range(0, getMaximalNumberOfHiddenLayer() + 1).forEach(idx ->
+                        getHiddenNodesInLayer(idx).forEach(node -> hiddenNodeLayer.put(node, idx))
         );
     }
 
@@ -268,7 +271,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             copy.addEdgeStateful(mapping.get(oldEdge.getSource()), mapping.get(oldEdge.getTarget()), this.getWeight(oldEdge), oldEdge.getType());
         });
 
-        return new Pair<>(copy,mapping);
+        return new Pair<>(copy, mapping);
     }
 
     /**
@@ -525,6 +528,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     /**
      * Given node is split to two - the first on possess only incoming connections to the node; the other (newOr) possess only outgoing connections and is one layer further from input layer. Note that no connection between these two nodes is added.
+     *
      * @param node
      * @param newOr
      */
@@ -532,18 +536,19 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     public void insertIntermezzoNodeStateful(Node node, Node newOr) {
         Long layerNumber = getLayerNumber(node) + 1;
         List<Node> parentLayer = getHiddenNodesInLayer(layerNumber);
-        if(!parentLayer.isEmpty()){
+        if (!parentLayer.isEmpty()) {
             for (long idx = getMaximalNumberOfHiddenLayer(); idx >= layerNumber; idx--) {
-                network.put(idx + 1,network.get(idx));
+                network.put(idx + 1, network.get(idx));
             }
             actualizeNodeLayerIndexes();
             network.put(layerNumber, new ArrayList<>());
         }
-        addNodeAtLayerStateful(newOr,layerNumber);
+        addNodeAtLayerStateful(newOr, layerNumber);
 
-        getOutgoingForwardEdges(node).stream().forEach(edge ->{
+        Set<Edge> edges = new HashSet(getOutgoingForwardEdges(node));
+        edges.stream().forEach(edge -> {
             Node successiveNode = edge.getTarget();
-            addEdgeStateful(newOr,successiveNode,getWeight(edge),Type.FORWARD);
+            addEdgeStateful(newOr, successiveNode, getWeight(edge), Type.FORWARD);
             removeEdgeStateful(edge);
         });
     }
@@ -556,7 +561,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                 sum = forwardIncomingEdges.get(node).stream()
                         .mapToDouble(edge ->
                                 {
-          //                          System.out.println("\t" + outputValues.get(edge.getSource()) + "\t" + this.getWeight(edge));
+                                    //                          System.out.println("\t" + outputValues.get(edge.getSource()) + "\t" + this.getWeight(edge));
                                     return outputValues.get(edge.getSource()) * this.getWeight(edge);
                                 }
 

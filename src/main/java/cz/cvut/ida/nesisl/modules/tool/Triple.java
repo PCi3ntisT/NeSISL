@@ -25,4 +25,13 @@ public class Triple<K, T, W> {
     public W getW() {
         return w;
     }
+
+    @Override
+    public String toString() {
+        return "Triple{" +
+                "k=" + k +
+                ", t=" + t +
+                ", w=" + w +
+                '}';
+    }
 }

@@ -25,39 +25,53 @@ public class TopGen {
     private NeuralNetwork network;
     private KBANN kbann;
     private final RandomGenerator randomGenerator;
+    private Double networkError = Double.MAX_VALUE;
 
     public TopGen(KBANN kbann, RandomGeneratorImpl randomGenerator) {
         this.kbann = kbann;
         this.randomGenerator = randomGenerator;
+        this.network = kbann.getNeuralNetwork();
     }
 
     public NeuralNetwork getNeuralNetwork() {
-        return kbann.getNeuralNetwork();
+        return network;
     }
 
     public void setKbann(KBANN kbann) {
         this.kbann = kbann;
     }
 
-    public void learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings,KBANNSettings kbannSetting) {
+    public void learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings, KBANNSettings kbannSetting) {
         // pairs <KBANN, (mean/average)dataSquaredError>
-        Backpropagation.feedforwardBackpropagationStateful(kbann.getNeuralNetwork(), dataset, wls);
-        Double error = Tools.computeAverageSuqaredTotalError(kbann.getNeuralNetwork(),dataset);
-        PriorityQueue<Triple<NeuralNetwork, Double, Double>> queue = new PriorityQueue<>();
-        queue.add(new Triple<>(kbann.getNeuralNetwork(), error, 1.0));
+        Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
+        Double error = Tools.computeAverageSuqaredTotalError(network, dataset);
+
+        Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
+            if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
+                return 0;
+            } else if (t1.getT() >= t2.getT()) {
+                return -1;
+            } else {
+                return 1;
+            }
+        };
+        PriorityQueue<Triple<NeuralNetwork, Double, Double>> queue = new PriorityQueue<>(comparator);
+        queue.add(new Triple<>(network, error, 1.0));
+
 
         while (!queue.isEmpty()) {
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
-            this.network = current.getK();
+            updateNetwork(current);
+
             if (current.getT() < tgSettings.getThreshold()) {
                 break;
             }
 
-            List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(network, dataset, tgSettings, wls, current.getW(),kbannSetting);
+            List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(current.getK(), dataset, tgSettings, wls, current.getW(), kbannSetting);
             queue.addAll(successors);
 
             if (queue.size() > tgSettings.getLengthOfOpenList()) {
-                PriorityQueue<Triple<NeuralNetwork, Double, Double>> nextRound = new PriorityQueue<>();
+                PriorityQueue<Triple<NeuralNetwork, Double, Double>> nextRound = new PriorityQueue<>(comparator);
                 final PriorityQueue<Triple<NeuralNetwork, Double, Double>> finalQueue = queue;
                 LongStream.range(0, tgSettings.getLengthOfOpenList()).forEach(i -> {
                     Triple<NeuralNetwork, Double, Double> move = finalQueue.poll();
@@ -68,11 +82,20 @@ public class TopGen {
         }
     }
 
-    private List<Triple<NeuralNetwork, Double, Double>> generateAndLearnSuccessors(NeuralNetwork network, Dataset dataset, TopGenSettings tgSettings, WeightLearningSetting wls, Double previousLearningRate,KBANNSettings kbannSetting) {
+    private void updateNetwork(Triple<NeuralNetwork, Double, Double> triple) {
+        if (networkError > triple.getT()) {
+            network = triple.getK();
+            networkError = triple.getT();
+        }
+    }
+
+    private List<Triple<NeuralNetwork, Double, Double>> generateAndLearnSuccessors(NeuralNetwork network, Dataset dataset, TopGenSettings tgSettings, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
         Map<Sample, Results> results = Tools.evaluateAllAndGetResults(dataset, network);
         Map<Sample, Boolean> correctlyClassified = Tools.classify(results);
-        List<Triple<Node, Long, Long>> generated = network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(kbann.getNeuralNetwork(), node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
-        Collections.sort(generated, (t1, t2) -> {
+
+        List<Triple<Node, Long, Long>> generated = network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
+
+        Comparator<Triple<? extends Object, Long, Long>> comparator = (t1, t2) -> {
             if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
                 return 0;
             } else if (t1.getT() >= t2.getT()) {
@@ -80,13 +103,13 @@ public class TopGen {
             } else {
                 return 1;
             }
-        });
+        };
+        Collections.sort(generated, comparator);
         Stream<Triple<Node, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
-        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK(), network, dataset, wls, previousLearningRate,kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
+        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate,KBANNSettings kbannSetting) {
-        // jeste se tam musi predavat upravene settings
+    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
         Node bias = network.getBias();
         final NeuralNetwork finalNetwork = network;
         Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
@@ -94,7 +117,7 @@ public class TopGen {
         Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
 
         if (Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight)) {
-            network = addAndNode(node, network,kbannSetting);
+            network = addAndNode(node, network, kbannSetting);
         } else {
             network = addOrNode(node, network);
         }
@@ -115,19 +138,19 @@ public class TopGen {
 
         Long layerNumber = currentNetwork.getLayerNumber(currentParent);
         Node newNode = NodeFactory.create(Sigmoid.getFunction());
-        currentNetwork.addNodeAtLayerStateful(newNode,layerNumber-1);
-        currentNetwork.addEdgeStateful(newNode,currentParent,randomGenerator.nextDouble(), Edge.Type.FORWARD);
+        currentNetwork.addNodeAtLayerStateful(newNode, layerNumber - 1);
+        currentNetwork.addEdgeStateful(newNode, currentParent, randomGenerator.nextDouble(), Edge.Type.FORWARD);
 
         List<Node> inputs = new ArrayList<>();
         inputs.addAll(currentNetwork.getInputNodes());
         inputs.add(currentNetwork.getBias());
 
-        Tools.makeFullInterLayerForwardConnections(inputs,newNode,currentNetwork,randomGenerator);
+        Tools.makeFullInterLayerForwardConnections(inputs, newNode, currentNetwork, randomGenerator);
 
         return currentNetwork;
     }
 
-    private NeuralNetwork addAndNode(Node node, NeuralNetwork network,KBANNSettings kbannSetting) {
+    private NeuralNetwork addAndNode(Node node, NeuralNetwork network, KBANNSettings kbannSetting) {
         Pair<NeuralNetwork, Map<Node, Node>> copied = network.getCopyWithMapping();
         NeuralNetwork currentNetwork = copied.getLeft();
         Map<Node, Node> map = copied.getRight();
@@ -141,21 +164,20 @@ public class TopGen {
         inputs.addAll(currentNetwork.getInputNodes());
         inputs.add(currentNetwork.getBias());
 
-        Tools.makeFullInterLayerForwardConnections(inputs,newNode,currentNetwork,randomGenerator);
+        Tools.makeFullInterLayerForwardConnections(inputs, newNode, currentNetwork, randomGenerator);
 
         Node newOr = NodeFactory.create(Sigmoid.getFunction());
         currentNetwork.insertIntermezzoNodeStateful(currentParent, newOr);
 
-        currentNetwork.addEdgeStateful(newNode,newOr,1.0d, Edge.Type.FORWARD);
-        currentNetwork.addEdgeStateful(currentParent,newOr,1.0d, Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(newNode, newOr, 1.0d, Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(currentParent, newOr, 1.0d, Edge.Type.FORWARD);
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
-        currentNetwork.addEdgeStateful(currentNetwork.getBias(),newOr,-1 * kbannSetting.getOmega() / 2, Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(currentNetwork.getBias(), newOr, -1 * kbannSetting.getOmega() / 2, Edge.Type.FORWARD);
 
         return currentNetwork;
     }
 
     private List<Triple<Node, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
-
         long falsePositive = results.keySet().stream().filter(sample -> !correctlyClassified.get(sample)).filter(sample ->
                         results.get(sample).getComputedValues().get(node) > 0
         ).count();
