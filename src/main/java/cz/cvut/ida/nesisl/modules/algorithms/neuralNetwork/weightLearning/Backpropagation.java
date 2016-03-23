@@ -12,6 +12,7 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -36,10 +37,13 @@ public class Backpropagation {
 
         long iteration = 0;
 
+        Map<Sample, Map<Edge, Double>> previousDeltas = initPreviousDeltas(dataset, network);
+
         while (iteration < wls.getEpochLimit()) { // eps > wls.getEpsilonDifference() // or other stopping criterion
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
-                updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned);
+                Map<Edge,Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
+                previousDeltas.put(sample,currentDeltas);
             }
             double currentError = Tools.computeSuqaredTotalError(network, dataset, wls);
             eps = Math.abs(error - currentError);
@@ -49,7 +53,17 @@ public class Backpropagation {
 
     }
 
-    public static void updateWeights(NeuralNetwork network, List<Double> differenceExampleMinusOutput, Results results, WeightLearningSetting wls, long numberOfLayersToBeLearned) {
+    public static Map<Sample, Map<Edge, Double>> initPreviousDeltas(Dataset dataset, NeuralNetwork network) {
+        Map<Edge, Double> inner = new HashMap<>();
+        network.getWeights().keySet().stream().forEach(edge -> inner.put(edge, 0.0d));
+
+        Map<Sample, Map<Edge, Double>> result = new HashMap<>();
+        dataset.getTrainData(network).forEach(sample -> result.put(sample,new HashMap<>(inner)));
+
+        return result;
+    }
+
+    public static Map<Edge, Double> updateWeights(NeuralNetwork network, List<Double> differenceExampleMinusOutput, Results results, WeightLearningSetting wls, long numberOfLayersToBeLearned, Map<Edge, Double> previousDeltas) {
         Map<Node, Double> sigma = new HashMap<>();
 
         IntStream.range(0, differenceExampleMinusOutput.size()).forEach(idx -> {
@@ -70,7 +84,8 @@ public class Backpropagation {
             }
             nodeLayer.forEach(node ->
                             network.getIncomingForwardEdges(node).stream().filter(Edge::isModifiable).forEach(edge -> {
-                                Double value = wls.getLearningRate() * sigma.get(node) * results.getComputedValues().get(edge.getSource());
+                                Double value = wls.getLearningRate() * sigma.get(node) * results.getComputedValues().get(edge.getSource())
+                                        + wls.getMomentumAlpha() * previousDeltas.get(edge);
                                 deltas.put(edge, value);
                             })
             );
@@ -82,6 +97,7 @@ public class Backpropagation {
             layersComputed++;
         }
         addDeltas(network, deltas);
+        return deltas;
     }
 
     private static NeuralNetwork addDeltas(NeuralNetwork network, Map<Edge, Double> deltas) {

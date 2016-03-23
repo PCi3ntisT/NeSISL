@@ -123,7 +123,7 @@ public class TopGen {
         }
 
         double learningRate = previousLearningRate * wls.getLearningRate(); // misto wls.getLearningRate by tu melo byt neco ve smyslu decay, ktere je ale parametrem tgSettings
-        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMaximumNumberOfHiddenNodes(), wls.getSizeOfCasCorPool(), wls.getMaxAlpha(), wls.getQuickpropEpsilon(), wls.getEpochLimit());
+        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMaximumNumberOfHiddenNodes(), wls.getSizeOfCasCorPool(), wls.getMaxAlpha(), wls.getQuickpropEpsilon(), wls.getEpochLimit(), wls.getMomentumAlpha());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
         double error = Tools.computeAverageSuqaredTotalError(network, dataset);

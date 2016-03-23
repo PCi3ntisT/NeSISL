@@ -27,11 +27,11 @@ public class Experiments {
             String slfInput = folder + "SLFinput.txt";
             String KBANNinput = folder + "KBANNinput.txt";
             try {
-                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput});
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls});
                 //Main.main(new String[]{"DNC", numberOfRepeats, data, wls});
                 //Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});
-                Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput});
+                //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput});
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }

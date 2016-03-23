@@ -13,6 +13,7 @@ public class WeightLearningSetting {
     public static final String CASCOR_POOL_NODES_LIMIT_TOKEN = "cascorPoolNodesLimit";
     public static final String QUICKPROP_ALFA_TOKEN = "alpha";
     public static final String QUICKPROP_EPSILON_TOKEN = "quickpropEpsilon";
+    public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
 
     private final Double epsilonDifference;
     private final Double quickpropEpsilon;
@@ -21,8 +22,9 @@ public class WeightLearningSetting {
     private final Long maximumNumberOfHiddenNodes;
     private final Integer sizeOfCasCorPool;
     private final Long epochLimit;
+    private final Double momentumAlpha;
 
-    public WeightLearningSetting(Double epsilonDifference, Double learningRate, Long maximumNumberOfHiddenNodes, Integer sizeOfCasCorPool, Double alpha, Double quickpropEpsilon, Long epochLimit) {
+    public WeightLearningSetting(Double epsilonDifference, Double learningRate, Long maximumNumberOfHiddenNodes, Integer sizeOfCasCorPool, Double alpha, Double quickpropEpsilon, Long epochLimit, Double momentumAlpha) {
         this.epsilonDifference = epsilonDifference;
         this.learningRate = learningRate;
         this.maximumNumberOfHiddenNodes = maximumNumberOfHiddenNodes;
@@ -30,6 +32,7 @@ public class WeightLearningSetting {
         this.alpha = alpha;
         this.quickpropEpsilon = quickpropEpsilon;
         this.epochLimit = epochLimit;
+        this.momentumAlpha = momentumAlpha;
     }
 
 
@@ -40,7 +43,8 @@ public class WeightLearningSetting {
         Double epsilonDifference = null;
         Long maximumNumberOfHiddenNodes = null;
         Integer sizeOfCasCorPool = null;
-        Long epochLimit= null;
+        Long epochLimit = null;
+        Double momentumAlpha = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -80,6 +84,9 @@ public class WeightLearningSetting {
                     case HIDDEN_NODES_LIMIT_TOKEN:
                         maximumNumberOfHiddenNodes = Long.valueOf(value);
                         break;
+                    case MOMENTUM_ALPHA_TOKEN:
+                        momentumAlpha = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -90,7 +97,7 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(epsilonDifference, learningRate, maximumNumberOfHiddenNodes, sizeOfCasCorPool, alpha, quickpropEpsilon,epochLimit);
+        return new WeightLearningSetting(epsilonDifference, learningRate, maximumNumberOfHiddenNodes, sizeOfCasCorPool, alpha, quickpropEpsilon, epochLimit, momentumAlpha);
     }
 
     public long getMaximumNumberOfHiddenNodes() {
@@ -141,5 +148,12 @@ public class WeightLearningSetting {
             System.out.println("Be aware that 'epochLimit' contains null value.");
         }
         return epochLimit;
+    }
+
+    public Double getMomentumAlpha() {
+        if (null == momentumAlpha) {
+            System.out.println("Be aware that 'momentumAlpha' contains null value.");
+        }
+        return momentumAlpha;
     }
 }

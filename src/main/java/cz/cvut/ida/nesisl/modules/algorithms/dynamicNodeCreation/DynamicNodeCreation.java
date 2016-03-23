@@ -7,8 +7,6 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
-import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
@@ -17,8 +15,6 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -44,10 +40,12 @@ public class DynamicNodeCreation {
         long iteration = 0;
         long timeOfAddingLastNode = 0;
 
+        Map<Sample, Map<Edge, Double>> previousDeltas = Backpropagation.initPreviousDeltas(dataset, network);
+
         while (true) { // or other stopping criterion
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
-                Backpropagation.updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, 2);
+                Backpropagation.updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, 2, previousDeltas.get(sample));
             }
             double currentError = Tools.computeAverageSuqaredTotalError(network, dataset);
             eps = Math.abs(error - currentError);
@@ -57,7 +55,7 @@ public class DynamicNodeCreation {
 
             double maxError = Tools.maxSquaredError(network, dataset);
 
-            if(canStopNodeGrowth(iteration,averagesErrors,maxError,dncSetting) || dncSetting.getHiddenNodesLimit() < network.getNumberOfHiddenNodes()){
+            if (canStopNodeGrowth(iteration, averagesErrors, maxError, dncSetting) || dncSetting.getHiddenNodesLimit() < network.getNumberOfHiddenNodes()) {
                 break;
             }
 
@@ -81,7 +79,7 @@ public class DynamicNodeCreation {
     }
 
     private boolean addNewNode(Map<Long, Double> averagesErrors, long time, long timeOfAddingLastNode, DNCSetting dncSetting) {
-        if(timeOfAddingLastNode > time - dncSetting.getTimeWindow()){
+        if (timeOfAddingLastNode > time - dncSetting.getTimeWindow()) {
             return false;
         }
 
@@ -102,7 +100,7 @@ public class DynamicNodeCreation {
         inputs.add(network.getBias());
         inputs.addAll(network.getInputNodes());
         inputs.forEach(source ->
-                    network.addEdgeStateful(source,node,randomGenerator.nextDouble(), Edge.Type.FORWARD)
+                        network.addEdgeStateful(source, node, randomGenerator.nextDouble(), Edge.Type.FORWARD)
         );
 
 
