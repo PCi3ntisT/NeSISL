@@ -93,7 +93,7 @@ public class TopGen {
         Map<Sample, Results> results = Tools.evaluateAllAndGetResults(dataset, network);
         Map<Sample, Boolean> correctlyClassified = Tools.classify(results);
 
-        List<Triple<Node, Long, Long>> generated = network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
+        List<Triple<Pair<Node,Boolean>, Long, Long>> generated = network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
 
         Comparator<Triple<? extends Object, Long, Long>> comparator = (t1, t2) -> {
             if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
@@ -105,18 +105,19 @@ public class TopGen {
             }
         };
         Collections.sort(generated, comparator);
-        Stream<Triple<Node, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
-        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
+        Stream<Triple<Pair<Node,Boolean>, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
+        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(),triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
+    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
         Node bias = network.getBias();
         final NeuralNetwork finalNetwork = network;
         Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
         Double negativeWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
         Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
 
-        if (Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight)) {
+        boolean isAndNode = Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight);
+        if ((isAndNode && !isFalsePositive) || (!isAndNode && isFalsePositive)) {
             network = addAndNode(node, network, kbannSetting);
         } else {
             network = addOrNode(node, network);
@@ -177,7 +178,7 @@ public class TopGen {
         return currentNetwork;
     }
 
-    private List<Triple<Node, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
+    private List<Triple<Pair<Node,Boolean>, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
         long falsePositive = results.keySet().stream().filter(sample -> !correctlyClassified.get(sample)).filter(sample ->
                         results.get(sample).getComputedValues().get(node) > 0
         ).count();
@@ -188,9 +189,9 @@ public class TopGen {
 
         long layerIdx = network.getLayerNumber(node);
 
-        ArrayList<Triple<Node, Long, Long>> list = new ArrayList<>();
-        list.add(new Triple(node, falsePositive, layerIdx));
-        list.add(new Triple(node, falseNegative, layerIdx));
+        ArrayList<Triple<Pair<Node,Boolean>, Long, Long>> list = new ArrayList<>();
+        list.add(new Triple(new Pair<>(node,true), falsePositive, layerIdx));
+        list.add(new Triple(new Pair<>(node,false), falseNegative, layerIdx));
         return list;
     }
 
