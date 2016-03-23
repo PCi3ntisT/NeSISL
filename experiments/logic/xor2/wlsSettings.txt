@@ -5,3 +5,4 @@ cascorPoolNodesLimit : 1
 alpha : 0.1
 quickpropEpsilon : 0.1
 epochLimit : 20000
+momentumAlpha : 0.3

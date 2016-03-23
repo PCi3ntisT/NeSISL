@@ -29,4 +29,31 @@ public class RandomGeneratorImpl implements RandomGenerator {
     public Integer nextInteger() {
         throw new NotImplementedException();
     }
+
+    @Override
+    public Integer nextIntegerFromRange(int start, int end) {
+        return generator.nextInt() % (end - start) + start;
+    }
+
+    @Override
+    public Long nextLongFromRange(long start, long end) {
+        return generator.nextLong() % (end - start) + start;
+    }
+
+    @Override
+    public Integer nextIntegerTo(int end) {
+        return nextIntegerFromRange(0,end);
+    }
+
+    @Override
+    public Long nextLongTo(long end) {
+        return nextLongFromRange(0, end);
+    }
+
+    @Override
+    public Boolean isProbable(Double psi) {
+        return psi > generator.nextDouble();
+    }
+
+
 }

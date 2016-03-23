@@ -90,10 +90,16 @@ public class TopGen {
     }
 
     private List<Triple<NeuralNetwork, Double, Double>> generateAndLearnSuccessors(NeuralNetwork network, Dataset dataset, TopGenSettings tgSettings, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
+        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset);
+        Stream<Triple<Pair<Node, Boolean>, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
+        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(), triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private static List<Triple<Pair<Node, Boolean>, Long, Long>> generateSorted(NeuralNetwork network, Dataset dataset) {
         Map<Sample, Results> results = Tools.evaluateAllAndGetResults(dataset, network);
         Map<Sample, Boolean> correctlyClassified = Tools.classify(results);
 
-        List<Triple<Pair<Node,Boolean>, Long, Long>> generated = network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
+        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = computeValues(network, results, correctlyClassified);
 
         Comparator<Triple<? extends Object, Long, Long>> comparator = (t1, t2) -> {
             if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
@@ -105,23 +111,21 @@ public class TopGen {
             }
         };
         Collections.sort(generated, comparator);
-        Stream<Triple<Pair<Node,Boolean>, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
-        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(),triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
+        return generated;
+    }
+
+    private static List<Triple<Pair<Node, Boolean>, Long, Long>> computeValues(NeuralNetwork network, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
+        return network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    public static NeuralNetwork generateSuccesor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
+        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset);
+        Triple<Pair<Node, Boolean>, Long, Long> picked = generated.get(which);
+        return addNode(picked.getK().getLeft(), picked.getK().getRight(), network, kbannSettings,randomGenerator);
     }
 
     private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
-        Node bias = network.getBias();
-        final NeuralNetwork finalNetwork = network;
-        Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
-        Double negativeWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
-        Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
-
-        boolean isAndNode = Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight);
-        if ((isAndNode && !isFalsePositive) || (!isAndNode && isFalsePositive)) {
-            network = addAndNode(node, network, kbannSetting);
-        } else {
-            network = addOrNode(node, network);
-        }
+        network = addNode(node, isFalsePositive, network, kbannSetting, randomGenerator);
 
         double learningRate = previousLearningRate * wls.getLearningRate(); // misto wls.getLearningRate by tu melo byt neco ve smyslu decay, ktere je ale parametrem tgSettings
         WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMaximumNumberOfHiddenNodes(), wls.getSizeOfCasCorPool(), wls.getMaxAlpha(), wls.getQuickpropEpsilon(), wls.getEpochLimit(), wls.getMomentumAlpha());
@@ -131,7 +135,26 @@ public class TopGen {
         return new Triple<>(network, error, learningRate);
     }
 
-    private NeuralNetwork addOrNode(Node node, NeuralNetwork network) {
+    private static NeuralNetwork addNode(Node node, Boolean isFalsePositive, NeuralNetwork network, KBANNSettings kbannSetting, RandomGenerator randomGenerator) {
+        boolean isAndNode = isAndNode(node, network);
+        if ((isAndNode && !isFalsePositive) || (!isAndNode && isFalsePositive)) {
+            return addAndNode(node, network, kbannSetting,randomGenerator);
+        } else {
+            return addOrNode(node, network, randomGenerator);
+        }
+    }
+
+    private static boolean isAndNode(Node node, NeuralNetwork network) {
+        Node bias = network.getBias();
+        final NeuralNetwork finalNetwork = network;
+        Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+        Double negativeWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+        Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+
+        return Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight);
+    }
+
+    private static NeuralNetwork addOrNode(Node node, NeuralNetwork network, RandomGenerator randomGenerator) {
         Pair<NeuralNetwork, Map<Node, Node>> copied = network.getCopyWithMapping();
         NeuralNetwork currentNetwork = copied.getLeft();
         Map<Node, Node> map = copied.getRight();
@@ -151,7 +174,7 @@ public class TopGen {
         return currentNetwork;
     }
 
-    private NeuralNetwork addAndNode(Node node, NeuralNetwork network, KBANNSettings kbannSetting) {
+    private static NeuralNetwork addAndNode(Node node, NeuralNetwork network, KBANNSettings kbannSetting, RandomGenerator randomGenerator) {
         Pair<NeuralNetwork, Map<Node, Node>> copied = network.getCopyWithMapping();
         NeuralNetwork currentNetwork = copied.getLeft();
         Map<Node, Node> map = copied.getRight();
@@ -178,7 +201,7 @@ public class TopGen {
         return currentNetwork;
     }
 
-    private List<Triple<Pair<Node,Boolean>, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
+    private static List<Triple<Pair<Node, Boolean>, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
         long falsePositive = results.keySet().stream().filter(sample -> !correctlyClassified.get(sample)).filter(sample ->
                         results.get(sample).getComputedValues().get(node) > 0
         ).count();
@@ -189,9 +212,9 @@ public class TopGen {
 
         long layerIdx = network.getLayerNumber(node);
 
-        ArrayList<Triple<Pair<Node,Boolean>, Long, Long>> list = new ArrayList<>();
-        list.add(new Triple(new Pair<>(node,true), falsePositive, layerIdx));
-        list.add(new Triple(new Pair<>(node,false), falseNegative, layerIdx));
+        ArrayList<Triple<Pair<Node, Boolean>, Long, Long>> list = new ArrayList<>();
+        list.add(new Triple(new Pair<>(node, true), falsePositive, layerIdx));
+        list.add(new Triple(new Pair<>(node, false), falseNegative, layerIdx));
         return list;
     }
 
@@ -200,4 +223,6 @@ public class TopGen {
         KBANN kbann = new KBANN(file, specific, randomGenerator, omega);
         return new TopGen(kbann, randomGenerator);
     }
+
+
 }

@@ -2,11 +2,15 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="04f8a7f2-c18b-4d48-a930-c0536da85086" name="Default" comment="fix TopGen">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Individual.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Regent.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/RegentSetting.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/api/neuralNetwork/ActivationFunction.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/api/neuralNetwork/ActivationFunction.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CascadeCorrelation.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CascadeCorrelation.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/ConstantOne.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/ConstantOne.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/dynamicNodeCreation/DynamicNodeCreation.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/dynamicNodeCreation/DynamicNodeCreation.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/application/Experiments.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/application/Experiments.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/Identity.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/Identity.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/kbann/KBANN.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/kbann/KBANN.class" />
@@ -19,6 +23,7 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NodeFactory.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NodeFactory.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NodeImpl.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NodeImpl.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Quickprop.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Quickprop.class" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/Sigmoid.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/Sigmoid.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/structuralLearningWithSelectiveForgetting/StructuralLearningWithSelectiveForgetting.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/structuralLearningWithSelectiveForgetting/StructuralLearningWithSelectiveForgetting.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/export/neuralNetwork/tex/TikzExporter.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/export/neuralNetwork/tex/TikzExporter.class" />
@@ -26,9 +31,12 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/WeightLearningSetting.class" afterPath="$PROJECT_DIR$/out/production/nesisl/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/WeightLearningSetting.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.pdf" afterPath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.pdf" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/origin.pdf" afterPath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/origin.pdf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGenerator.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGenerator.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGeneratorImpl.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGeneratorImpl.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.log" afterPath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.log" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.tex" afterPath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/final.tex" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/origin.log" afterPath="$PROJECT_DIR$/experiments/logic/xor2/KBANN/KBANN_0/origin.log" />
@@ -66,98 +74,144 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="results.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/experiments/logic/xor2/TopGen/results.txt">
+      <file leaf-file-name="Regent.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Regent.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="338">
-              <caret line="7" column="0" selection-start-line="7" selection-start-column="0" selection-end-line="7" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="wlsSettings.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/experiments/logic/xor2/wlsSettings.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="338">
-              <caret line="7" column="19" selection-start-line="7" selection-start-column="19" selection-end-line="7" selection-end-column="19" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CasCorSetting.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CasCorSetting.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="6" max-vertical-offset="806">
-              <caret line="5" column="13" selection-start-line="5" selection-start-column="13" selection-end-line="5" selection-end-column="13" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Tools.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="4513" max-vertical-offset="5304">
-              <caret line="211" column="33" selection-start-line="211" selection-start-column="33" selection-end-line="211" selection-end-column="33" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Double.java" pinned="false" current-in-tab="false">
-        <entry file="jar://C:/Program Files/Java/jdk1.8.0_31/src.zip!/java/lang/Double.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="12517" max-vertical-offset="26026">
-              <caret line="517" column="25" selection-start-line="517" selection-start-column="25" selection-end-line="517" selection-end-column="25" />
-              <folding>
-                <element signature="e#20934#20935#0" expanded="true" />
-                <element signature="e#20970#20971#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CascadeCorrelation.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CascadeCorrelation.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="303" max-vertical-offset="4628">
-              <caret line="41" column="23" selection-start-line="41" selection-start-column="23" selection-end-line="41" selection-end-column="23" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ExperimentResult.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="2199" max-vertical-offset="3042">
-              <caret line="109" column="39" selection-start-line="109" selection-start-column="39" selection-end-line="109" selection-end-column="39" />
+            <state vertical-scroll-proportion="-6.3103447" vertical-offset="4263" max-vertical-offset="5772">
+              <caret line="171" column="59" selection-start-line="171" selection-start-column="59" selection-end-line="171" selection-end-column="59" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#2488#2489#0" expanded="true" />
-                <element signature="e#2522#2523#0" expanded="true" />
+                <element signature="e#1650#1651#0" expanded="true" />
+                <element signature="e#1689#1690#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SampleGenerator.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.java">
+      <file leaf-file-name="RegentSetting.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/RegentSetting.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.9893455" vertical-offset="936" max-vertical-offset="3302">
-              <caret line="17" column="23" selection-start-line="17" selection-start-column="23" selection-end-line="17" selection-end-column="23" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="19" max-vertical-offset="2470">
+              <caret line="15" column="36" selection-start-line="15" selection-start-column="36" selection-end-line="15" selection-end-column="36" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#2205#2206#0" expanded="true" />
+                <element signature="e#2238#2239#0" expanded="true" />
+                <element signature="e#2430#2431#0" expanded="true" />
+                <element signature="e#2478#2479#0" expanded="true" />
+                <element signature="e#2520#2521#0" expanded="true" />
+                <element signature="e#2557#2558#0" expanded="true" />
+                <element signature="e#2764#2765#0" expanded="true" />
+                <element signature="e#2815#2816#0" expanded="true" />
+                <element signature="e#2871#2872#0" expanded="true" />
+                <element signature="e#2922#2923#0" expanded="true" />
+                <element signature="e#2968#2969#0" expanded="true" />
+                <element signature="e#3003#3004#0" expanded="true" />
+                <element signature="e#3055#3056#0" expanded="true" />
+                <element signature="e#3103#3104#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Backpropagation.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="483" max-vertical-offset="2860">
+              <caret line="28" column="23" selection-start-line="28" selection-start-column="23" selection-end-line="28" selection-end-column="23" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TopGen.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Collection.java" pinned="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.8.0_31/src.zip!/java/util/Collection.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="7187" max-vertical-offset="15054">
+              <caret line="310" column="12" selection-start-line="310" selection-start-column="12" selection-end-line="310" selection-end-column="12" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RandomGeneratorImpl.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGeneratorImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="531" max-vertical-offset="1586">
+              <caret line="34" column="49" selection-start-line="34" selection-start-column="49" selection-end-line="34" selection-end-column="49" />
+              <folding>
+                <element signature="e#737#738#0" expanded="true" />
+                <element signature="e#788#789#0" expanded="true" />
+                <element signature="e#865#866#0" expanded="true" />
+                <element signature="e#931#932#0" expanded="true" />
+                <element signature="e#1004#1005#0" expanded="true" />
+                <element signature="e#1071#1072#0" expanded="true" />
+                <element signature="e#1130#1131#0" expanded="true" />
+                <element signature="e#1180#1181#0" expanded="true" />
+                <element signature="e#1234#1235#0" expanded="true" />
+                <element signature="e#1282#1283#0" expanded="true" />
+                <element signature="e#1341#1342#0" expanded="true" />
+                <element signature="e#1392#1393#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Random.java" pinned="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.8.0_31/src.zip!/java/util/Random.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="4877" max-vertical-offset="30680">
+              <caret line="197" column="18" selection-start-line="197" selection-start-column="18" selection-end-line="197" selection-end-column="18" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RandomGenerator.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGenerator.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="702">
+              <caret line="15" column="16" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Individual.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Individual.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="728">
+              <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#358#359#0" expanded="true" />
+                <element signature="e#403#404#0" expanded="true" />
+                <element signature="e#449#450#0" expanded="true" />
+                <element signature="e#487#488#0" expanded="true" />
+                <element signature="e#520#521#0" expanded="true" />
+                <element signature="e#559#560#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NeuralNetworkImpl.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-16.172413" vertical-offset="7149" max-vertical-offset="14612">
+              <caret line="319" column="30" selection-start-line="319" selection-start-column="30" selection-end-line="319" selection-end-column="30" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="TopGen.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="2232" max-vertical-offset="5408">
-              <caret line="95" column="191" selection-start-line="95" selection-start-column="191" selection-end-line="95" selection-end-column="239" />
+            <state vertical-scroll-proportion="1.7869102" vertical-offset="2466" max-vertical-offset="6084">
+              <caret line="140" column="73" selection-start-line="140" selection-start-column="73" selection-end-line="140" selection-end-column="73" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="e#1410#1411#0" expanded="true" />
@@ -177,12 +231,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/kbann/Rules.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/dataset/DatasetImpl.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/kbann/RuleCreationWrapper.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CasCorSetting.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CascadeCorrelation.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/EPOCH_TOKEN.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/dynamicNodeCreation/DNCSetting.java" />
         <option value="$PROJECT_DIR$/ruleExamples/sampleInput/wlsSettings.txt" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/structuralLearningWithSelectiveForgetting/StructuralLearningwithSelectiveForgetting.java" />
@@ -217,17 +265,23 @@
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/api/neuralNetwork/NeuralNetwork.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/activationFunctions/Identity.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Triple.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/WeightLearningSetting.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/dynamicNodeCreation/DynamicNodeCreation.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java" />
-        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java" />
         <option value="$PROJECT_DIR$/experiments/logic/xor2/wlsSettings.txt" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/ExperimentResult.java" />
         <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Regent.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Individual.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGenerator.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGeneratorImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Regent.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/RegentSetting.java" />
+        <option value="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java" />
       </list>
     </option>
   </component>
@@ -500,6 +554,40 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="structuralLearningWithSelectiveForgetting" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="NESISL" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nesisl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="nesisl" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="modules" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="algorithms" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="regent" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -889,11 +977,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CreateClassDialog.RecentsKey">
+      <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.regent" />
+      <recent name="main.java.cz.cvut.ida.nesisl.application" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.tool" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning" />
-      <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation" />
-      <recent name="main.java.cz.cvut.ida.nesisl.modules.experiments" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="H:\skola\master\dp\codes\nesisl\eperiments\logic\and3" />
@@ -907,11 +995,11 @@
       <recent name="H:\skola\master\dp\codes\nesisl\eperiments" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.regent" />
       <recent name="main.java.cz.cvut.ida.nesisl.api" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.logic" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann" />
       <recent name="main.java.cz.cvut.ida.nesisl.modules.algorithms.methods" />
-      <recent name="main.java.cz.cvut.ida.nesisl.modules" />
     </key>
   </component>
   <component name="RunManager" selected="Application.SampleGenerator">
@@ -1181,7 +1269,19 @@
       <option name="project" value="LOCAL" />
       <updated>1458731256106</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="adding new functionality for generation experiments">
+      <created>1458735012491</created>
+      <option name="number" value="00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1458735012491</updated>
+    </task>
+    <task id="LOCAL-00005" summary="fix TopGen - creation of add/or node dependent on FP or FN">
+      <created>1458743106029</created>
+      <option name="number" value="00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1458743106029</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -1238,7 +1338,9 @@
     <MESSAGE value="test" />
     <MESSAGE value="fix TopGen" />
     <MESSAGE value="added momentum to backpropagation" />
-    <option name="LAST_COMMIT_MESSAGE" value="added momentum to backpropagation" />
+    <MESSAGE value="adding new functionality for generation experiments" />
+    <MESSAGE value="fix TopGen - creation of add/or node dependent on FP or FN" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix TopGen - creation of add/or node dependent on FP or FN" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1251,58 +1353,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/experiments/logic/and3/wlsSettings.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="670">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/dynamicNodeCreation/DNCSetting.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="248" max-vertical-offset="1026">
-          <caret line="36" column="39" selection-start-line="36" selection-start-column="39" selection-end-line="36" selection-end-column="39" />
-          <folding>
-            <element signature="e#896#897#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiments/logic/and3/CasCor/results.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="657">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiments/logic/and3/DNC/results.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="657">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiments/logic/xor3/DNC/results.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="657">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiments/logic/xor3/CasCor/results.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="657">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/experiments/logic/xor3/KBANN/results.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="657">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/structuralLearningWithSelectiveForgetting/StructuralLearningWithSelectiveForgetting.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="4014" max-vertical-offset="4671">
@@ -1522,18 +1572,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-46.655174" vertical-offset="11933" max-vertical-offset="14638">
-          <caret line="547" column="0" selection-start-line="547" selection-start-column="0" selection-end-line="547" selection-end-column="0" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#6870#6871#0" expanded="true" />
-            <element signature="e#6915#6916#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/experiments/logic/xor2/TopGen/TopGen_0/final.tex">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="52" max-vertical-offset="1066">
@@ -1558,39 +1596,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-7.206897" vertical-offset="883" max-vertical-offset="2860">
-          <caret line="55" column="10" selection-start-line="55" selection-start-column="10" selection-end-line="55" selection-end-column="10" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/WeightLearningSetting.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="3633" max-vertical-offset="4290">
           <caret line="156" column="8" selection-start-line="156" selection-start-column="8" selection-end-line="156" selection-end-column="8" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-10.793103" vertical-offset="2651" max-vertical-offset="9230">
-          <caret line="114" column="53" selection-start-line="114" selection-start-column="53" selection-end-line="114" selection-end-column="53" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-13.965517" vertical-offset="401" max-vertical-offset="1196">
-          <caret line="31" column="12" selection-start-line="31" selection-start-column="12" selection-end-line="31" selection-end-column="12" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1626,20 +1636,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="2232" max-vertical-offset="5408">
-          <caret line="95" column="191" selection-start-line="95" selection-start-column="191" selection-end-line="95" selection-end-column="239" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1410#1411#0" expanded="true" />
-            <element signature="e#1440#1441#0" expanded="true" />
-            <element signature="e#1481#1482#0" expanded="true" />
-            <element signature="e#1515#1516#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/cascadeCorrelation/CascadeCorrelation.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="303" max-vertical-offset="4628">
@@ -1656,14 +1652,6 @@
             <element signature="e#20934#20935#0" expanded="true" />
             <element signature="e#20970#20971#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="4513" max-vertical-offset="5304">
-          <caret line="211" column="33" selection-start-line="211" selection-start-column="33" selection-end-line="211" selection-end-column="33" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1689,9 +1677,166 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/experiments/SampleGenerator.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.9893455" vertical-offset="936" max-vertical-offset="3302">
+        <state vertical-scroll-proportion="0.0" vertical-offset="936" max-vertical-offset="3302">
           <caret line="17" column="23" selection-start-line="17" selection-start-column="23" selection-end-line="17" selection-end-column="23" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Experiments.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="401" max-vertical-offset="1222">
+          <caret line="29" column="18" selection-start-line="29" selection-start-column="18" selection-end-line="29" selection-end-column="18" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/application/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2719" max-vertical-offset="10426">
+          <caret line="117" column="22" selection-start-line="117" selection-start-column="22" selection-end-line="117" selection-end-column="22" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/Tools.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="977" max-vertical-offset="5304">
+          <caret line="65" column="25" selection-start-line="65" selection-start-column="25" selection-end-line="65" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/neuralNetwork/NeuralNetworkImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-16.172413" vertical-offset="7149" max-vertical-offset="14612">
+          <caret line="319" column="30" selection-start-line="319" selection-start-column="30" selection-end-line="319" selection-end-column="30" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_31/src.zip!/java/util/Random.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="4877" max-vertical-offset="30680">
+          <caret line="197" column="18" selection-start-line="197" selection-start-column="18" selection-end-line="197" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGenerator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="702">
+          <caret line="15" column="16" selection-start-line="15" selection-start-column="16" selection-end-line="15" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/tool/RandomGeneratorImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="531" max-vertical-offset="1586">
+          <caret line="34" column="49" selection-start-line="34" selection-start-column="49" selection-end-line="34" selection-end-column="49" />
+          <folding>
+            <element signature="e#737#738#0" expanded="true" />
+            <element signature="e#788#789#0" expanded="true" />
+            <element signature="e#865#866#0" expanded="true" />
+            <element signature="e#931#932#0" expanded="true" />
+            <element signature="e#1004#1005#0" expanded="true" />
+            <element signature="e#1071#1072#0" expanded="true" />
+            <element signature="e#1130#1131#0" expanded="true" />
+            <element signature="e#1180#1181#0" expanded="true" />
+            <element signature="e#1234#1235#0" expanded="true" />
+            <element signature="e#1282#1283#0" expanded="true" />
+            <element signature="e#1341#1342#0" expanded="true" />
+            <element signature="e#1392#1393#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_31/src.zip!/java/util/Collection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="7187" max-vertical-offset="15054">
+          <caret line="310" column="12" selection-start-line="310" selection-start-column="12" selection-end-line="310" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/neuralNetwork/weightLearning/Backpropagation.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="171" max-vertical-offset="2860">
+          <caret line="28" column="23" selection-start-line="28" selection-start-column="23" selection-end-line="28" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Individual.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="728">
+          <caret line="8" column="13" selection-start-line="8" selection-start-column="13" selection-end-line="8" selection-end-column="13" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#358#359#0" expanded="true" />
+            <element signature="e#403#404#0" expanded="true" />
+            <element signature="e#449#450#0" expanded="true" />
+            <element signature="e#487#488#0" expanded="true" />
+            <element signature="e#520#521#0" expanded="true" />
+            <element signature="e#559#560#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/RegentSetting.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="19" max-vertical-offset="2470">
+          <caret line="15" column="36" selection-start-line="15" selection-start-column="36" selection-end-line="15" selection-end-column="36" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2205#2206#0" expanded="true" />
+            <element signature="e#2238#2239#0" expanded="true" />
+            <element signature="e#2430#2431#0" expanded="true" />
+            <element signature="e#2478#2479#0" expanded="true" />
+            <element signature="e#2520#2521#0" expanded="true" />
+            <element signature="e#2557#2558#0" expanded="true" />
+            <element signature="e#2764#2765#0" expanded="true" />
+            <element signature="e#2815#2816#0" expanded="true" />
+            <element signature="e#2871#2872#0" expanded="true" />
+            <element signature="e#2922#2923#0" expanded="true" />
+            <element signature="e#2968#2969#0" expanded="true" />
+            <element signature="e#3003#3004#0" expanded="true" />
+            <element signature="e#3055#3056#0" expanded="true" />
+            <element signature="e#3103#3104#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/regent/Regent.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-6.3103447" vertical-offset="4263" max-vertical-offset="5772">
+          <caret line="171" column="59" selection-start-line="171" selection-start-column="59" selection-end-line="171" selection-end-column="59" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1650#1651#0" expanded="true" />
+            <element signature="e#1689#1690#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/topGen/TopGen.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.7869102" vertical-offset="2466" max-vertical-offset="6084">
+          <caret line="140" column="73" selection-start-line="140" selection-start-column="73" selection-end-line="140" selection-end-column="73" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1410#1411#0" expanded="true" />
+            <element signature="e#1440#1441#0" expanded="true" />
+            <element signature="e#1481#1482#0" expanded="true" />
+            <element signature="e#1515#1516#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

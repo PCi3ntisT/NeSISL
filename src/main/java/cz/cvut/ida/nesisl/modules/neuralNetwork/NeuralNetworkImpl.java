@@ -216,7 +216,6 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             }
             network.get(layerNumber).add(node);
             updateHiddenNodeLayerIndex(node, layerNumber);
-            numberOfHiddenNodes++;
         } else { // layerNumber < 0
             for (long idx = getMaximalNumberOfHiddenLayer(); idx >= 0; idx--) {
                 network.put(idx - layerNumber, network.get(idx));
@@ -227,6 +226,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             actualizeNodeLayerIndexes();
             numberOfHiddenLayers += -layerNumber;
         }
+        numberOfHiddenNodes++;
     }
 
     private void actualizeNodeLayerIndexes() {
@@ -317,6 +317,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         removeEdgesStateful(forwardOutgoingEdges.get(node));
         removeEdgesStateful(backwardIncomingEdges.get(node));
         removeEdgesStateful(backwardOutgoingEdges.get(node));
+        numberOfHiddenNodes--;
     }
 
     @Override
