@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * Created by EL on 16.3.2016.
@@ -14,8 +15,8 @@ public class SampleGenerator {
 
     public static void main(String arg[]) {
         int seed = 13;
-        double sigma = 0.5;
-        double mu = 0.5;
+        double sigma = 1.0d;
+        double mu = 0.0d;
         RandomGeneratorImpl random = new RandomGeneratorImpl(sigma, mu, seed);
 
         SampleGenerator sample = new SampleGenerator();
@@ -24,13 +25,14 @@ public class SampleGenerator {
         //sample.generateXor2(10, random);
         //sample.generateXor3(20, random);
         //sample.generateDNF4(50, random);
-        sample.generateAnd3(20, random);
+        sample.generateAnd3(12, random);
     }
 
     private void generateAnd3(int numberOfSamples, RandomGeneratorImpl random) {
         System.out.println("a\tb\tc\t|\tx\ty");
-        IntStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = generateList(3, random);
+        int numberOfLIterals = 3;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -47,8 +49,9 @@ public class SampleGenerator {
 
     private void generateDNF4(int numberOfSamples, RandomGeneratorImpl random) {
         System.out.println("a\tb\tc\td\t|\tx\ty\tz");
-        IntStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = generateList(4, random);
+        int numberOfLIterals = 4;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -68,8 +71,9 @@ public class SampleGenerator {
 
     private void generateXor3(int numberOfSamples, RandomGeneratorImpl random) {
         System.out.println("a\tb\tc\t|\tx");
-        IntStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = generateList(3,random);
+        int numberOfLIterals = 3;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
@@ -83,8 +87,9 @@ public class SampleGenerator {
 
     private void generateXor2(int numberOfSamples, RandomGeneratorImpl random) {
         System.out.println("a\tb\t|\tx");
-        IntStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = generateList(2,random);
+        int numberOfLIterals = 2;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
@@ -96,6 +101,20 @@ public class SampleGenerator {
         });
     }
 
+
+    private List<Boolean> longBitToBooleanList(long number, int numberOfLiterals) {
+        List<Boolean> list = new ArrayList<>();
+        for (int iter = 0; iter < numberOfLiterals; iter++) {
+            Boolean val = false;
+            if (1 == (number % 2)) {
+                val = true;
+            }
+            list.add(val);
+            number = number / 2;
+        }
+        return list;
+    }
+
     private String booleanToZeroOne(Boolean bool) {
         return bool ? "1" : "0";
     }
@@ -105,7 +124,7 @@ public class SampleGenerator {
     }
 
     private List<Boolean> generateList(int numberOfLiterals, RandomGeneratorImpl random) {
-        return IntStream.range(0,numberOfLiterals).mapToObj(idx -> random.nextDouble() > 0.5).collect(Collectors.toCollection(ArrayList::new));
+        return IntStream.range(0, numberOfLiterals).mapToObj(idx -> random.nextDouble() > 0.5).collect(Collectors.toCollection(ArrayList::new));
     }
 
 

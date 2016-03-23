@@ -200,4 +200,20 @@ public class Tools {
         //return diff.sum() < 0.1;
         return diff.max().orElse(0) < 0.25;
     }
+
+    public static Double medianDouble(List<Double> list) {
+        Collections.sort(list);
+        if(0 == list.size() % 2){
+            return list.get(list.size() / 2);
+        }
+        return (list.get(list.size() / 2) + list.get(1 + list.size() / 2)) / 2;
+    }
+
+    public static Long medianLong(List<Long> list) {
+        Collections.sort(list);
+        if(0 == list.size() % 2){
+            return list.get(list.size() / 2);
+        }
+        return (list.get(list.size() / 2) + list.get(1 + list.size() / 2)) / 2;
+    }
 }
