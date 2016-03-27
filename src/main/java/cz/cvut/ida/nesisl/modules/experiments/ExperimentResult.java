@@ -64,7 +64,7 @@ public class ExperimentResult {
 
         TexFile tex = TikzExporter.export(network);
         File output = tex.saveAs(myAdress + File.separator + name + ".tex");
-        TexFile.build(output);
+        //TexFile.build(output);
     }
 
     public NeuralNetwork getFinalNetwork() {

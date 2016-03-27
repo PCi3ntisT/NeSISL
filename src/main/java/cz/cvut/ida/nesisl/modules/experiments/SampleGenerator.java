@@ -22,10 +22,115 @@ public class SampleGenerator {
         SampleGenerator sample = new SampleGenerator();
 
 
-        //sample.generateXor2(10, random);
         //sample.generateXor3(20, random);
         //sample.generateDNF4(50, random);
-        sample.generateAnd3(12, random);
+        //sample.generateAnd3(12, random);
+        //sample.generateAnd2(4, random);
+        //sample.generateAnd2Reversed(4, random);
+        //sample.generateXor2(4, random);
+        //sample.generateXor2Reversed(4, random);
+        //sample.generateXor4(16, random);
+        //sample.generateXor4Reversed(16, random);
+        //sample.generateOr2Clauses(16, random);
+        //sample.generateAllOrNothing(16, random);
+        //sample.generateDoubleImplication(32, random);
+        //sample.generateTwoIndependentClauses(32, random);
+        //sample.generateThreeIndependentClauses(32, random);
+        //sample.generateThreeHierarchyClauses(32, random);
+        sample.generateThreeHierarchyClausesWithXor(32,random);
+    }
+
+    private void generateThreeHierarchyClauses(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\te\t|\tx");
+        int numberOfLiterals = 5;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+            Boolean e = input.get(4);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean m1 = !a && b;
+            Boolean m2 = c && e;
+            Boolean n = !m1 && m2;
+            Boolean m = (a && b) || !c;
+            Boolean p = !m && e;
+            Boolean q = p || n;
+            Boolean x = (p && !n) || !m || q;
+
+            sb.append(booleanToZeroOne(x));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateThreeHierarchyClausesWithXor(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\te\t|\tx");
+        int numberOfLiterals = 5;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+            Boolean e = input.get(4);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean m1 = !a && b;
+            Boolean m2 = c && e;
+            Boolean n = !m1 && m2;
+            Boolean m = (a && b) || !c;
+            Boolean p = !m && e;
+            Boolean q = p || n;
+            Boolean v = (p && !n) != !m;
+            Boolean x = v != q;
+
+            sb.append(booleanToZeroOne(x));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateAnd2Reversed(int numberOfSamples, Object random) {
+        System.out.println("a\tb\t|\tx\ty");
+        int numberOfLiterals = 2;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            sb.append("|\t");
+
+            sb.append(booleanToZeroOne(a && b)).append("\t");
+            sb.append(booleanToZeroOne(!(a && b)));
+
+            System.out.println(sb);
+        });
+    }
+
+    private void generateAnd2(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\t|\tx");
+        int numberOfLiterals = 2;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            sb.append("|\t");
+
+            sb.append(booleanToZeroOne(a && b));
+            System.out.println(sb);
+        });
     }
 
     private void generateAnd3(int numberOfSamples, RandomGeneratorImpl random) {
@@ -85,11 +190,11 @@ public class SampleGenerator {
         });
     }
 
-    private void generateXor2(int numberOfSamples, RandomGeneratorImpl random) {
-        System.out.println("a\tb\t|\tx");
-        int numberOfLIterals = 2;
+    private void generateXor4(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\t|\tx");
+        int numberOfLiterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
@@ -101,8 +206,169 @@ public class SampleGenerator {
         });
     }
 
+    private void generateXor4Reversed(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\t|\tx\ty");
+        int numberOfLiterals = 4;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean output = generateXor(input);
 
-    private List<Boolean> longBitToBooleanList(long number, int numberOfLiterals) {
+            StringBuilder sb = new StringBuilder();
+            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            sb.append("|\t");
+
+            sb.append(booleanToZeroOne(output)).append("\t");
+            sb.append(booleanToZeroOne(!output));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateAllOrNothing(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\t|\tx");
+        int numberOfLiterals = 4;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean output = (!a && !b && !c && !d) || (b && a && d && c);
+            sb.append(booleanToZeroOne(output));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateDoubleImplication(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\te\t|\tx");
+        int numberOfLiterals = 5;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+            Boolean e = input.get(4);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean v1 = a && !b;
+            Boolean v2 = !c && b;
+            Boolean w = !(v1 || v2) || d;
+            Boolean output = !(w && a) || e;
+            sb.append(booleanToZeroOne(output));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateTwoIndependentClauses(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\te\t|\tx\ty");
+        int numberOfLiterals = 5;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+            Boolean e = input.get(4);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean x = (a && e && c);
+            Boolean y = (!b && !d);
+            sb.append(booleanToZeroOne(x)).append("\t");
+            sb.append(booleanToZeroOne(y));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateThreeIndependentClauses(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\te\t|\tx\ty\tz");
+        int numberOfLiterals = 5;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+            Boolean e = input.get(4);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean x = (a && e && c);
+            Boolean y = (!b && !d);
+            Boolean z = !(b && d) || (c && a);
+            sb.append(booleanToZeroOne(x)).append("\t");
+            sb.append(booleanToZeroOne(y)).append("\t");
+            sb.append(booleanToZeroOne(z));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateOr2Clauses(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\tc\td\t|\tx");
+        int numberOfLiterals = 4;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean a = input.get(0);
+            Boolean b = input.get(1);
+            Boolean c = input.get(2);
+            Boolean d = input.get(3);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            sb.append("|\t");
+
+            Boolean output = (a && !b && c) || (b && !a && !d);
+            sb.append(booleanToZeroOne(output));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateXor2(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\t|\tx");
+        int numberOfLiterals = 2;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean output = generateXor(input);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            sb.append("|\t");
+
+            sb.append(booleanToZeroOne(output));
+            System.out.println(sb);
+        });
+    }
+
+    private void generateXor2Reversed(int numberOfSamples, RandomGeneratorImpl random) {
+        System.out.println("a\tb\t|\tx\ty");
+        int numberOfLiterals = 2;
+        LongStream.range(0, numberOfSamples).forEach(i -> {
+            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            Boolean output = generateXor(input);
+
+            StringBuilder sb = new StringBuilder();
+            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            sb.append("|\t");
+
+            sb.append(booleanToZeroOne(output)).append("\t");
+            sb.append(booleanToZeroOne(!output));
+            System.out.println(sb);
+        });
+    }
+
+    public static List<Boolean> intBitToBooleanList(int number, int numberOfLiterals) {
         List<Boolean> list = new ArrayList<>();
         for (int iter = 0; iter < numberOfLiterals; iter++) {
             Boolean val = false;
@@ -115,7 +381,20 @@ public class SampleGenerator {
         return list;
     }
 
-    private String booleanToZeroOne(Boolean bool) {
+    public static List<Boolean> longBitToBooleanList(long number, int numberOfLiterals) {
+        List<Boolean> list = new ArrayList<>();
+        for (int iter = 0; iter < numberOfLiterals; iter++) {
+            Boolean val = false;
+            if (1 == (number % 2)) {
+                val = true;
+            }
+            list.add(val);
+            number = number / 2;
+        }
+        return list;
+    }
+
+    public static String booleanToZeroOne(Boolean bool) {
         return bool ? "1" : "0";
     }
 

@@ -23,4 +23,14 @@ public class SampleImpl implements Sample {
     public List<Value> getOutput() {
         return output;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        String factDelimiter = "\t";
+        input.forEach(v -> sb.append(v.getValue()).append(factDelimiter));
+        sb.append(DatasetImpl.INPUT_OUTPUT_DELIMITER);
+        output.forEach(v -> sb.append(factDelimiter).append(v.getValue()));
+        return sb.toString();
+    }
 }
