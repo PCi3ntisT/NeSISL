@@ -202,18 +202,26 @@ public class Tools {
     }
 
     public static Double medianDouble(List<Double> list) {
+        if(1 == list.size()){
+            return list.get(0);
+        }
+
         Collections.sort(list);
         if(0 == list.size() % 2){
-            return list.get(list.size() / 2);
+            return list.get(list.size() / 2 - 1);
         }
-        return (list.get(list.size() / 2) + list.get(1 + list.size() / 2)) / 2;
+        return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
     }
 
     public static Long medianLong(List<Long> list) {
+        if(1 == list.size()){
+            return list.get(0);
+        }
+
         Collections.sort(list);
         if(0 == list.size() % 2){
-            return list.get(list.size() / 2);
+            return list.get(list.size() / 2 - 1);
         }
-        return (list.get(list.size() / 2) + list.get(1 + list.size() / 2)) / 2;
+        return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
     }
 }

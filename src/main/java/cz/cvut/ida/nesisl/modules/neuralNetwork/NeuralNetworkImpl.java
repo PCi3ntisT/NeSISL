@@ -4,6 +4,7 @@ import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge.Type;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.ConstantOne;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
@@ -176,10 +177,6 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public Long getLayerNumber(Node node) {
-        // TODO tady aby nebyla tahle osklivost, tak odladit kde se vzala ta chyba
-        if (null == hiddenNodeLayer.get(node)) {
-            actualizeNodeLayerIndexes();
-        }
         return hiddenNodeLayer.get(node);
     }
 
@@ -268,6 +265,20 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
         weights.entrySet().forEach(entry -> {
             Edge oldEdge = entry.getKey();
+
+            // TODO just for debug, shouldn't be at the final version
+            if (mapping.get(oldEdge.getSource()) == mapping.get(oldEdge.getTarget())) {
+                System.out.println("ccc" +
+                                "\n\t" + oldEdge +
+                                "\n\t" + oldEdge.getSource() +
+                                "\n\t" + oldEdge.getTarget() +
+                                "\n\t" + mapping.get(oldEdge.getSource()) +
+                                "\n\t" + mapping.get(oldEdge.getTarget()) +
+                                "\n\t" + (mapping.get(oldEdge.getTarget()) == mapping.get(oldEdge.getSource()))
+                );
+                throw new IllegalStateException("cannot do right now");
+            }
+
             copy.addEdgeStateful(mapping.get(oldEdge.getSource()), mapping.get(oldEdge.getTarget()), this.getWeight(oldEdge), oldEdge.getType());
         });
 
@@ -358,7 +369,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public void addEdgeStateful(Edge edge, Double weight) {
-        weights.put(edge, weight);
+        setEdgeWeight(edge, weight);
         switch (edge.getType()) {
             case FORWARD:
                 addEdge(edge, edge.getTarget(), forwardIncomingEdges);
@@ -401,6 +412,10 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public void setEdgeWeight(Edge edge, Double weight) {
+        if (null == weight) {
+            System.out.println(edge);
+            throw new IllegalStateException("trying to add edge with weight 'null'");
+        }
         weights.put(edge, weight);
     }
 
@@ -428,9 +443,27 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         assert null != incoming;
         assert null != outgoing;
 
+
         removeEdgeFromSet(edge, incoming.get(edge.getTarget()));
         removeEdgeFromSet(edge, outgoing.get(edge.getSource()));
+
+        /*removeEdgeFromSet(edge, forwardOutgoingEdges.get(edge.getSource()));
+        removeEdgeFromSet(edge, forwardIncomingEdges.get(edge.getSource()));
+        removeEdgeFromSet(edge, backwardOutgoingEdges.get(edge.getSource()));
+        removeEdgeFromSet(edge, backwardIncomingEdges.get(edge.getSource()));
+
+        removeEdgeFromSet(edge, forwardOutgoingEdges.get(edge.getTarget()));
+        removeEdgeFromSet(edge, forwardIncomingEdges.get(edge.getTarget()));
+        removeEdgeFromSet(edge, backwardOutgoingEdges.get(edge.getTarget()));
+        removeEdgeFromSet(edge, backwardIncomingEdges.get(edge.getTarget()));
+        */
+
         weights.remove(edge);
+
+        // just for debug
+        if (weights.containsKey(edge)) {
+            throw new IllegalStateException();
+        }
     }
 
     private static void removeEdgeFromSet(Edge edge, Set<Edge> set) {
@@ -463,13 +496,6 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         Results results = this.evaluateAndGetResults(input);
         return results.getComputedOutputs();
     }
-
-    // zatim implementace jen pro feedforward hrany
-  /*  private List<Double> evaluateOnDoubleInput(List<Double> input) {
-        Results results = this.evaluateAndGetResults(input);
-        return results.getComputedOutputs();
-    }
-*/
 
     public Results evaluateAndGetResults(List<Value> input) {
         assert input.size() == inputNodes.size();
@@ -535,6 +561,10 @@ public class NeuralNetworkImpl implements NeuralNetwork {
      */
     @Override
     public void insertIntermezzoNodeStateful(Node node, Node newOr) {
+        if (!getHiddenNodes().contains(node)) {
+            throw new IllegalStateException("Cannot split one node to two when the original is not presented in the network.");
+        }
+
         Long layerNumber = getLayerNumber(node) + 1;
         List<Node> parentLayer = getHiddenNodesInLayer(layerNumber);
         if (!parentLayer.isEmpty()) {
@@ -546,31 +576,41 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         }
         addNodeAtLayerStateful(newOr, layerNumber);
 
-        Set<Edge> edges = new HashSet(getOutgoingForwardEdges(node));
+        // do the same thing as the later code
+        /*Set<Edge> edges = new HashSet(getOutgoingForwardEdges(node));
         edges.stream().forEach(edge -> {
             Node successiveNode = edge.getTarget();
             addEdgeStateful(newOr, successiveNode, getWeight(edge), Type.FORWARD);
             removeEdgeStateful(edge);
+        });*/
+
+        getOutgoingForwardEdges(node).stream().forEach(edge -> {
+            Node successiveNode = edge.getTarget();
+            addEdgeStateful(newOr, successiveNode, getWeight(edge), edge.getType());
         });
+
+        Set<Edge> edges = new HashSet<>(getOutgoingEdges(node));
+        removeEdgesStateful(edges);
+
+    }
+
+    private void evaluateFeedforwardNode(Node node, Map<Node, Double> outputValues) {
+        Double sum = 0.0d;
+        if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
+            sum = forwardIncomingEdges.get(node).stream().filter(edge -> edge.getSource() != edge.getTarget())
+                    .mapToDouble(edge -> {
+                                if (null == outputValues.get(edge.getSource())) {
+                                    evaluateFeedforwardNode(edge.getSource(), outputValues);
+                                }
+                                return outputValues.get(edge.getSource()) * this.getWeight(edge);
+                            }
+                    ).sum();
+        }
+        outputValues.put(node, node.getValue(sum));
     }
 
     private void evaluateFeedforwardLayer(List<Node> nodes, Map<Node, Double> outputValues) {
-        //System.out.println("delam vrstvu");
-        nodes.forEach(node -> {
-            double sum = 0.0d;
-            if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
-                sum = forwardIncomingEdges.get(node).stream()
-                        .mapToDouble(edge ->
-                                {
-                                    //                          System.out.println("\t" + outputValues.get(edge.getSource()) + "\t" + this.getWeight(edge));
-                                    return outputValues.get(edge.getSource()) * this.getWeight(edge);
-                                }
-
-                        ).sum();
-            }
-            //System.out.println("\t" + node.getName() + "\t" + node.getValue(sum) + "\t" + sum);
-            outputValues.put(node, node.getValue(sum));
-        });
+        nodes.forEach(node -> evaluateFeedforwardNode(node, outputValues));
     }
 
     private static Set<Edge> selectEdges(Node node, Map<Node, Set<Edge>> map) {

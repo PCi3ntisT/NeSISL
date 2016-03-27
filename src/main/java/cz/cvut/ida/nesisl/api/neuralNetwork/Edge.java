@@ -25,12 +25,13 @@ public class Edge {
 
     /**
      * Creates modifiable edge.
+     *
      * @param source
      * @param target
      * @param type
      */
     public Edge(Node source, Node target, Type type) {
-        this(source,target,type,true);
+        this(source, target, type, true);
     }
 
     public Node getSource() {
@@ -45,12 +46,12 @@ public class Edge {
         return type;
     }
 
-    public Pair<Node,Node> getAsPair(){
-        return new Pair<Node,Node>(source,target);
+    public Pair<Node, Node> getAsPair() {
+        return new Pair<Node, Node>(source, target);
     }
 
-    public Pair<Node,Node> getAsOppositePair(){
-        return new Pair<Node,Node>(target,source);
+    public Pair<Node, Node> getAsOppositePair() {
+        return new Pair<Node, Node>(target, source);
     }
 
     @Override

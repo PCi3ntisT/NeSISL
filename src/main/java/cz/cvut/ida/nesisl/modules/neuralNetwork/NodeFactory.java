@@ -9,6 +9,7 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Id
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  */
 public class NodeFactory {
 
-    private static Long index = 0l;
+    private static final AtomicLong index = new AtomicLong();
 
     /**
      * Returns copy of given node.
@@ -43,11 +44,9 @@ public class NodeFactory {
 
     private static Node create(ActivationFunction function, Parameters parameters, String nodeName) {
         Node node;
-        synchronized (index) {
-            node = new NodeImpl(function, new Parameters(parameters), index);
-            node.setName(nodeName);
-            index++;
-        }
+        long count = index.incrementAndGet();
+        node = new NodeImpl(function, new Parameters(parameters), count);
+        node.setName(nodeName);
         return node;
     }
 

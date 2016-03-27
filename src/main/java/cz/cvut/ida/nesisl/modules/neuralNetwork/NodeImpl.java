@@ -22,15 +22,6 @@ public class NodeImpl implements Node {
         this.index = index;
     }
 
-    /*public NodeImpl(ActivationFunction function) {
-        this.function = function;
-    }
-
-    public NodeImpl(ActivationFunction function, Parameters parameters) {
-        this.function = function;
-        this.parameters = parameters;
-    }*/
-
     @Override
     public Double getValue(Value value) {
         return getValue(value.getValue());
@@ -38,6 +29,7 @@ public class NodeImpl implements Node {
 
     @Override
     public Double getValue(double x) {
+        assert null != (Double) x;
         return function.getValueAt(x, parameters);
     }
 

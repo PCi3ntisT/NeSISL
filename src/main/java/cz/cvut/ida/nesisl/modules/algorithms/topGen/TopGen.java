@@ -7,6 +7,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.*;
@@ -63,12 +64,17 @@ public class TopGen {
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
             updateNetwork(current);
 
+            System.out.println(current.getT() + "\t < \t" + tgSettings.getThreshold());
             if (current.getT() < tgSettings.getThreshold()) {
                 break;
             }
 
             List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(current.getK(), dataset, tgSettings, wls, current.getW(), kbannSetting);
             queue.addAll(successors);
+
+            Collections.sort(successors, comparator);
+            System.out.println("\t" + successors.get(0).getT());
+
 
             if (queue.size() > tgSettings.getLengthOfOpenList()) {
                 PriorityQueue<Triple<NeuralNetwork, Double, Double>> nextRound = new PriorityQueue<>(comparator);
@@ -101,14 +107,12 @@ public class TopGen {
 
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = computeValues(network, results, correctlyClassified);
 
+        // descending order
         Comparator<Triple<? extends Object, Long, Long>> comparator = (t1, t2) -> {
-            if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
-                return 0;
-            } else if (t1.getT() >= t2.getT()) {
-                return -1;
-            } else {
-                return 1;
+            if (t1.getT() == t2.getT()) {
+                return -Long.compare(t1.getW(), t2.getW());
             }
+            return -Long.compare(t1.getT(), t2.getT());
         };
         Collections.sort(generated, comparator);
         return generated;
@@ -118,10 +122,10 @@ public class TopGen {
         return network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    public static NeuralNetwork generateSuccesor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
+    public static NeuralNetwork generateSuccessor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset);
         Triple<Pair<Node, Boolean>, Long, Long> picked = generated.get(which);
-        return addNode(picked.getK().getLeft(), picked.getK().getRight(), network, kbannSettings,randomGenerator);
+        return addNode(picked.getK().getLeft(), picked.getK().getRight(), network, kbannSettings, randomGenerator);
     }
 
     private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
@@ -138,7 +142,7 @@ public class TopGen {
     private static NeuralNetwork addNode(Node node, Boolean isFalsePositive, NeuralNetwork network, KBANNSettings kbannSetting, RandomGenerator randomGenerator) {
         boolean isAndNode = isAndNode(node, network);
         if ((isAndNode && !isFalsePositive) || (!isAndNode && isFalsePositive)) {
-            return addAndNode(node, network, kbannSetting,randomGenerator);
+            return addAndNode(node, network, kbannSetting, randomGenerator);
         } else {
             return addOrNode(node, network, randomGenerator);
         }
@@ -191,6 +195,7 @@ public class TopGen {
         Tools.makeFullInterLayerForwardConnections(inputs, newNode, currentNetwork, randomGenerator);
 
         Node newOr = NodeFactory.create(Sigmoid.getFunction());
+
         currentNetwork.insertIntermezzoNodeStateful(currentParent, newOr);
 
         currentNetwork.addEdgeStateful(newNode, newOr, 1.0d, Edge.Type.FORWARD);
