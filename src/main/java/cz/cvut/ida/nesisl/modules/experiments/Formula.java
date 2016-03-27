@@ -39,14 +39,12 @@ public class Formula {
     }
 
     public int getWidth() {
-        if (isTerminal()) {
+        if(isTerminal() || isNegation() ){
             return 1;
         }
         if (canBeFlattened()) {
             return first.getWidth() + second.getWidth();
         }
-        // tady jeste ochranit negaci, pri ni vracet pouze jednicku
-        // mozna to s tou negaci nechat nakonec, jinak by se to muselo osetrovat na vice vrstvach
         return 2;
     }
 

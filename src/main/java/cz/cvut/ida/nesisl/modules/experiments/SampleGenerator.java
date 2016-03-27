@@ -44,7 +44,7 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\te\t|\tx");
         int numberOfLiterals = 5;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -52,7 +52,7 @@ public class SampleGenerator {
             Boolean e = input.get(4);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean m1 = !a && b;
@@ -63,7 +63,7 @@ public class SampleGenerator {
             Boolean q = p || n;
             Boolean x = (p && !n) || !m || q;
 
-            sb.append(booleanToZeroOne(x));
+            sb.append(ExperimentsTool.booleanToZeroOne(x));
             System.out.println(sb);
         });
     }
@@ -72,7 +72,7 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\te\t|\tx");
         int numberOfLiterals = 5;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -80,7 +80,7 @@ public class SampleGenerator {
             Boolean e = input.get(4);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean m1 = !a && b;
@@ -92,7 +92,7 @@ public class SampleGenerator {
             Boolean v = (p && !n) != !m;
             Boolean x = v != q;
 
-            sb.append(booleanToZeroOne(x));
+            sb.append(ExperimentsTool.booleanToZeroOne(x));
             System.out.println(sb);
         });
     }
@@ -101,16 +101,16 @@ public class SampleGenerator {
         System.out.println("a\tb\t|\tx\ty");
         int numberOfLiterals = 2;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            input.forEach(bo -> sb.append(ExperimentsTool.booleanToZeroOne(bo)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(a && b)).append("\t");
-            sb.append(booleanToZeroOne(!(a && b)));
+            sb.append(ExperimentsTool.booleanToZeroOne(a && b)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(!(a && b)));
 
             System.out.println(sb);
         });
@@ -120,15 +120,15 @@ public class SampleGenerator {
         System.out.println("a\tb\t|\tx");
         int numberOfLiterals = 2;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            input.forEach(bo -> sb.append(ExperimentsTool.booleanToZeroOne(bo)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(a && b));
+            sb.append(ExperimentsTool.booleanToZeroOne(a && b));
             System.out.println(sb);
         });
     }
@@ -137,17 +137,17 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\t|\tx\ty");
         int numberOfLIterals = 3;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLIterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            input.forEach(bo -> sb.append(ExperimentsTool.booleanToZeroOne(bo)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(a && b && c)).append("\t");
-            sb.append(booleanToZeroOne(!a && !b && !c));
+            sb.append(ExperimentsTool.booleanToZeroOne(a && b && c)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(!a && !b && !c));
             System.out.println(sb);
         });
     }
@@ -156,20 +156,20 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\t|\tx\ty\tz");
         int numberOfLIterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLIterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
             Boolean d = input.get(3);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bo -> sb.append(booleanToZeroOne(bo)).append("\t"));
+            input.forEach(bo -> sb.append(ExperimentsTool.booleanToZeroOne(bo)).append("\t"));
             sb.append("|\t");
 
 
-            sb.append(booleanToZeroOne((a && b && c && d))).append("\t");
-            sb.append(booleanToZeroOne((a && b) || (c && d))).append("\t");
-            sb.append(booleanToZeroOne(!a && !b));
+            sb.append(ExperimentsTool.booleanToZeroOne((a && b && c && d))).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne((a && b) || (c && d))).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(!a && !b));
             System.out.println(sb);
         });
     }
@@ -178,14 +178,14 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\t|\tx");
         int numberOfLIterals = 3;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLIterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLIterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            input.forEach(b -> sb.append(ExperimentsTool.booleanToZeroOne(b)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -194,14 +194,14 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\t|\tx");
         int numberOfLiterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            input.forEach(b -> sb.append(ExperimentsTool.booleanToZeroOne(b)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -210,15 +210,15 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\t|\tx\ty");
         int numberOfLiterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            input.forEach(b -> sb.append(ExperimentsTool.booleanToZeroOne(b)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(output)).append("\t");
-            sb.append(booleanToZeroOne(!output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(!output));
             System.out.println(sb);
         });
     }
@@ -227,18 +227,18 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\t|\tx");
         int numberOfLiterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
             Boolean d = input.get(3);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean output = (!a && !b && !c && !d) || (b && a && d && c);
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -247,7 +247,7 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\te\t|\tx");
         int numberOfLiterals = 5;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -255,14 +255,14 @@ public class SampleGenerator {
             Boolean e = input.get(4);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean v1 = a && !b;
             Boolean v2 = !c && b;
             Boolean w = !(v1 || v2) || d;
             Boolean output = !(w && a) || e;
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -271,7 +271,7 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\te\t|\tx\ty");
         int numberOfLiterals = 5;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -279,13 +279,13 @@ public class SampleGenerator {
             Boolean e = input.get(4);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean x = (a && e && c);
             Boolean y = (!b && !d);
-            sb.append(booleanToZeroOne(x)).append("\t");
-            sb.append(booleanToZeroOne(y));
+            sb.append(ExperimentsTool.booleanToZeroOne(x)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(y));
             System.out.println(sb);
         });
     }
@@ -294,7 +294,7 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\te\t|\tx\ty\tz");
         int numberOfLiterals = 5;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
@@ -302,15 +302,15 @@ public class SampleGenerator {
             Boolean e = input.get(4);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean x = (a && e && c);
             Boolean y = (!b && !d);
             Boolean z = !(b && d) || (c && a);
-            sb.append(booleanToZeroOne(x)).append("\t");
-            sb.append(booleanToZeroOne(y)).append("\t");
-            sb.append(booleanToZeroOne(z));
+            sb.append(ExperimentsTool.booleanToZeroOne(x)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(y)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(z));
             System.out.println(sb);
         });
     }
@@ -319,18 +319,18 @@ public class SampleGenerator {
         System.out.println("a\tb\tc\td\t|\tx");
         int numberOfLiterals = 4;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean a = input.get(0);
             Boolean b = input.get(1);
             Boolean c = input.get(2);
             Boolean d = input.get(3);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(bol -> sb.append(booleanToZeroOne(bol)).append("\t"));
+            input.forEach(bol -> sb.append(ExperimentsTool.booleanToZeroOne(bol)).append("\t"));
             sb.append("|\t");
 
             Boolean output = (a && !b && c) || (b && !a && !d);
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -339,14 +339,14 @@ public class SampleGenerator {
         System.out.println("a\tb\t|\tx");
         int numberOfLiterals = 2;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            input.forEach(b -> sb.append(ExperimentsTool.booleanToZeroOne(b)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output));
             System.out.println(sb);
         });
     }
@@ -355,48 +355,20 @@ public class SampleGenerator {
         System.out.println("a\tb\t|\tx\ty");
         int numberOfLiterals = 2;
         LongStream.range(0, numberOfSamples).forEach(i -> {
-            List<Boolean> input = longBitToBooleanList(i, numberOfLiterals);
+            List<Boolean> input = ExperimentsTool.longBitToBooleanList(i, numberOfLiterals);
             Boolean output = generateXor(input);
 
             StringBuilder sb = new StringBuilder();
-            input.forEach(b -> sb.append(booleanToZeroOne(b)).append("\t"));
+            input.forEach(b -> sb.append(ExperimentsTool.booleanToZeroOne(b)).append("\t"));
             sb.append("|\t");
 
-            sb.append(booleanToZeroOne(output)).append("\t");
-            sb.append(booleanToZeroOne(!output));
+            sb.append(ExperimentsTool.booleanToZeroOne(output)).append("\t");
+            sb.append(ExperimentsTool.booleanToZeroOne(!output));
             System.out.println(sb);
         });
     }
 
-    public static List<Boolean> intBitToBooleanList(int number, int numberOfLiterals) {
-        List<Boolean> list = new ArrayList<>();
-        for (int iter = 0; iter < numberOfLiterals; iter++) {
-            Boolean val = false;
-            if (1 == (number % 2)) {
-                val = true;
-            }
-            list.add(val);
-            number = number / 2;
-        }
-        return list;
-    }
 
-    public static List<Boolean> longBitToBooleanList(long number, int numberOfLiterals) {
-        List<Boolean> list = new ArrayList<>();
-        for (int iter = 0; iter < numberOfLiterals; iter++) {
-            Boolean val = false;
-            if (1 == (number % 2)) {
-                val = true;
-            }
-            list.add(val);
-            number = number / 2;
-        }
-        return list;
-    }
-
-    public static String booleanToZeroOne(Boolean bool) {
-        return bool ? "1" : "0";
-    }
 
     private Boolean generateXor(List<Boolean> input) {
         return 1 == input.stream().filter(b -> b).count();

@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Created by EL on 25.3.2016.
  */
-public class PropositionalFormmulaeGenerator {
+public class PropositionalFormulaeGenerator {
 
     private final int numberOfAtoms;
     private final int maximalNumberOfFormulasInFormula;
@@ -32,12 +32,12 @@ public class PropositionalFormmulaeGenerator {
         l.add(Operator.OR);
         l.add(Operator.XOR);
         //l.add(Operator.IMPLICATION);
-        PropositionalFormmulaeGenerator prop = new PropositionalFormmulaeGenerator(4, 4, 4, l);
+        PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(4, 4, 4, l);
         File target = new File("." + File.separator + "experiments" + File.separator + "artificial");
         prop.generateAndStoreToFolder(target, 600, 0.2);
     }
 
-    public PropositionalFormmulaeGenerator(int numberOfAtoms, int maximalNumberOfFormulasInFormula, int maximalDepth, List<Operator> operators) {
+    public PropositionalFormulaeGenerator(int numberOfAtoms, int maximalNumberOfFormulasInFormula, int maximalDepth, List<Operator> operators) {
         this.numberOfAtoms = numberOfAtoms;
         this.maximalNumberOfFormulasInFormula = maximalNumberOfFormulasInFormula;
         this.maximalDepth = maximalDepth;
@@ -151,7 +151,7 @@ public class PropositionalFormmulaeGenerator {
     }
 
     private Pair<List<Boolean>, List<Value>> generateInput(int idx) {
-        List<Boolean> list = SampleGenerator.intBitToBooleanList(idx, numberOfAtoms);
+        List<Boolean> list = ExperimentsTool.intBitToBooleanList(idx, numberOfAtoms);
         List<Value> values = list.stream().map(i -> new Value(i ? 1.0 : 0.0)).collect(Collectors.toCollection(ArrayList::new));
         return new Pair<>(list, values);
     }
@@ -207,13 +207,6 @@ public class PropositionalFormmulaeGenerator {
 
     private boolean canGenerateXor(Formula first, Formula second) {
         int maxDepth = Math.max(first.getDepth(), second.getDepth());
-        boolean sameOperator = (first.getOperator() == Operator.XOR && second.getOperator() == Operator.XOR) ||
-                (first.isTerminal() && second.getOperator() == Operator.XOR) ||
-                (second.isTerminal() && first.getOperator() == Operator.XOR);
-
-        if (sameOperator) {
-            return first.getWidth() + second.getWidth() <= maximalNumberOfFormulasInFormula;
-        }
         return maxDepth < maximalDepth;
     }
 
