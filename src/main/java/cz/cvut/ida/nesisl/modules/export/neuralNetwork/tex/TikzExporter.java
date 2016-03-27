@@ -30,12 +30,16 @@ public class TikzExporter {
 
 
     public static TexFile export(NeuralNetwork network) {
+        return new TexFile(exportToString(network));
+    }
+
+    public static String exportToString(NeuralNetwork network) {
         initDescriptions();
         StringBuilder mainSB = new StringBuilder();
         mainSB.append(documentTexHead());
         mainSB.append(convertToTikz(network));
         mainSB.append(documentTexTail());
-        return new TexFile(mainSB.toString());
+        return mainSB.toString();
     }
 
     private static void initDescriptions() {
