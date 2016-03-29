@@ -14,12 +14,12 @@ public class RegentSetting {
     private final Integer numberOfMutationOfCrossovers;
     private final  KBANNSettings KBANNSetting;
     private final Double probabilityOfNodeDeletion;
-    private final Long maxFitness;
+    private final Long maxAllowedFitness;
     private final Integer numberOfCrossoverChildren;
     private final Integer numberOfElites;
     private Long computedFitness = 0l;
 
-    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxFitness, Integer numberOfCrossoverChildren, Integer numberOfElites) {
+    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites) {
         this.tournamentSize = tournamentSize;
         this.populationSize = populationSize;
         this.topGenSettings = topGenSettings;
@@ -27,7 +27,7 @@ public class RegentSetting {
         this.numberOfMutationOfCrossovers = numberOfMutationOfCrossovers;
         this.KBANNSetting = KBANNSetting;
         this.probabilityOfNodeDeletion = probabilityOfNodeDeletion;
-        this.maxFitness = maxFitness;
+        this.maxAllowedFitness = maxAllowedFitness;
         this.numberOfCrossoverChildren = numberOfCrossoverChildren;
         this.numberOfElites = numberOfElites;
     }
@@ -53,8 +53,8 @@ public class RegentSetting {
                 '}';
     }
 
-    public Long getMaxFitness() {
-        return maxFitness;
+    public Long getMaxAllowedFitness() {
+        return maxAllowedFitness;
     }
 
     public Long computedFitness() {

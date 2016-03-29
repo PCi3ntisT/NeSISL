@@ -323,19 +323,21 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         if (null == layerNumber) {
             throw new IllegalStateException("This node probably does not belong to this network.");
         }
+        network.get(layerNumber).remove(node);
         hiddenNodeLayer.remove(node);
-        removeEdgesStateful(forwardIncomingEdges.get(node));
-        removeEdgesStateful(forwardOutgoingEdges.get(node));
-        removeEdgesStateful(backwardIncomingEdges.get(node));
-        removeEdgesStateful(backwardOutgoingEdges.get(node));
+        removeEdgesStateful(new HashSet<>(getOutgoingForwardEdges(node)));
+        removeEdgesStateful(new HashSet<>(getIncomingForwardEdges(node)));
+        removeEdgesStateful(new HashSet<>(getIncomingBackwardEdges(node)));
+        removeEdgesStateful(new HashSet<>(getOutgoingBackwardEdges(node)));
         numberOfHiddenNodes--;
     }
 
     @Override
     public NeuralNetwork removeHiddenNode(Node node) {
-        NeuralNetwork network = this.getCopy();
-        network.removeHiddenNodeStateful(node);
-        return network;
+        Pair<NeuralNetwork, Map<Node, Node>> copyWithMapping = this.getCopyWithMapping();
+        NeuralNetwork result = copyWithMapping.getLeft();
+        result.removeHiddenNodeStateful(copyWithMapping.getRight().get(node));
+        return result;
     }
 
     @Override

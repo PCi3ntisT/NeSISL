@@ -123,9 +123,10 @@ public class TopGen {
     }
 
     public static NeuralNetwork generateSuccessor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
-        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset);
+        NeuralNetwork currentNetwork = network.getCopy();
+        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(currentNetwork, dataset);
         Triple<Pair<Node, Boolean>, Long, Long> picked = generated.get(which);
-        return addNode(picked.getK().getLeft(), picked.getK().getRight(), network, kbannSettings, randomGenerator);
+        return addNode(picked.getK().getLeft(), picked.getK().getRight(), currentNetwork, kbannSettings, randomGenerator);
     }
 
     private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
@@ -148,7 +149,7 @@ public class TopGen {
         }
     }
 
-    private static boolean isAndNode(Node node, NeuralNetwork network) {
+    public static boolean isAndNode(Node node, NeuralNetwork network) {
         Node bias = network.getBias();
         final NeuralNetwork finalNetwork = network;
         Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
