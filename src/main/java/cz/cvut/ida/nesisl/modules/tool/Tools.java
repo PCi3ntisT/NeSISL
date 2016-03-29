@@ -132,6 +132,7 @@ public class Tools {
     }
 
     public static Map<Sample, Results> evaluateAllAndGetResults(Dataset dataset, NeuralNetwork network) {
+        //return dataset.getTrainData(network).parallelStream().collect(Collectors.toMap(sample -> sample, sample -> network.evaluateAndGetResults(sample.getInput())));
         Map<Sample, Results> map = new HashMap<>();
         dataset.getTrainData(network).forEach(sample -> {
             Results result = network.evaluateAndGetResults(sample.getInput());

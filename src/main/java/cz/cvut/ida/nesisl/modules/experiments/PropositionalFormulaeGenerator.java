@@ -5,12 +5,14 @@ import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.SampleImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -100,7 +102,7 @@ public class PropositionalFormulaeGenerator {
     }
 
     private Boolean filterFormula(List<Sample> samples, double minimalTresholdForEachClass) {
-        Predicate<? super Sample> predicate = (sample) -> Math.abs(sample.getOutput().get(0).getValue() - 1.0) < 0.00001;
+        Predicate<? super Sample> predicate = (sample) -> Tools.isZero(sample.getOutput().get(0).getValue() - 1.0);
         long numberOfPositives = samples.parallelStream().filter(predicate).count();
         double ration = numberOfPositives / (double) samples.size();
         return ration >= minimalTresholdForEachClass && ration <= (1 - minimalTresholdForEachClass);
@@ -138,8 +140,7 @@ public class PropositionalFormulaeGenerator {
         List<Pair<List<Boolean>, List<Value>>> inputs = IntStream.range(0, (int) Math.pow(2, numberOfAtoms)).mapToObj(idx -> generateInput(idx)).collect(Collectors.toCollection(ArrayList::new));
         Stream<Pair<Formula, List<Sample>>> stream = formulae.parallelStream().map(formula ->
                         new Pair<Formula, List<Sample>>(formula,
-                                inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new)))
-        );
+                                inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new))));
         return stream.collect(Collectors.toCollection(ArrayList::new));
     }
 

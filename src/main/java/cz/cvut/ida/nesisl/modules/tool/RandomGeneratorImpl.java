@@ -32,12 +32,12 @@ public class RandomGeneratorImpl implements RandomGenerator {
 
     @Override
     public Integer nextIntegerFromRange(int start, int end) {
-        return generator.nextInt() % (end - start) + start;
+        return Math.abs(generator.nextInt()) % (end - start) + start;
     }
 
     @Override
     public Long nextLongFromRange(long start, long end) {
-        return generator.nextLong() % (end - start) + start;
+        return Math.abs(generator.nextLong()) % (end - start) + start;
     }
 
     @Override

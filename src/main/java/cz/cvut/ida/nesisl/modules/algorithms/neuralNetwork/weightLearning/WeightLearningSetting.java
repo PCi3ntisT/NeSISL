@@ -131,14 +131,14 @@ public class WeightLearningSetting {
 
     public Double getMaxAlpha() {
         if (null == alpha) {
-            System.out.println("Be aware that 'alpha' contains null value.");
+            //System.out.println("Be aware that 'alpha' contains null value.");
         }
         return alpha;
     }
 
     public Double getQuickpropEpsilon() {
         if (null == quickpropEpsilon) {
-            System.out.println("Be aware that 'quickpropEpsilon' contains null value.");
+            //System.out.println("Be aware that 'quickpropEpsilon' contains null value.");
         }
         return quickpropEpsilon;
     }

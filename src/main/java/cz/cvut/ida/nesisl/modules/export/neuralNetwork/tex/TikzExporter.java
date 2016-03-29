@@ -34,7 +34,6 @@ public class TikzExporter {
     }
 
     public static String exportToString(NeuralNetwork network) {
-        initDescriptions();
         StringBuilder mainSB = new StringBuilder();
         mainSB.append(documentTexHead());
         mainSB.append(convertToTikz(network));
@@ -43,23 +42,26 @@ public class TikzExporter {
     }
 
     private static void initDescriptions() {
-        nodesDescriptions.put(Identity.getFunction().getName(), "\\tikzstyle{" + Identity.getFunction().getName() + "}=[neuron, fill=green!50];");
-        nodesDescriptions.put(Sigmoid.getFunction().getName(), "\\tikzstyle{" + Sigmoid.getFunction().getName() + "}=[neuron, fill=red!50];");
-        nodesDescriptions.put(ConstantOne.getFunction().getName(), "\\tikzstyle{" + ConstantOne.getFunction().getName() + "}=[neuron, fill=white!50];");
+        synchronized (nodesDescriptions) {
+            nodesDescriptions.put(Identity.getFunction().getName(), "\\tikzstyle{" + Identity.getFunction().getName() + "}=[neuron, fill=green!50];");
+            nodesDescriptions.put(Sigmoid.getFunction().getName(), "\\tikzstyle{" + Sigmoid.getFunction().getName() + "}=[neuron, fill=red!50];");
+            nodesDescriptions.put(ConstantOne.getFunction().getName(), "\\tikzstyle{" + ConstantOne.getFunction().getName() + "}=[neuron, fill=white!50];");
+        }
     }
 
-    private static String convertToTikz(NeuralNetwork network) {
+    public static String convertToTikz(NeuralNetwork network) {
+        initDescriptions();
         StringBuilder sb = new StringBuilder();
         sb.append("\\begin{tikzpicture}[shorten >=1pt,->,draw=black!,node distance=" + LAYER_DISTANCE + "]\n" // 50, node distance=\layersep
                 + "\\tikzstyle{neuron}=[circle,fill=black!25,minimum size=17pt,inner sep=0pt]\n");
         sb.append(nodesDescription(network));
-        sb.append(networStructure(network));
+        sb.append(networkStructure(network));
         sb.append(edgesPart(network));
         sb.append("\\end{tikzpicture}\n");
         return sb.toString();
     }
 
-    private static String networStructure(NeuralNetwork network) {
+    private static String networkStructure(NeuralNetwork network) {
         StringBuilder sb = new StringBuilder();
 
         Node layerLeader = null;
@@ -76,7 +78,7 @@ public class TikzExporter {
             } else {
                 position = ",below of=" + nodeMark(previous);
             }
-            sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + mark + "};\n");
+            sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + nodeText(node) + "};\n");
             previous = node;
         }
 
@@ -90,7 +92,7 @@ public class TikzExporter {
                 } else {
                     position = ",below of=" + nodeMark(previous);
                 }
-                sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + mark + "};\n");
+                sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + nodeText(node) + "};\n");
                 previous = node;
             }
         }
@@ -104,7 +106,7 @@ public class TikzExporter {
             } else {
                 position = ",below of=" + nodeMark(previous);
             }
-            sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + mark + "};\n");
+            sb.append("\\node [" + node.getActivationFunction().getName() + "" + position + "] (" + mark + ") {" + nodeText(node) + "};\n");
             previous = node;
         }
 
@@ -141,11 +143,18 @@ public class TikzExporter {
         return "(" + nodeMark(edge.getSource()) + ") edge node {" + new DecimalFormat("#.##").format(weight) + "} (" + nodeMark(edge.getTarget()) + ")\n";
     }
 
-    private static String nodeMark(Node node) {
+    private static String nodeText(Node node) {
         if (null == node.getName() || node.getName().equals("")) {
             return "n" + node.getIndex();
         }
         return node.getName();
+    }
+
+    private static String nodeMark(Node node) {
+        if (null == node.getName() || node.getName().equals("")) {
+            return "n" + node.getIndex();
+        }
+        return node.getName()+node.getIndex();
     }
 
     private static String documentTexHead() {

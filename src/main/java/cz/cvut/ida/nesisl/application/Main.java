@@ -86,22 +86,28 @@ public class Main {
     }
 
     private void runREGENT(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "TopGen";
+        String algName = "REGENT";
         File file = new File(arg[4]);
         Double omega = 4.0;
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
         Double treshold = 0.0000002;
-        Long lengthOfOpenList = 4l;
-        Long numberOfSuccessors = 2l;
+        Long lengthOfOpenList = 2l;
+        Long numberOfSuccessors = 1l;
 
         TopGenSettings tgSetting = new TopGenSettings(treshold, numberOfSuccessors, lengthOfOpenList);
 
-        long populationSize = 3;
-        long tournamentSize = 2;
-        RegentSetting regentSetting = new RegentSetting(tournamentSize, populationSize, tgSetting);
-
+        long populationSize = 4;
+        long tournamentSize = 1;
+        Integer numberOfMutationOfPopulation = 1;
+        Integer numberOfMutationOfCrossovers = 1;
         KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, omega);
+        Double probabilityOfNodeDeletion = 0.4;
+        Long maxFitness = 1000l;
+        Integer numberOfCrossoverChildren = 1;
+        Integer numberOfElites = 1;
+        RegentSetting regentSetting = new RegentSetting(tournamentSize, populationSize, tgSetting, numberOfMutationOfPopulation, numberOfMutationOfCrossovers, kbannSetting, probabilityOfNodeDeletion, maxFitness, numberOfCrossoverChildren, numberOfElites);
+
 
         // nedodelana funkcionalita setting pro KBANN algoritmus (omega) a dalsich pravidel, ktere se mohou vkladat do site (specific) (ty jsou totiz delany expertem)
         Dataset dataset = DatasetImpl.parseDataset(datasetFile);
@@ -111,6 +117,7 @@ public class Main {
             Regent regent = Regent.create(file, specific, randomGenerator, omega);
 
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
+            System.out.println(regent.getNeuralNetwork());
             currentResult.setInitNetwork(regent.getNeuralNetwork().getCopy());
 
 
@@ -135,9 +142,9 @@ public class Main {
         Double omega = 4.0;
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
-        Double treshold = 0.0000002;
-        Long lengthOfOpenList = 4l;
-        Long numberOfSuccessors = 2l;
+        Double treshold = 0.0001;
+        Long lengthOfOpenList = 100l;
+        Long numberOfSuccessors = 10l;
 
         TopGenSettings tgSetting = new TopGenSettings(treshold, numberOfSuccessors, lengthOfOpenList);
 
@@ -148,21 +155,26 @@ public class Main {
 
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
+        //List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).mapToObj(idx -> {
+            System.out.println("starting topget\t" + idx);
             TopGen topgen = TopGen.create(file, specific, randomGenerator, omega);
 
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
             currentResult.setInitNetwork(topgen.getNeuralNetwork().getCopy());
 
-
             long start = System.nanoTime();
             topgen.learn(dataset, wls, tgSetting, kbannSetting);
             long end = System.nanoTime();
 
+            System.out.println("from\t" + idx);
             Tools.printEvaluation(topgen.getNeuralNetwork(), dataset);
+            System.out.println("to\t" + idx);
 
             currentResult.setRunningTime(end - start);
             currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(topgen.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(topgen.getNeuralNetwork().getCopy());
+
+            System.out.println("ending topget\t" + idx);
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
@@ -179,7 +191,7 @@ public class Main {
         NeuralNetwork network = StructuralLearningWithSelectiveForgetting.createInitNetwork(new File(arg[4]), dataset, randomGenerator);
 
         double penaltyEpsilon = 0.0001;
-        double treshold = 0.0;//0.1;
+        double treshold = 0.1;//0.1;
         SLFSetting slfSetting = new SLFSetting(penaltyEpsilon, treshold);
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
@@ -233,7 +245,7 @@ public class Main {
         long timeWindow = 5l;
         double cm = 0.01;
         double ca = 0.001;
-        long hiddenNodesLimit = 50;
+        long hiddenNodesLimit = 70;
         DNCSetting dncSetting = new DNCSetting(deltaT, timeWindow, cm, ca, hiddenNodesLimit);
 
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
@@ -263,9 +275,7 @@ public class Main {
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
 
         // udelat parser na to
-        int poolSize = 2;
-        long hiddenNodesLimit = 50;
-        CasCorSetting ccSetting = new CasCorSetting(poolSize, hiddenNodesLimit);
+        CasCorSetting ccSetting = new CasCorSetting(wls.getSizeOfCasCorPool(), wls.getMaximumNumberOfHiddenNodes());
 
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);

@@ -42,8 +42,8 @@ public class Backpropagation {
         while (iteration < wls.getEpochLimit()) { // eps > wls.getEpsilonDifference() // or other stopping criterion
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
-                Map<Edge,Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
-                previousDeltas.put(sample,currentDeltas);
+                Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
+                previousDeltas.put(sample, currentDeltas);
             }
             double currentError = Tools.computeSuqaredTotalError(network, dataset, wls);
             eps = Math.abs(error - currentError);
@@ -57,8 +57,13 @@ public class Backpropagation {
         Map<Edge, Double> inner = new HashMap<>();
         network.getWeights().keySet().stream().forEach(edge -> inner.put(edge, 0.0d));
 
+        long c = network.getWeights().keySet().stream().filter(edge -> network.getWeight(edge) == null).count();
+        if(c > 0){
+            throw new IllegalStateException();
+        }
+
         Map<Sample, Map<Edge, Double>> result = new HashMap<>();
-        dataset.getTrainData(network).forEach(sample -> result.put(sample,new HashMap<>(inner)));
+        dataset.getTrainData(network).forEach(sample -> result.put(sample, new HashMap<>(inner)));
 
         return result;
     }
@@ -84,8 +89,14 @@ public class Backpropagation {
             }
             nodeLayer.forEach(node ->
                             network.getIncomingForwardEdges(node).stream().filter(Edge::isModifiable).forEach(edge -> {
+                                double previousDelta = 0.0d;
+                                if (previousDeltas.containsKey(edge)) {
+                                    previousDelta = previousDeltas.get(edge);
+                                }
+
                                 Double value = wls.getLearningRate() * sigma.get(node) * results.getComputedValues().get(edge.getSource())
-                                        + wls.getMomentumAlpha() * previousDeltas.get(edge);
+                                        + wls.getMomentumAlpha() * previousDelta;
+
                                 deltas.put(edge, value);
                             })
             );
