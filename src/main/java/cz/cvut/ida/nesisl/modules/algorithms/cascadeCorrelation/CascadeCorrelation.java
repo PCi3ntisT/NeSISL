@@ -51,7 +51,7 @@ public class CascadeCorrelation {
         return network;
     }
 
-    public void learn(Dataset dataset, WeightLearningSetting wls, CasCorSetting casCorSetting) {
+    public void learn(Dataset dataset, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
 
         long numberOfAddedNodes = 0;
         double epochDifference = Double.MAX_VALUE;
@@ -64,12 +64,12 @@ public class CascadeCorrelation {
             epochDifference = Math.abs(error - currentError);
             error = currentError;
 
-            if (numberOfAddedNodes > casCorSetting.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonDifference()) {
+            if (numberOfAddedNodes > cascadeCorrelationSetting.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonDifference()) {
                 break;
             }
 
             // pridani dalsiho uzlu
-            CandidateWrapper bestCandidate = IntStream.range(0, casCorSetting.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls))
+            CandidateWrapper bestCandidate = IntStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls))
                     .max(CandidateWrapper::compare).get();
 
             this.network.addNodeAtLayerStateful(bestCandidate.getNode(), this.network.getMaximalNumberOfHiddenLayer() + 1);

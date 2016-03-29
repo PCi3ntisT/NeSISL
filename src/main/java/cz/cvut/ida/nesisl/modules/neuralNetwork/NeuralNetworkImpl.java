@@ -43,11 +43,15 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private Classifier classifier;
 
     public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor) {
-        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor,null);
+        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, null);
     }
 
     public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
         this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, classifier);
+    }
+
+    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor) {
+        this(inputNodes,  outputNodes, missingValuesProcessor, null);
     }
 
     public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
