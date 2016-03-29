@@ -24,7 +24,6 @@
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/xor2Reversed/SLFinput.txt" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/xor4/SLFinput.txt" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/xor4Reversed/SLFinput.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/cz/cvut/ida/nesisl/modules/algorithms/tresholdClassificator/ThresholdClassificator.java" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/allOrNothing/data.txt" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/and2/data.txt" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiments/logic/and2Reversed/data.txt" />
@@ -2291,7 +2290,13 @@
       <option name="project" value="LOCAL" />
       <updated>1459266743203</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="threshold classificator">
+      <created>1459288730373</created>
+      <option name="number" value="00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1459288730373</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
@@ -2357,7 +2362,8 @@
     <MESSAGE value="TopGen changes" />
     <MESSAGE value="REGENT fixes" />
     <MESSAGE value="minor fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="minor fixes" />
+    <MESSAGE value="threshold classificator" />
+    <option name="LAST_COMMIT_MESSAGE" value="threshold classificator" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
