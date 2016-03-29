@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.neuralNetwork;
 
+import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge.Type;
@@ -39,15 +40,20 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private Node bias;
     private final List<Fact> outputFactOrder;
     private final List<Fact> inputFactOrder;
+    private Classifier classifier;
 
     public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor) {
-        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor);
+        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor,null);
     }
 
-    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor) {
+    public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
+        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, classifier);
+    }
+
+    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
         this(inputNodes, outputNodes, new HashMap<>(), new HashMap<>(),
                 new HashMap<>(), new HashMap<>(),
-                new HashMap<>(), new HashMap<>(), missingValuesProcessor);
+                new HashMap<>(), new HashMap<>(), missingValuesProcessor, classifier);
     }
 
     public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes,
@@ -55,7 +61,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                              Map<Node, Set<Edge>> forwardIncomingEdges,
                              Map<Node, Set<Edge>> forwardOutgoingEdges,
                              Map<Node, Set<Edge>> backwardIncomingEdges,
-                             Map<Node, Set<Edge>> backwardOutgoingEdges, MissingValues missingValuesProcessor) {
+                             Map<Node, Set<Edge>> backwardOutgoingEdges, MissingValues missingValuesProcessor, Classifier classifier) {
         this.inputNodes = new ArrayList<>(inputNodes);
         this.outputNodes = new ArrayList<>(outputNodes);
         this.network = network;
@@ -72,11 +78,12 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                 list.forEach(node -> this.updateHiddenNodeLayerIndex(node, entry.getKey()));
             }
         });
-        this.missingValuesProcessor = missingValuesProcessor;
 
         this.inputFactOrder = Collections.unmodifiableList(Tools.nodeListToFactList(inputNodes));
         this.outputFactOrder = Collections.unmodifiableList(Tools.nodeListToFactList(outputNodes));
 
+        this.missingValuesProcessor = missingValuesProcessor;
+        this.classifier = classifier;
     }
 
 
@@ -249,7 +256,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         Map<Node, Node> mapping = new HashMap<>();
         Pair<List<Node>, Map<Node, Node>> newInputs = Tools.copyNodes(inputNodes);
         Pair<List<Node>, Map<Node, Node>> newOutputs = Tools.copyNodes(outputNodes);
-        NeuralNetwork copy = new NeuralNetworkImpl(newInputs.getLeft(), newOutputs.getLeft(), this.missingValuesProcessor);
+        NeuralNetwork copy = new NeuralNetworkImpl(newInputs.getLeft(), newOutputs.getLeft(), this.missingValuesProcessor, classifier);
         mapping.putAll(newInputs.getRight());
         mapping.putAll(newOutputs.getRight());
 
@@ -313,7 +320,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                 newForwardIncomingEdges,
                 newForwardOutgoingEdges,
                 newBackwardIncomingEdges,
-                newBackwardOutgoingEdges, this.missingValuesProcessor);
+                newBackwardOutgoingEdges, this.missingValuesProcessor, classifier);
         return copy;
     }
 
@@ -594,6 +601,23 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         Set<Edge> edges = new HashSet<>(getOutgoingEdges(node));
         removeEdgesStateful(edges);
 
+    }
+
+    @Override
+    public NeuralNetwork setClassifier(Classifier classifier) {
+        NeuralNetwork copy = this.getCopy();
+        copy.setClassifierStateful(classifier);
+        return copy;
+    }
+
+    @Override
+    public void setClassifierStateful(Classifier classifier) {
+        this.classifier = classifier;
+    }
+
+    @Override
+    public Classifier getClassifier() {
+        return classifier;
     }
 
     private void evaluateFeedforwardNode(Node node, Map<Node, Double> outputValues) {

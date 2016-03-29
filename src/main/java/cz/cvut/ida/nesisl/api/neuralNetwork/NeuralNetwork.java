@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.api.neuralNetwork;
 
+import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
@@ -79,4 +80,10 @@ public interface NeuralNetwork {
     public List<Fact> getOutputFactOrder();
 
     public void insertIntermezzoNodeStateful(Node currentParent, Node newOr);
+
+    public NeuralNetwork setClassifier(Classifier classifier);
+    public void setClassifierStateful(Classifier classifier);
+
+    public Classifier getClassifier();
+
 }
