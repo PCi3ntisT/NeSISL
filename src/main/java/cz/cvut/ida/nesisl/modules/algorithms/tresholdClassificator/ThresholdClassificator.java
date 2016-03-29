@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator;
 
+import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
@@ -16,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by EL on 29.3.2016.
  */
-public class ThresholdClassificator {
+public class ThresholdClassificator implements Classifier {
 
     private final Double treshold;
 
@@ -32,15 +33,15 @@ public class ThresholdClassificator {
         return classify(value.getValue());
     }
 
-    private Boolean classify(Double value) {
+    public Boolean classify(Double value) {
         return value > treshold;
     }
 
-    private Double classifyToDouble(Value value) {
+    public Double classifyToDouble(Value value) {
         return classifyToDouble(value.getValue());
     }
 
-    private Double classifyToDouble(Double value) {
+    public Double classifyToDouble(Double value) {
         return classify(value) ? 1.0d : 0.0d;
     }
 
