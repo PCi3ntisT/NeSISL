@@ -131,14 +131,23 @@ public class Tools {
         weights.entrySet().forEach(entry -> network.setEdgeWeight(entry.getKey(), entry.getValue()));
     }
 
-    public static Map<Sample, Results> evaluateAllAndGetResults(Dataset dataset, NeuralNetwork network) {
+    public static Map<Sample, Results> evaluateOnTestAllAndGetResults(Dataset dataset, NeuralNetwork network) {
         //return dataset.getTrainData(network).parallelStream().collect(Collectors.toMap(sample -> sample, sample -> network.evaluateAndGetResults(sample.getInput())));
+        return evaluateAllAndGetResults(dataset.getTestData(network), network);
+    }
+
+    public static Map<Sample, Results> evaluateAllAndGetResults(List<Sample> data, NeuralNetwork network) {
+        //return .parallelStream().collect(Collectors.toMap(sample -> sample, sample -> network.evaluateAndGetResults(sample.getInput())));
         Map<Sample, Results> map = new HashMap<>();
-        dataset.getTrainData(network).forEach(sample -> {
+        data.forEach(sample -> {
             Results result = network.evaluateAndGetResults(sample.getInput());
             map.put(sample, result);
         });
         return map;
+    }
+
+    public static Map<Sample, Results> evaluateOnTrainDataAllAndGetResults(Dataset dataset, NeuralNetwork network) {
+        return evaluateAllAndGetResults(dataset.getTrainData(network), network);
     }
 
     public static boolean isZero(Double value) {
@@ -174,7 +183,7 @@ public class Tools {
 
             sample.getInput().forEach(val -> System.out.print(val.getValue() + "\t"));
             System.out.print("|");
-            output.forEach(val -> System.out.print("\t" + val));
+            output.forEach(val -> System.out.print("\t" + val + " (" + network.getClassifier().classifyToOneZero(val) + ")"));
             System.out.println();
         });
     }

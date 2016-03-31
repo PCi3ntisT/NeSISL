@@ -13,6 +13,10 @@ public interface Classifier {
 
     public Boolean classify(Double value);
 
+    public String classifyToOneZero(Value value);
+
+    public String classifyToOneZero(double value);
+
     public Double classifyToDouble(Value value);
 
     public Double classifyToDouble(Double value);

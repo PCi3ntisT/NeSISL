@@ -66,6 +66,12 @@ public class DatasetImpl implements Dataset {
         }
     }
 
+    @Override
+    public List<Sample> getTestData(NeuralNetwork network) {
+        // tohle jeste predelat ;)
+        return getTrainData(network);
+    }
+
     private boolean areDataCached(NeuralNetwork network) {
         return areDataCached(network.getInputFactOrder(), getInputFactOrder());
     }

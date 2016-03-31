@@ -16,4 +16,6 @@ public interface Dataset {
     public List<Fact> getOutputFactOrder();
 
     public List<Double> getAverageOutputs(NeuralNetwork network);
+
+    public List<Sample> getTestData(NeuralNetwork network);
 }

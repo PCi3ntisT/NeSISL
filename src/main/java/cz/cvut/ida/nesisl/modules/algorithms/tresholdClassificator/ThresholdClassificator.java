@@ -37,6 +37,16 @@ public class ThresholdClassificator implements Classifier {
         return value > treshold;
     }
 
+    @Override
+    public String classifyToOneZero(Value value) {
+        return classifyToOneZero(value.getValue());
+    }
+
+    @Override
+    public String classifyToOneZero(double value) {
+        return (classify(value)) ? "1" : "0";
+    }
+
     public Double classifyToDouble(Value value) {
         return classifyToDouble(value.getValue());
     }
@@ -46,7 +56,7 @@ public class ThresholdClassificator implements Classifier {
     }
 
     public static ThresholdClassificator create(NeuralNetwork network, Dataset dataset) {
-        return create(Tools.evaluateAllAndGetResults(dataset, network));
+        return create(Tools.evaluateOnTestAllAndGetResults(dataset, network));
     }
 
     public static ThresholdClassificator create(Map<Sample, Results> results) {
@@ -66,15 +76,17 @@ public class ThresholdClassificator implements Classifier {
         long truePositives = positives;
         long trueNegatives = 0l;
 
-        for (Pair<Double, Boolean> pair : sortedPairs) {
-            if(pair.getRight()){
+        for (int idx = 0; idx < sortedPairs.size(); idx++) {
+            Pair<Double, Boolean> pair = sortedPairs.get(idx);
+            if (pair.getRight()) {
                 truePositives--;
-            }else{
+            } else {
                 trueNegatives++;
             }
             double currentAccuracy = truePositives * (positives * 1.0) / size + trueNegatives * (negatives * 1.0) / size;
-            if(currentAccuracy > accuracy){
-                threshold = pair.getLeft();
+            if (currentAccuracy > accuracy) {
+                double next = (idx + 1 < sortedPairs.size()) ? sortedPairs.get(idx + 1).getLeft() : 1.0d;
+                threshold = (pair.getLeft() + next) / 2;
                 accuracy = currentAccuracy;
             }
         }
