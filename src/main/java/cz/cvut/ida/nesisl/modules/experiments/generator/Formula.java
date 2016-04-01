@@ -1,4 +1,4 @@
-package main.java.cz.cvut.ida.nesisl.modules.experiments;
+package main.java.cz.cvut.ida.nesisl.modules.experiments.generator;
 
 import java.util.List;
 import java.util.StringTokenizer;

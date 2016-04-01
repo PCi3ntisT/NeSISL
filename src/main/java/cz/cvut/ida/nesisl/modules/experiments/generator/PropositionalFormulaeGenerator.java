@@ -1,9 +1,10 @@
-package main.java.cz.cvut.ida.nesisl.modules.experiments;
+package main.java.cz.cvut.ida.nesisl.modules.experiments.generator;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.SampleImpl;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.ExperimentsTool;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
@@ -12,7 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

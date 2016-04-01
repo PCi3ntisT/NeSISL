@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.modules.dataset;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.Literal;
 import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
@@ -25,6 +26,7 @@ public class DatasetImpl implements Dataset {
     public static final String TRAIN_TOKEN = "TRAIN SET";
 
 
+    private final File originalFile;
     private final List<Map<Fact, Value>> samples;
     private final List<Fact> inputFacts;
     private final List<Fact> outputFacts;
@@ -34,10 +36,11 @@ public class DatasetImpl implements Dataset {
     private List<Sample> cachedSamples;
     private List<Double> cachedOutputAverage;
 
-    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples) {
+    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples, File file) {
         this.inputFacts = inputFacts;
         this.outputFacts = outputFacts;
         this.samples = samples;
+        this.originalFile = file;
     }
 
     @Override
@@ -64,6 +67,11 @@ public class DatasetImpl implements Dataset {
             }
             return cachedOutputAverage;
         }
+    }
+
+    @Override
+    public File getOriginalFile() {
+        return this.originalFile;
     }
 
     @Override
@@ -170,7 +178,7 @@ public class DatasetImpl implements Dataset {
         //final List<Fact> finalFactsOrder = factsOrder;
         //Map<Fact, Integer> order = IntStream.range(0, factsOrder.size()).mapToObj(idx -> new Pair<>(idx, finalFactsOrder.get(idx))).filter(pair -> null != pair.getRight()).collect(Collectors.toMap(pair -> pair.getRight(), p -> p.getLeft()));
         Pair<List<Fact>, List<Fact>> factsOrderWrapper = selectInputAndOutputFacts(factsOrder);
-        return new DatasetImpl(Collections.unmodifiableList(factsOrderWrapper.getLeft()), Collections.unmodifiableList(factsOrderWrapper.getRight()), examples);
+        return new DatasetImpl(Collections.unmodifiableList(factsOrderWrapper.getLeft()), Collections.unmodifiableList(factsOrderWrapper.getRight()), examples, file);
     }
 
     private static Pair<List<Fact>, List<Fact>> selectInputAndOutputFacts(List<Fact> factsOrder) {

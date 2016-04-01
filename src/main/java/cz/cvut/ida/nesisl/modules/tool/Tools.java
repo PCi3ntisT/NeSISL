@@ -1,19 +1,14 @@
 package main.java.cz.cvut.ida.nesisl.modules.tool;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,7 +25,7 @@ public class Tools {
         return generateNodes(numberOfNodes, Identity.getFunction());
     }
 
-    public static List<Node> generateNodes(int numberOfNodes,ActivationFunction function) {
+    public static List<Node> generateNodes(int numberOfNodes, ActivationFunction function) {
         return Collections.nCopies(numberOfNodes, null).stream()
                 .map(o -> NodeFactory.create(function)).collect(Collectors.toCollection(ArrayList::new));
     }
@@ -55,20 +50,33 @@ public class Tools {
 
 
     // zparametrizovat
-    public static double computeSuqaredTotalError(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
-        return processErrorStream(network, dataset).mapToDouble(Tools::squaredError).sum() * 1 / 2.0;
+    public static double computeSquaredTrainTotalError(NeuralNetwork network, Dataset dataset) {
+        return processTrainErrorStream(network, dataset).mapToDouble(Tools::squaredError).sum() * 1 / 2.0;
     }
 
-    private static Stream<List<Double>> processErrorStream(NeuralNetwork network, Dataset dataset) {
-        return dataset.getTrainData(network).stream().map(sample -> computeError(network, sample.getInput(), sample.getOutput()));
+    private static Stream<List<Double>> processTrainErrorStream(NeuralNetwork network, Dataset dataset) {
+        return processErrorStream(dataset.getTrainData(network), network);
     }
 
-    public static double computeAverageSuqaredTotalError(NeuralNetwork network, Dataset dataset) {
-        return processErrorStream(network, dataset).mapToDouble(Tools::squaredError).average().orElse(0);
+    private static Stream<List<Double>> processErrorStream(List<Sample> data, NeuralNetwork network) {
+        return data.stream().map(sample -> computeError(network, sample.getInput(), sample.getOutput()));
+    }
+
+    public static double computeAverageSquaredTotalError(Map<Sample, Results> evaluation) {
+        return computeAverageSquaredTotalError(evaluation.entrySet().stream().map(entry -> computeDiff(entry.getValue(), entry.getKey().getOutput())));
+    }
+
+    // tady napsat metody genericke a na jakych mnozine dat se to trenuje
+    public static double computeAverageSquaredTotalError(NeuralNetwork network, Dataset dataset) {
+        return computeAverageSquaredTotalError(processTrainErrorStream(network, dataset));
+    }
+
+    private static double computeAverageSquaredTotalError(Stream<List<Double>> diffs) {
+        return diffs.mapToDouble(Tools::squaredError).average().orElse(0);
     }
 
     public static double maxSquaredError(NeuralNetwork network, Dataset dataset) {
-        return processErrorStream(network, dataset).mapToDouble(Tools::squaredError).max().orElse(0);
+        return processTrainErrorStream(network, dataset).mapToDouble(Tools::squaredError).max().orElse(0);
     }
 
     public static double squaredError(List<Double> doubles) {
@@ -77,36 +85,24 @@ public class Tools {
 
     public static List<Double> computeError(NeuralNetwork network, List<Value> input, List<Value> output) {
         Pair<List<Double>, Results> results = computeErrorResults(network, input, output);
-
-        /*String s = "";
-        for (Value value : input) {
-            s += value.getValue() + " ";
-        }
-        s += "\n\t";
-        for (Value value : output) {
-            s += value.getValue() + " ";
-        }
-        s += "\n\t";
-        for (Double value : results.getLeft()) {
-            s += value + " ";
-        }
-        System.out.println(s);*/
-
-        /*System.out.println("vysledky");
-        results.getLeft().forEach(System.out::println);
-
-        System.exit(-1);*/
         return results.getLeft();
     }
 
     // list<Double> of diferences (computedOutputValues - labels)
     public static Pair<List<Double>, Results> computeErrorResults(NeuralNetwork network, List<Value> input, List<Value> output) {
-        //System.out.println("computeErrorResults");
         Results result = network.evaluateAndGetResults(input);
-        List<Double> diff = IntStream.range(0, result.getComputedOutputs().size()).mapToObj(idx ->
-                        output.get(idx).getValue() - result.getComputedOutputs().get(idx)
-        ).collect(Collectors.toCollection(ArrayList::new));
+        return computeDiffs(result, output);
+    }
+
+    private static Pair<List<Double>, Results> computeDiffs(Results result, List<Value> labeledOutput) {
+        List<Double> diff = computeDiff(result, labeledOutput);
         return new Pair<>(diff, result);
+    }
+
+    private static List<Double> computeDiff(Results result, List<Value> labeledOutput) {
+        return IntStream.range(0, result.getComputedOutputs().size()).mapToObj(idx ->
+                        labeledOutput.get(idx).getValue() - result.getComputedOutputs().get(idx)
+        ).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static List<Double> computeAverages(List<List<Value>> list) {
@@ -178,7 +174,7 @@ public class Tools {
     }
 
     public static void printEvaluation(NeuralNetwork network, Dataset dataset) {
-        dataset.getTrainData(network).forEach(sample ->{
+        dataset.getTrainData(network).forEach(sample -> {
             List<Double> output = network.evaluate(sample.getInput());
 
             sample.getInput().forEach(val -> System.out.print(val.getValue() + "\t"));
@@ -212,26 +208,28 @@ public class Tools {
     }
 
     public static Double medianDouble(List<Double> list) {
-        if(1 == list.size()){
+        if (1 == list.size()) {
             return list.get(0);
         }
 
         Collections.sort(list);
-        if(0 == list.size() % 2){
+        if (0 == list.size() % 2) {
             return list.get(list.size() / 2 - 1);
         }
         return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
     }
 
     public static Long medianLong(List<Long> list) {
-        if(1 == list.size()){
+        if (1 == list.size()) {
             return list.get(0);
         }
 
         Collections.sort(list);
-        if(0 == list.size() % 2){
+        if (0 == list.size() % 2) {
             return list.get(list.size() / 2 - 1);
         }
         return (list.get(list.size() / 2 - 1) + list.get(list.size() / 2)) / 2;
     }
+
+
 }

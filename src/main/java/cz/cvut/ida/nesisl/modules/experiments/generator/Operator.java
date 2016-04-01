@@ -1,4 +1,4 @@
-package main.java.cz.cvut.ida.nesisl.modules.experiments;
+package main.java.cz.cvut.ida.nesisl.modules.experiments.generator;
 
 /**
  * Created by EL on 25.3.2016.

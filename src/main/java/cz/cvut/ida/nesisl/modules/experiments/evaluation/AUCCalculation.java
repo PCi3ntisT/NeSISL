@@ -1,12 +1,14 @@
-package main.java.cz.cvut.ida.nesisl.modules.tool;
+package main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.IntFunction;
@@ -18,17 +20,22 @@ import java.util.stream.IntStream;
 public class AUCCalculation {
 
     private static final String AUC_VALUE_LINE_START = "Area Under the Curve for ROC is";
+
     private final NeuralNetwork network;
-    private final Dataset dataset;
+    private final HashMap<Sample,Results> evaluation;
     private Double aucValue;
 
-    public AUCCalculation(NeuralNetwork network, Dataset dataset) {
+    public AUCCalculation(NeuralNetwork network, Map<Sample,Results> evaluation) {
         this.network = network;
-        this.dataset = dataset;
+        this.evaluation = new HashMap(evaluation);
     }
 
     public static AUCCalculation create(NeuralNetwork network, Dataset dataset) {
-        return new AUCCalculation(network, dataset);
+        return AUCCalculation.create(network, Tools.evaluateOnTestAllAndGetResults(dataset, network));
+    }
+
+    public static AUCCalculation create(NeuralNetwork network, Map<Sample,Results> evaluation) {
+        return new AUCCalculation(network, evaluation);
     }
 
     public Double computeAUC() {
@@ -42,7 +49,7 @@ public class AUCCalculation {
     }
 
     private void computeAndStoreAUC() {
-        String data = Tools.evaluateOnTestAllAndGetResults(dataset, network).entrySet().parallelStream()
+        String data = evaluation.entrySet().parallelStream()
                 .map(this::resultsToString)
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                 .toString().trim();

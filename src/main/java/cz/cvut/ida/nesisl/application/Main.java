@@ -5,7 +5,7 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CasCorSetting;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DynamicNodeCreation;
@@ -20,7 +20,10 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.structuralLearningWithSel
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.ExperimentResult;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.Initable;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
@@ -48,6 +51,7 @@ public class Main {
         if (arg.length < 4) {
             throw new IllegalStateException("Right setting in form 'algorithm numberOfRuns dataset weightLearningSetting [ruleFile structureLearningSetting]'");
         }
+        // algName  #runs   datasetFile wlsFile ruleFile KBANNsetting ruleSpecificFile
 
         double simga = 1d;
         double mu = 0.0d;
@@ -55,11 +59,13 @@ public class Main {
         int numberOfRepeats = Integer.valueOf(arg[1]);
         File datasetFile = new File(arg[2]);
         File wlsFile = new File(arg[3]);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+        Dataset dataset = DatasetImpl.createDataset(datasetFile);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
         Main main = new Main();
         switch (arg[0]) {
             case "KBANN":
-                main.runKBANN(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runKBANN(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "CasCor":
                 main.runCasCor(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
@@ -83,6 +89,49 @@ public class Main {
         }
 
         //System.out.println("zkontrolovat jestli vsechny forEach jsou spravne a nemely by byt nahrazeny forEachOrdered");
+    }
+
+    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        ExperimentResult.storeResultsResults(results, algName, dataset.getOriginalFile());
+    }
+
+    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset) {
+        return IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
+            ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile());
+            NeuralNetworkOwner alg = initialize.initialize();
+            currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
+
+            long start = System.nanoTime();
+            NeuralNetwork learnedNetwork = learn.learn(alg);
+            long end = System.nanoTime();
+
+            Tools.printEvaluation(learnedNetwork, dataset);
+
+            currentResult.addExperiment(learnedNetwork, start, end, dataset);
+            return currentResult;
+        }).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+
+    private void runKBANN(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if(arg.length < 6){
+            throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile weightLearningSettingsFile ruleFile KBANNsetting [ruleSpecificFile]'");
+        }
+
+        String algName = "KBANN";
+        File ruleFile = new File(arg[4]);
+        KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, new File(arg[5]));
+
+        if(arg.length > 6){
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
+        List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
+
+        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
+        Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, wls);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
 
     private void runREGENT(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -128,12 +177,12 @@ public class Main {
             Tools.printEvaluation(regent.getNeuralNetwork(), dataset);
 
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(regent.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(regent.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(regent.getNeuralNetwork().getCopy());
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
 
     private void runTopGen(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -155,7 +204,7 @@ public class Main {
 
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-        //List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).mapToObj(idx -> {
+            //List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).mapToObj(idx -> {
             System.out.println("starting topget\t" + idx);
             TopGen topgen = TopGen.create(file, specific, randomGenerator, omega);
 
@@ -171,14 +220,14 @@ public class Main {
             System.out.println("to\t" + idx);
 
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(topgen.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(topgen.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(topgen.getNeuralNetwork().getCopy());
 
             System.out.println("ending topget\t" + idx);
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
 
 
@@ -210,12 +259,12 @@ public class Main {
             Tools.printEvaluation(slf.getNeuralNetwork(), dataset);
 
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(slf.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(slf.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(slf.getNeuralNetwork().getCopy());
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
 
 
@@ -260,12 +309,12 @@ public class Main {
             long end = System.nanoTime();
 
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(dnc.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(dnc.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(dnc.getNeuralNetwork().getCopy());
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -275,7 +324,7 @@ public class Main {
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
 
         // udelat parser na to
-        CasCorSetting ccSetting = new CasCorSetting(wls.getSizeOfCasCorPool(), wls.getMaximumNumberOfHiddenNodes());
+        CascadeCorrelationSetting ccSetting = new CascadeCorrelationSetting(wls.getSizeOfCasCorPool(), wls.getMaximumNumberOfHiddenNodes());
 
         List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
@@ -289,14 +338,18 @@ public class Main {
             long end = System.nanoTime();
 
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(cascor.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(cascor.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(cascor.getNeuralNetwork().getCopy());
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
 
+
+
+
+    /*
     private void runKBANN(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "KBANN";
         File file = new File(arg[4]);
@@ -312,21 +365,27 @@ public class Main {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
             currentResult.setInitNetwork(kbann.getNeuralNetwork().getCopy());
 
+
+            TADY TO ZPARAMETRIZOVAT DO LAMBDA FUNKCE !!!!
             long start = System.nanoTime();
             kbann.learn(dataset, wls);
             long end = System.nanoTime();
 
             Tools.printEvaluation(kbann.getNeuralNetwork(), dataset);
 
+            System.out.println("ponovu");
+            System.out.println(kbann.getNeuralNetwork().getClassifier().getTreshold());
+            System.out.println("AUC\t" + AUCCalculation.create(kbann.getNeuralNetwork(),dataset).computeAUC());
+
             currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredError(Tools.computeAverageSuqaredTotalError(kbann.getNeuralNetwork(), dataset));
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(kbann.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(kbann.getNeuralNetwork().getCopy());
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 
-        ExperimentResult.printResults(results, algName, datasetFile);
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
     }
-
+     */
     /*private void run() {
         NeuralNetwork network = simpleNetwork();
         List<Double> input = new ArrayList<>();

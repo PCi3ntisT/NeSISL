@@ -9,10 +9,10 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -31,36 +31,31 @@ public class Backpropagation {
     }
 
     private static void learnWeights(long numberOfLayersToBeLearned, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
-
-        double error = Double.MAX_VALUE;
-        double eps = Double.MAX_VALUE;
-
         long iteration = 0;
 
         Map<Sample, Map<Edge, Double>> previousDeltas = initPreviousDeltas(dataset, network);
+        List<Double> errors = new ArrayList<>();
 
-        while (iteration < wls.getEpochLimit()) { // eps > wls.getEpsilonDifference() // or other stopping criterion
+        while (wls.canContinueBackpropagation(iteration, errors)) {
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
-            double currentError = Tools.computeSuqaredTotalError(network, dataset, wls);
-            eps = Math.abs(error - currentError);
-            error = currentError;
+            double currentError = Tools.computeSquaredTrainTotalError(network, dataset);
+            errors.add(currentError);
             iteration++;
         }
-
     }
 
     public static Map<Sample, Map<Edge, Double>> initPreviousDeltas(Dataset dataset, NeuralNetwork network) {
         Map<Edge, Double> inner = new HashMap<>();
         network.getWeights().keySet().stream().forEach(edge -> inner.put(edge, 0.0d));
 
-        long c = network.getWeights().keySet().stream().filter(edge -> network.getWeight(edge) == null).count();
-        if(c > 0){
+        /*long nullWeights = network.getWeights().keySet().stream().filter(edge -> network.getWeight(edge) == null).count();
+        if(nullWeights > 0){
             throw new IllegalStateException();
-        }
+        }*/
 
         Map<Sample, Map<Edge, Double>> result = new HashMap<>();
         dataset.getTrainData(network).forEach(sample -> result.put(sample, new HashMap<>(inner)));
@@ -74,7 +69,7 @@ public class Backpropagation {
         IntStream.range(0, differenceExampleMinusOutput.size()).forEach(idx -> {
             Node node = network.getOutputNodes().get(idx);
             Double value = node.getFirstDerivationAtX(results.getComputedOutputs().get(idx)) * differenceExampleMinusOutput.get(idx);
-            sigma.put(node, value); // ten vypocet presunout do funkce, etc.
+            sigma.put(node, value);
         });
 
         HashMap<Edge, Double> deltas = new HashMap<>();

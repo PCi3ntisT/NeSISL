@@ -2,9 +2,11 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
@@ -19,14 +21,14 @@ import java.util.stream.Collectors;
 /**
  * Created by EL on 1.3.2016.
  */
-public class KBANN {
+public class KBANN implements NeuralNetworkOwner {
 
     private NeuralNetwork network;
     private final KBANNSettings settings;
 
 
-    public KBANN(File rawRuleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGenerator randomGenerator, Double omega) {
-        this(RuleFile.create(rawRuleFile), specific, new KBANNSettings(randomGenerator, omega));
+    public static KBANN create(File rawRuleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings) {
+        return new KBANN(RuleFile.create(rawRuleFile), specific, kbannSettings);
     }
 
     public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings) {
@@ -197,10 +199,6 @@ public class KBANN {
                                     )
             );
 
-            //throw new NotImplementedException("problem tady - nepridava bias do vystupni vrstvy");
-            //nntool
-            // deep learning for J / DL4J
-
             previousLayer = currentLayer;
             previousLayer.add(network.getBias());
         }
@@ -213,7 +211,9 @@ public class KBANN {
      *
      * @param dataset
      */
-    public void learn(Dataset dataset, WeightLearningSetting weightLearningSetting) {
+    public NeuralNetwork learn(Dataset dataset, WeightLearningSetting weightLearningSetting) {
         this.network = Backpropagation.feedforwardBackpropagation(this.network, dataset, weightLearningSetting);
+        this.network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        return this.network;
     }
 }

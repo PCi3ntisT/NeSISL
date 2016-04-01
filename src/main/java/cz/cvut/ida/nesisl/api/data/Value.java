@@ -1,4 +1,4 @@
-package main.java.cz.cvut.ida.nesisl.modules.dataset;
+package main.java.cz.cvut.ida.nesisl.api.data;
 
 /**
  * Created by EL on 7.3.2016.

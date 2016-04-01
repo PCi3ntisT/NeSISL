@@ -56,7 +56,7 @@ public class Quickprop {
             }
 
 
-            error = Tools.computeSuqaredTotalError(network, dataset, wls);
+            error = Tools.computeSquaredTrainTotalError(network, dataset, wls);
             System.out.println(error);
 
             eps = Math.abs(error - previousError);

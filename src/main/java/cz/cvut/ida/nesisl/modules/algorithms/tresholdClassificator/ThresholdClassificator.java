@@ -5,7 +5,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 

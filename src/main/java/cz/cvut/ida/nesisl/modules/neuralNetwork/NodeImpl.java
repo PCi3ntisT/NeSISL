@@ -3,7 +3,7 @@ package main.java.cz.cvut.ida.nesisl.modules.neuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Parameters;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 
 /**
  * Created by EL on 9.2.2016.

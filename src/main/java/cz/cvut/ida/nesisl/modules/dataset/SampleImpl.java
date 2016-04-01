@@ -1,6 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.dataset;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 
 import java.util.List;
 

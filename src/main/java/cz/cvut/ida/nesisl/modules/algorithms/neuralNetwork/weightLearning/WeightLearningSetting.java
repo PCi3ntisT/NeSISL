@@ -1,6 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning;
 
 import java.io.*;
+import java.util.List;
 
 /**
  * Created by EL on 13.2.2016.
@@ -9,8 +10,8 @@ public class WeightLearningSetting {
     public static final String EPSILON_TOKEN = "epsilon";
     public static final String EPOCH_TOKEN = "epochLimit";
     public static final String LEARNING_RATE_TOKEN = "learningRate";
-    public static final String HIDDEN_NODES_LIMIT_TOKEN = "maximumNumberOfHiddenNodes";
-    public static final String CASCOR_POOL_NODES_LIMIT_TOKEN = "cascorPoolNodesLimit";
+    public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
+    public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String QUICKPROP_ALFA_TOKEN = "alpha";
     public static final String QUICKPROP_EPSILON_TOKEN = "quickpropEpsilon";
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
@@ -19,20 +20,20 @@ public class WeightLearningSetting {
     private final Double quickpropEpsilon;
     private final Double alpha;
     private final Double learningRate;
-    private final Long maximumNumberOfHiddenNodes;
-    private final Integer sizeOfCasCorPool;
-    private final Long epochLimit;
     private final Double momentumAlpha;
+    private final Long epochLimit;
+    private final Integer shortTimeWindow;
+    private final Integer longTimeWindow;
 
-    public WeightLearningSetting(Double epsilonDifference, Double learningRate, Long maximumNumberOfHiddenNodes, Integer sizeOfCasCorPool, Double alpha, Double quickpropEpsilon, Long epochLimit, Double momentumAlpha) {
+    public WeightLearningSetting(Double epsilonDifference, Double quickpropEpsilon, Double alpha, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow) {
         this.epsilonDifference = epsilonDifference;
-        this.learningRate = learningRate;
-        this.maximumNumberOfHiddenNodes = maximumNumberOfHiddenNodes;
-        this.sizeOfCasCorPool = sizeOfCasCorPool;
-        this.alpha = alpha;
         this.quickpropEpsilon = quickpropEpsilon;
-        this.epochLimit = epochLimit;
+        this.alpha = alpha;
+        this.learningRate = learningRate;
         this.momentumAlpha = momentumAlpha;
+        this.epochLimit = epochLimit;
+        this.shortTimeWindow = shortTimeWindow;
+        this.longTimeWindow = longTimeWindow;
     }
 
 
@@ -41,10 +42,10 @@ public class WeightLearningSetting {
         Double alpha = null;
         Double quickpropEpsilon = null;
         Double epsilonDifference = null;
-        Long maximumNumberOfHiddenNodes = null;
-        Integer sizeOfCasCorPool = null;
         Long epochLimit = null;
         Double momentumAlpha = null;
+        Integer shortTimeWindow = null;
+        Integer longTimeWindow  = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -78,14 +79,14 @@ public class WeightLearningSetting {
                     case QUICKPROP_EPSILON_TOKEN:
                         quickpropEpsilon = Double.valueOf(value);
                         break;
-                    case CASCOR_POOL_NODES_LIMIT_TOKEN:
-                        sizeOfCasCorPool = Integer.valueOf(value);
-                        break;
-                    case HIDDEN_NODES_LIMIT_TOKEN:
-                        maximumNumberOfHiddenNodes = Long.valueOf(value);
-                        break;
                     case MOMENTUM_ALPHA_TOKEN:
                         momentumAlpha = Double.valueOf(value);
+                        break;
+                    case SHORT_TIME_WINDOW_TOKEN:
+                        shortTimeWindow = Integer.valueOf(value);
+                        break;
+                    case LONG_TIME_WINDOW_TOKEN:
+                        longTimeWindow = Integer.valueOf(value);
                         break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
@@ -97,23 +98,8 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(epsilonDifference, learningRate, maximumNumberOfHiddenNodes, sizeOfCasCorPool, alpha, quickpropEpsilon, epochLimit, momentumAlpha);
+        return new WeightLearningSetting(epsilonDifference, quickpropEpsilon, alpha, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow);
     }
-
-    public long getMaximumNumberOfHiddenNodes() {
-        if (null == maximumNumberOfHiddenNodes) {
-            System.out.println("Be aware that 'maximumNumberOfHiddenNodes' contains null value.");
-        }
-        return maximumNumberOfHiddenNodes;
-    }
-
-    public int getSizeOfCasCorPool() {
-        if (null == sizeOfCasCorPool) {
-            System.out.println("Be aware that 'sizeOfCasCorPool' contains null value.");
-        }
-        return sizeOfCasCorPool;
-    }
-
 
     public Double getEpsilonDifference() {
         if (null == epsilonDifference) {
@@ -131,14 +117,14 @@ public class WeightLearningSetting {
 
     public Double getMaxAlpha() {
         if (null == alpha) {
-            //System.out.println("Be aware that 'alpha' contains null value.");
+            System.out.println("Be aware that 'alpha' contains null value.");
         }
         return alpha;
     }
 
     public Double getQuickpropEpsilon() {
         if (null == quickpropEpsilon) {
-            //System.out.println("Be aware that 'quickpropEpsilon' contains null value.");
+            System.out.println("Be aware that 'quickpropEpsilon' contains null value.");
         }
         return quickpropEpsilon;
     }
@@ -155,5 +141,32 @@ public class WeightLearningSetting {
             System.out.println("Be aware that 'momentumAlpha' contains null value.");
         }
         return momentumAlpha;
+    }
+
+    public Double getAlpha() {
+        return alpha;
+    }
+
+    public Integer getShortTimeWindow() {
+        return shortTimeWindow;
+    }
+
+    public Integer getLongTimeWindow() {
+        return longTimeWindow;
+    }
+
+    public boolean canContinueBackpropagation(long iteration, List<Double> errors) {
+        if(iteration > epochLimit){
+            return false;
+        }
+        return !(errors.size() > longTimeWindow && hasConverged(errors));
+    }
+
+    private boolean hasConverged(List<Double> errors) {
+        return Math.abs(average(errors,longTimeWindow) - average(errors,shortTimeWindow)) < getEpsilonDifference();
+    }
+
+    private double average(List<Double> list, Integer timeWindow) {
+        return list.subList(list.size() - timeWindow,list.size()).stream().mapToDouble(d -> d).average().orElse(0);
     }
 }

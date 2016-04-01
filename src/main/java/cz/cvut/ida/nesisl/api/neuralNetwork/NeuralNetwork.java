@@ -2,7 +2,7 @@ package main.java.cz.cvut.ida.nesisl.api.neuralNetwork;
 
 import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.util.Collection;

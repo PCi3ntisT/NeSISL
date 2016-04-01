@@ -1,5 +1,6 @@
-package main.java.cz.cvut.ida.nesisl.modules.experiments;
+package main.java.cz.cvut.ida.nesisl.modules.experiments.generator;
 
+import main.java.cz.cvut.ida.nesisl.modules.experiments.ExperimentsTool;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 
 import java.util.ArrayList;

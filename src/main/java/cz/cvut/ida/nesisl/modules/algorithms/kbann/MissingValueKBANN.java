@@ -1,7 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Value;
+import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.MissingValueGeneralProcessor;
 
 import java.util.List;
