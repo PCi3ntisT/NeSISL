@@ -4,30 +4,32 @@ import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.util.*;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * Created by EL on 8.3.2016.
  */
-public class CascadeCorrelation {
+public class CascadeCorrelation implements NeuralNetworkOwner {
 
     private NeuralNetwork network;
     private RandomGenerator randomGenerator;
 
-    public CascadeCorrelation(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGenerator randomGenerator) {
-        this.network = constructNetwork(inputFactOrder, outputFactOrder, new MissingValueKBANN(), randomGenerator);
+    public CascadeCorrelation(NeuralNetwork network, RandomGenerator randomGenerator) {
+        this.network = network;
         this.randomGenerator = randomGenerator;
     }
 
@@ -43,7 +45,7 @@ public class CascadeCorrelation {
     }
 
     /**
-     * Returns neural network; (statefull).
+     * Returns neural network; (stateful).
      *
      * @return
      */
@@ -51,26 +53,20 @@ public class CascadeCorrelation {
         return network;
     }
 
-    public void learn(Dataset dataset, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
-
+    public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
         long numberOfAddedNodes = 0;
-        double epochDifference = Double.MAX_VALUE;
-        double error = Double.MAX_VALUE;
-        double currentError = Double.MAX_VALUE;
+        List<Double> errors = new ArrayList<>();
+
         while (true) {
-
             Backpropagation.learnEdgesToOutputLayerOnlyStateful(network, dataset, wls);
-            currentError = Tools.computeSuqaredTotalError(network, dataset, wls);
-            epochDifference = Math.abs(error - currentError);
-            error = currentError;
+            double currentError = Tools.computeSquaredTrainTotalError(network, dataset);
+            errors.add(currentError);
 
-            if (numberOfAddedNodes > cascadeCorrelationSetting.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonDifference()) {
+            if (cascadeCorrelationSetting.stopCascadeCorrelation(numberOfAddedNodes,errors)) {
                 break;
             }
 
-            // pridani dalsiho uzlu
-            CandidateWrapper bestCandidate = IntStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls))
-                    .max(CandidateWrapper::compare).get();
+            CandidateWrapper bestCandidate = LongStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls, cascadeCorrelationSetting)).max(CandidateWrapper::compare).get();
 
             this.network.addNodeAtLayerStateful(bestCandidate.getNode(), this.network.getMaximalNumberOfHiddenLayer() + 1);
             bestCandidate.getEdgeWeightPairs().forEach(pair -> this.network.addEdgeStateful(pair.getLeft(), pair.getRight()));
@@ -78,9 +74,10 @@ public class CascadeCorrelation {
 
             numberOfAddedNodes++;
         }
+        return this.network;
     }
 
-    private static CandidateWrapper makeAndLearnCandidate(NeuralNetwork network, Dataset dataset, RandomGenerator randomGenerator, WeightLearningSetting wls) {
+    private static CandidateWrapper makeAndLearnCandidate(NeuralNetwork network, Dataset dataset, RandomGenerator randomGenerator, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
         Node node = NodeFactory.create(Sigmoid.getFunction());
         Set<Pair<Edge, Double>> edges = new HashSet<>();
 
@@ -88,28 +85,30 @@ public class CascadeCorrelation {
         network.getInputNodes().forEach(source -> generateAndAddEdge(edges, source, node, randomGenerator));
         edges.add(generateRandomEdgeWeight(network.getBias(), node, randomGenerator));
 
-        Pair<Set<Pair<Edge, Double>>, Double> result = learnCandidatesConnections(dataset, node, edges, network, wls);
+        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network);
+        Pair<Set<Pair<Edge, Double>>, Double> result = learnCandidatesConnections(dataset, node, edges, network, cache, wls, cascadeCorrelationSetting);
 
         return new CandidateWrapper(result.getRight(), result.getLeft(), node);
     }
 
-    private static Pair<Set<Pair<Edge, Double>>, Double> learnCandidatesConnections(Dataset dataset, Node node, Set<Pair<Edge, Double>> edges, NeuralNetwork network, WeightLearningSetting wls) {
-        Double correlation = Double.MIN_VALUE;
-        Map<Sample, Results> cache = Tools.evaluateAllAndGetResults(dataset, network); // tohle by asi nebylo od veci cachovat nekde na vyssi urovni, kdyz to stejnak pouzivaji vsichni
+    private static Pair<Set<Pair<Edge, Double>>, Double> learnCandidatesConnections(Dataset dataset, Node node, Set<Pair<Edge, Double>> edges, NeuralNetwork network, Map<Sample, Results> cache, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
         Set<Pair<Edge, Double>> currentEdges = edges;
-        Double epsilon = Double.MAX_VALUE;
+        List<Double> correlations = new ArrayList<>();
+        long iteration = 0l;
+        Double correlation;
         while (true) {
             Pair<Double, Map<Sample, Double>> candidateAverageOutputs = computeAverage(edges, cache, dataset, network);
             Pair<Double, Set<Pair<Edge, Double>>> current = computeCorrelationAndComputeWeights(node, candidateAverageOutputs.getLeft(), candidateAverageOutputs.getRight(), network, dataset, currentEdges, wls);
 
-            epsilon = Math.abs(correlation - current.getLeft());
             correlation = current.getLeft();
+            correlations.add(correlation);
 
             currentEdges = current.getRight();
 
-            if (wls.getEpsilonDifference() > epsilon) {
+            if (cascadeCorrelationSetting.canStopLearningCandidatConnection(correlations, iteration)) {
                 break;
             }
+            iteration++;
         }
 
         return new Pair<>(currentEdges, correlation);
@@ -157,7 +156,7 @@ public class CascadeCorrelation {
                 }));
         double correlation = outputs.entrySet().parallelStream().mapToDouble(entry -> Math.abs(entry.getValue())).sum();
 
-        Map<Sample, Results> cache = Tools.evaluateAllAndGetResults(dataset, network);
+        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network);
 
         originalEdges.forEach(pair -> {
             Double derivative = dataset.getTrainData(network).parallelStream().mapToDouble(sample -> {
@@ -187,4 +186,8 @@ public class CascadeCorrelation {
         return list;
     }
 
+    public static CascadeCorrelation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValues missingValuesProcessor) {
+        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValuesProcessor, randomGenerator);
+        return new CascadeCorrelation(network,randomGenerator);
+    }
 }

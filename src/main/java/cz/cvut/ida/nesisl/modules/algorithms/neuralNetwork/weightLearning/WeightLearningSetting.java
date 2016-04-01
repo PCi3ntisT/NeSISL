@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning;
 
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+
 import java.io.*;
 import java.util.List;
 
@@ -45,7 +47,7 @@ public class WeightLearningSetting {
         Long epochLimit = null;
         Double momentumAlpha = null;
         Integer shortTimeWindow = null;
-        Integer longTimeWindow  = null;
+        Integer longTimeWindow = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -156,17 +158,9 @@ public class WeightLearningSetting {
     }
 
     public boolean canContinueBackpropagation(long iteration, List<Double> errors) {
-        if(iteration > epochLimit){
+        if (iteration > epochLimit) {
             return false;
         }
-        return !(errors.size() > longTimeWindow && hasConverged(errors));
-    }
-
-    private boolean hasConverged(List<Double> errors) {
-        return Math.abs(average(errors,longTimeWindow) - average(errors,shortTimeWindow)) < getEpsilonDifference();
-    }
-
-    private double average(List<Double> list, Integer timeWindow) {
-        return list.subList(list.size() - timeWindow,list.size()).stream().mapToDouble(d -> d).average().orElse(0);
+        return !(errors.size() > longTimeWindow && Tools.hasConverged(errors, longTimeWindow, shortTimeWindow, epsilonDifference));
     }
 }
