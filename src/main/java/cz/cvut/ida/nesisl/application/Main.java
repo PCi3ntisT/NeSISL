@@ -68,22 +68,21 @@ public class Main {
                 main.runKBANN(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "CasCor":
-                main.runCasCor(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runCasCor(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "DNC":
-                main.runDNC(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runDNC(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "SLF":
                 main.runSLF(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
                 break;
-            case "REGENT":
-                main.runREGENT(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
-                break;
             case "TopGen":
                 main.runTopGen(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
                 break;
+            case "REGENT":
+                main.runREGENT(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                break;
             default:
-
                 System.out.println("Unknown algorithm '" + arg[0] + "'.");
                 break;
         }
@@ -113,17 +112,16 @@ public class Main {
         }).collect(Collectors.toCollection(ArrayList::new));
     }
 
-
     private void runKBANN(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        if(arg.length < 6){
-            throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile weightLearningSettingsFile ruleFile KBANNsetting [ruleSpecificFile]'");
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile    KBANNsetting    [ruleSpecificFile]'");
         }
 
         String algName = "KBANN";
         File ruleFile = new File(arg[4]);
         KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, new File(arg[5]));
 
-        if(arg.length > 6){
+        if (arg.length > 6) {
             throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
         }
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
@@ -133,6 +131,79 @@ public class Main {
 
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
+
+    private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if (arg.length < 5) {
+            throw new IllegalStateException("Need more arguments. To run Cascade Correlation use 'CasCor   #ofRepeats  datasetFile  weightLearningSettingsFile  cascadeCorrelationSetting'");
+        }
+        String algName = "CasCor";
+
+        CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(new File(arg[4]));
+
+        Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
+        Learnable learn = (cascadeCorrelation) -> ((CascadeCorrelation) cascadeCorrelation).learn(dataset, wls, ccSetting);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+    }
+
+
+    private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if (arg.length < 5) {
+            throw new IllegalStateException("Need more arguments. To run Dynamic Node Creation use 'DNC   #ofRepeats  datasetFile  weightLearningSettingsFile  DNCSetting'");
+        }
+        String algName = "DNC";
+
+        /*
+        double deltaT = 0.05;
+        long timeWindow = 5l;
+        double cm = 0.01;
+        double ca = 0.001;
+        long hiddenNodesLimit = 70;
+         */
+        DNCSetting dncSetting = DNCSetting.create(new File(arg[4]));
+
+        Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
+        Learnable learn = (dnc) -> ((DynamicNodeCreation) dnc).learn(dataset, wls, dncSetting);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+    }
+
+    private void runSLF(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        String algName = "SLF";
+
+        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+
+        NeuralNetwork network = StructuralLearningWithSelectiveForgetting.createInitNetwork(new File(arg[4]), dataset, randomGenerator);
+
+        double penaltyEpsilon = 0.0001;
+        double treshold = 0.1;//0.1;
+        SLFSetting slfSetting = new SLFSetting(penaltyEpsilon, treshold);
+        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
+            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
+
+            NeuralNetwork copied = network.getCopy();
+            copied.getWeights().entrySet().forEach(entry -> copied.setEdgeWeight(entry.getKey(), randomGenerator.nextDouble()));
+
+            StructuralLearningWithSelectiveForgetting slf = new StructuralLearningWithSelectiveForgetting(copied);
+
+            currentResult.setInitNetwork(slf.getNeuralNetwork().getCopy());
+
+            long start = System.nanoTime();
+            slf.learn(dataset, wls, slfSetting);
+            long end = System.nanoTime();
+
+            Tools.printEvaluation(slf.getNeuralNetwork(), dataset);
+
+            currentResult.setRunningTime(end - start);
+            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(slf.getNeuralNetwork(), dataset));
+            currentResult.setFinalNetwork(slf.getNeuralNetwork().getCopy());
+            return currentResult;
+        }).collect(Collectors.toCollection(ArrayList::new));
+
+        ExperimentResult.storeResultsResults(results, algName, datasetFile);
+    }
+
 
     private void runREGENT(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
@@ -231,42 +302,6 @@ public class Main {
     }
 
 
-    private void runSLF(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "SLF";
-
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-
-        NeuralNetwork network = StructuralLearningWithSelectiveForgetting.createInitNetwork(new File(arg[4]), dataset, randomGenerator);
-
-        double penaltyEpsilon = 0.0001;
-        double treshold = 0.1;//0.1;
-        SLFSetting slfSetting = new SLFSetting(penaltyEpsilon, treshold);
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-
-            NeuralNetwork copied = network.getCopy();
-            copied.getWeights().entrySet().forEach(entry -> copied.setEdgeWeight(entry.getKey(), randomGenerator.nextDouble()));
-
-            StructuralLearningWithSelectiveForgetting slf = new StructuralLearningWithSelectiveForgetting(copied);
-
-            currentResult.setInitNetwork(slf.getNeuralNetwork().getCopy());
-
-            long start = System.nanoTime();
-            slf.learn(dataset, wls, slfSetting);
-            long end = System.nanoTime();
-
-            Tools.printEvaluation(slf.getNeuralNetwork(), dataset);
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(slf.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(slf.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
-    }
-
 
     /*private void runMAC() {
         File wlsFile = new File("./ruleExamples/sampleInput/wlsSettings.txt");
@@ -283,68 +318,6 @@ public class Main {
         TexFile.build(output);
     }*/
 
-    private void runDNC(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "DNC";
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-
-
-        // tohle predelat a naparsovat ze vstupu
-        double deltaT = 0.05;
-        long timeWindow = 5l;
-        double cm = 0.01;
-        double ca = 0.001;
-        long hiddenNodesLimit = 70;
-        DNCSetting dncSetting = new DNCSetting(deltaT, timeWindow, cm, ca, hiddenNodesLimit);
-
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-
-            DynamicNodeCreation dnc = new DynamicNodeCreation(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator);
-
-            currentResult.setInitNetwork(dnc.getNeuralNetwork().getCopy());
-
-            long start = System.nanoTime();
-            dnc.learn(dataset, wls, dncSetting);
-            long end = System.nanoTime();
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(dnc.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(dnc.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
-    }
-
-    private void runCasCor(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "CasCor";
-
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-
-        // udelat parser na to
-        CascadeCorrelationSetting ccSetting = new CascadeCorrelationSetting(wls.getSizeOfCasCorPool(), wls.getMaximumNumberOfHiddenNodes());
-
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-
-            CascadeCorrelation cascor = new CascadeCorrelation(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator);
-
-            currentResult.setInitNetwork(cascor.getNeuralNetwork().getCopy());
-
-            long start = System.nanoTime();
-            cascor.learn(dataset, wls, ccSetting);
-            long end = System.nanoTime();
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(cascor.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(cascor.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
-    }
 
 
 

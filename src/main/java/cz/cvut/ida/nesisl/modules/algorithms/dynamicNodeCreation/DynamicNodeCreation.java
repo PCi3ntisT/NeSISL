@@ -7,12 +7,14 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.util.*;
@@ -20,12 +22,12 @@ import java.util.*;
 /**
  * Created by EL on 13.3.2016.
  */
-public class DynamicNodeCreation {
+public class DynamicNodeCreation implements NeuralNetworkOwner {
     private NeuralNetwork network;
     private RandomGenerator randomGenerator;
 
-    public DynamicNodeCreation(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGenerator randomGenerator) {
-        this.network = constructNetwork(inputFactOrder, outputFactOrder, new MissingValueKBANN(), randomGenerator);
+    public DynamicNodeCreation(NeuralNetwork network, RandomGenerator randomGenerator) {
+        this.network = network;
         this.randomGenerator = randomGenerator;
     }
 
@@ -33,23 +35,19 @@ public class DynamicNodeCreation {
         return network;
     }
 
-    public void learn(Dataset dataset, WeightLearningSetting wls, DNCSetting dncSetting) {
-        double error = Double.MAX_VALUE;
-        double eps = Double.MAX_VALUE;
+    public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, DNCSetting dncSetting) {
         Map<Long, Double> averagesErrors = new HashMap<>();
         long iteration = 0;
         long timeOfAddingLastNode = 0;
 
         Map<Sample, Map<Edge, Double>> previousDeltas = Backpropagation.initPreviousDeltas(dataset, network);
 
-        while (true) { // or other stopping criterion
+        while (true) {
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Backpropagation.updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, 2, previousDeltas.get(sample));
             }
-            double currentError = Tools.computeAverageSuqaredTotalError(network, dataset);
-            eps = Math.abs(error - currentError);
-            error = currentError;
+            double currentError = Tools.computeAverageSquaredTotalError(network, dataset);
 
             averagesErrors.put(iteration, currentError);
 
@@ -65,16 +63,12 @@ public class DynamicNodeCreation {
             }
 
             iteration++;
-            System.out.println(iteration + "\t" + error + "\t" + eps);
         }
+        return network;
     }
 
     private boolean canStopNodeGrowth(long time, Map<Long, Double> averagesErrors, double maxError, DNCSetting dncSetting) {
         double aT = averagesErrors.get(time);
-        /*System.out.println("stop?");
-        System.out.println("\t" + aT +" < " + dncSetting.getCa());
-        System.out.println("\t" + maxError + " < " + dncSetting.getCm());
-        */
         return aT < dncSetting.getCa() && maxError < dncSetting.getCm();
     }
 
@@ -87,9 +81,6 @@ public class DynamicNodeCreation {
         Double averTMinusWindow = averagesErrors.get(time - dncSetting.getTimeWindow());
         Double averAtAddedNode = averagesErrors.get(timeOfAddingLastNode);
 
-        /*System.out.println("add?");
-        System.out.println("\t" + (Math.abs(averT - averTMinusWindow) / averAtAddedNode) + "\t" +  dncSetting.getDeltaT());
-        */
         return Math.abs(averT - averTMinusWindow) / averAtAddedNode < dncSetting.getDeltaT();
     }
 
@@ -130,5 +121,10 @@ public class DynamicNodeCreation {
         Tools.makeFullInterLayerForwardConnections(inter, output, network, randomGenerator);
 
         return network;
+    }
+
+    public static DynamicNodeCreation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValueKBANN missingValue) {
+        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValue, randomGenerator);
+        return new DynamicNodeCreation(network,randomGenerator);
     }
 }
