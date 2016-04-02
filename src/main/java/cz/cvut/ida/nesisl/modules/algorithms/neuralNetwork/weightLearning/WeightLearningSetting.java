@@ -17,6 +17,8 @@ public class WeightLearningSetting {
     public static final String QUICKPROP_ALFA_TOKEN = "alpha";
     public static final String QUICKPROP_EPSILON_TOKEN = "quickpropEpsilon";
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
+    public static final String PENALTY_EPSILON_TOKEN = "SLFPenaltyEpsilon";
+    public static final String SLF_THRESHOLD_TOKEN = "slfThreshold";
 
     private final Double epsilonDifference;
     private final Double quickpropEpsilon;
@@ -26,8 +28,10 @@ public class WeightLearningSetting {
     private final Long epochLimit;
     private final Integer shortTimeWindow;
     private final Integer longTimeWindow;
+    private final Double slfThreshold;
+    private final Double penaltyEpsilon;
 
-    public WeightLearningSetting(Double epsilonDifference, Double quickpropEpsilon, Double alpha, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow) {
+    public WeightLearningSetting(Double epsilonDifference, Double quickpropEpsilon, Double alpha, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
         this.epsilonDifference = epsilonDifference;
         this.quickpropEpsilon = quickpropEpsilon;
         this.alpha = alpha;
@@ -36,6 +40,8 @@ public class WeightLearningSetting {
         this.epochLimit = epochLimit;
         this.shortTimeWindow = shortTimeWindow;
         this.longTimeWindow = longTimeWindow;
+        this.penaltyEpsilon = penaltyEpsilon;
+        this.slfThreshold = slfThreshold;
     }
 
 
@@ -48,6 +54,8 @@ public class WeightLearningSetting {
         Double momentumAlpha = null;
         Integer shortTimeWindow = null;
         Integer longTimeWindow = null;
+        Double penaltyEpsilon = null;
+        Double slfThreshold = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -90,6 +98,12 @@ public class WeightLearningSetting {
                     case LONG_TIME_WINDOW_TOKEN:
                         longTimeWindow = Integer.valueOf(value);
                         break;
+                    case PENALTY_EPSILON_TOKEN:
+                        penaltyEpsilon = Double.valueOf(value);
+                        break;
+                    case SLF_THRESHOLD_TOKEN:
+                        slfThreshold = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -100,7 +114,7 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(epsilonDifference, quickpropEpsilon, alpha, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow);
+        return new WeightLearningSetting(epsilonDifference, quickpropEpsilon, alpha, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
     }
 
     public Double getEpsilonDifference() {
@@ -143,6 +157,14 @@ public class WeightLearningSetting {
             System.out.println("Be aware that 'momentumAlpha' contains null value.");
         }
         return momentumAlpha;
+    }
+
+    public Double getPenaltyEpsilon() {
+        return penaltyEpsilon;
+    }
+
+    public Double getSLFThreshold() {
+        return slfThreshold;
     }
 
     public Double getAlpha() {

@@ -42,7 +42,7 @@ public class Backpropagation {
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
-            double currentError = Tools.computeSquaredTrainTotalError(network, dataset);
+            double currentError = Tools.computeSquaredTrainTotalError(network, dataset) + Tools.computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
             errors.add(currentError);
             iteration++;
         }
@@ -76,7 +76,6 @@ public class Backpropagation {
         List<Node> nodeLayer;
         long layersComputed = 0;
         for (long layer = network.getMaximalNumberOfHiddenLayer() + 1; layer >= 0 && layersComputed < numberOfLayersToBeLearned; layer--) {
-
             if (layer > network.getMaximalNumberOfHiddenLayer()) {
                 nodeLayer = network.getOutputNodes();
             } else {
@@ -88,9 +87,17 @@ public class Backpropagation {
                                 if (previousDeltas.containsKey(edge)) {
                                     previousDelta = previousDeltas.get(edge);
                                 }
-
+                                // delta with learning and momentum
                                 Double value = wls.getLearningRate() * sigma.get(node) * results.getComputedValues().get(edge.getSource())
                                         + wls.getMomentumAlpha() * previousDelta;
+
+                                // edge zeoring
+                                Double edgeWeight = network.getWeight(edge);
+                                Double edgeAbsoluteWeight = Math.abs(edgeWeight);
+                                if (edgeAbsoluteWeight < wls.getSLFThreshold()) {
+                                    Double penaltyTerm = wls.getLearningRate() * wls.getPenaltyEpsilon() * Math.signum(edgeWeight);
+                                    value = value - penaltyTerm;
+                                }
 
                                 deltas.put(edge, value);
                             })

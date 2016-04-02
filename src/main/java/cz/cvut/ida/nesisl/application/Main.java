@@ -30,7 +30,9 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Si
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class Main {
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", ""};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/sampleInput/SLFinput.txt"};
         if (arg.length < 4) {
-            throw new IllegalStateException("Right setting in form 'algorithm numberOfRuns dataset weightLearningSetting [ruleFile structureLearningSetting]'");
+            throw new IllegalStateException("Right setting in form 'algorithm numberOfRuns dataset weightLearningSetting [...]'. Possible algorithms KBANN, CasCor, DNC, SLF, TopGen, REGENT; write as first argument to see more.");
         }
         // algName  #runs   datasetFile wlsFile ruleFile KBANNsetting ruleSpecificFile
 
@@ -74,13 +76,13 @@ public class Main {
                 main.runDNC(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "SLF":
-                main.runSLF(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runSLF(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "TopGen":
-                main.runTopGen(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runTopGen(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "REGENT":
-                main.runREGENT(arg, numberOfRepeats, datasetFile, wlsFile, randomGenerator);
+                main.runREGENT(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             default:
                 System.out.println("Unknown algorithm '" + arg[0] + "'.");
@@ -168,40 +170,19 @@ public class Main {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
 
-    private void runSLF(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure '");
+        }
         String algName = "SLF";
 
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+        /*Double penaltyEpsilon = 0.0001;
+        Double treshold = 0.1;//0.1;*/
 
-        NeuralNetwork network = StructuralLearningWithSelectiveForgetting.createInitNetwork(new File(arg[4]), dataset, randomGenerator);
+        Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(new File(arg[4]), dataset, randomGenerator);
+        Learnable learn = (slf) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(dataset, wls);
 
-        double penaltyEpsilon = 0.0001;
-        double treshold = 0.1;//0.1;
-        SLFSetting slfSetting = new SLFSetting(penaltyEpsilon, treshold);
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-
-            NeuralNetwork copied = network.getCopy();
-            copied.getWeights().entrySet().forEach(entry -> copied.setEdgeWeight(entry.getKey(), randomGenerator.nextDouble()));
-
-            StructuralLearningWithSelectiveForgetting slf = new StructuralLearningWithSelectiveForgetting(copied);
-
-            currentResult.setInitNetwork(slf.getNeuralNetwork().getCopy());
-
-            long start = System.nanoTime();
-            slf.learn(dataset, wls, slfSetting);
-            long end = System.nanoTime();
-
-            Tools.printEvaluation(slf.getNeuralNetwork(), dataset);
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(slf.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(slf.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
 
 
