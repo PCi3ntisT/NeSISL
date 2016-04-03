@@ -64,14 +64,15 @@ public class MultilayeredConstructiveArchitecture {
         double currentError = Double.MAX_VALUE;
         boolean runCascadeAdding = false;
         Node lastlyAddedNewNode = null;
+        /*
         while (true) {
-
             System.out.println("addingNodeLoop");
             if (runCascadeAdding) {
                 Backpropagation.learnEdgesToOutputLayerOnlyStateful(network, dataset, wls);
             } else {
                 Backpropagation.feedforwardBackpropagation(network, dataset, wls);
             }
+            // TODO
             currentError = Tools.computeSquaredTrainTotalError(network, dataset, wls);
             epochDifference = Math.abs(error - currentError);
             error = currentError;
@@ -86,13 +87,16 @@ public class MultilayeredConstructiveArchitecture {
                 runCascadeAdding = isStillCreatingFirstLayer(lastlyAddedNewNode, network, dataset);
             }
 
+            // TODO
             if (numberOfAddedNodes > wls.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonDifference()) {
                 break;
             }
 
             // pridani dalsiho uzlu
             final boolean finalRunCascadeAdding = runCascadeAdding;
-            CandidateWrapper bestCandidate = IntStream.range(0, wls.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, finalRunCascadeAdding, wls))
+            CandidateWrapper bestCandidate = null;
+            // TODO
+             bestCandidate = IntStream.range(0, wls.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, finalRunCascadeAdding, wls))
                     .max(CandidateWrapper::compare).get();
 
             Long layerNumber = 0l;
@@ -110,7 +114,10 @@ public class MultilayeredConstructiveArchitecture {
             TexFile.build(output);
 
             numberOfAddedNodes++;
-        }
+
+        }*/
+        // what is commented should be reimplemented
+        throw new NotImplementedException();
     }
 
     private boolean isStillCreatingFirstLayer(Node lastlyAddedNewNode, NeuralNetwork network, Dataset dataset) {
