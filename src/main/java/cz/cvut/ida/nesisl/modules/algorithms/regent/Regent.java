@@ -8,8 +8,8 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
-import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
-import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * Created by EL on 23.3.2016.
  */
-public class Regent {
+public class Regent implements NeuralNetworkOwner {
     private final KBANN kbann;
     private final RandomGeneratorImpl randomGenerator;
     private NeuralNetwork neuralNetwork;
@@ -53,14 +53,14 @@ public class Regent {
     }
 
     public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega) {
-        KBANN kbann = new KBANN(file, specific, randomGenerator, omega);
+        KBANN kbann = KBANN.create(file, specific, new KBANNSettings(randomGenerator, omega));
         return new Regent(kbann, randomGenerator);
     }
 
-    public void learn(Dataset dataset, WeightLearningSetting wls, RegentSetting regentSetting, KBANNSettings kbannSetting) {
+    public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, RegentSetting regentSetting, KBANNSettings kbannSetting) {
         this.kbann.learn(dataset, wls);
         this.neuralNetwork = kbann.getNeuralNetwork();
-        this.bestSoFarScore = Tools.computeAverageSuqaredTotalError(neuralNetwork, dataset);
+        this.bestSoFarScore = Tools.computeAverageSquaredTotalError(neuralNetwork, dataset);
 
         List<NeuralNetwork> children = mutateInitialNetworkToMakeChildrens(this.neuralNetwork, dataset, regentSetting);
         List<Individual> population = computeFitness(children, dataset);
@@ -90,6 +90,9 @@ public class Regent {
             Collections.sort(population, comparator);
             updateBestSoFar(population.get(0));
         }
+
+        bestSoFarNetwork.setClassifierStateful(ThresholdClassificator.create(bestSoFarNetwork, dataset));
+        return bestSoFarNetwork;
     }
 
     private List<NeuralNetwork> crossover(List<Pair<NeuralNetwork, NeuralNetwork>> pairs, Dataset dataset, RegentSetting regentSetting) {
@@ -172,7 +175,7 @@ public class Regent {
 
     private NeuralNetwork correctBias(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork, Dataset dataset) {
         Map<NeuralNetwork, Map<Sample, Results>> computedValues = new HashMap<>();
-        nodeOriginalNetwork.values().forEach(net -> computedValues.put(net, Tools.evaluateAllAndGetResults(dataset, net)));
+        nodeOriginalNetwork.values().forEach(net -> computedValues.put(net, Tools.evaluateOnTestAllAndGetResults(dataset, net)));
 
         Set<Node> nodes = new HashSet<>();
         nodeOriginalNetwork.values().forEach(net -> {
@@ -391,7 +394,7 @@ public class Regent {
     private Individual evaluate(NeuralNetwork network, RegentSetting regentSetting, Dataset dataset, WeightLearningSetting wls) {
         regentSetting.increaseFitnessCountSynchronized();
         Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
-        double error = Tools.computeAverageSuqaredTotalError(network, dataset);
+        double error = Tools.computeAverageSquaredTotalError(network, dataset);
         return new Individual(network, error);
     }
 
@@ -490,6 +493,6 @@ public class Regent {
     }
 
     private Individual computeFitness(NeuralNetwork network, Dataset dataset) {
-        return new Individual(network, Tools.computeAverageSuqaredTotalError(network, dataset));
+        return new Individual(network, Tools.computeAverageSquaredTotalError(network, dataset));
     }
 }

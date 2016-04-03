@@ -2,9 +2,7 @@ package main.java.cz.cvut.ida.nesisl.application;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
@@ -15,7 +13,6 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.structuralLearningWithSelectiveForgetting.SLFSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.structuralLearningWithSelectiveForgetting.StructuralLearningWithSelectiveForgetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
@@ -24,13 +21,9 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.Initable;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.xml.crypto.Data;
 import java.io.File;
@@ -211,56 +204,31 @@ public class Main {
 
     private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
-        File file = new File(arg[4]);
-        Double omega = 4.0;
+        if (arg.length < 7) {
+            throw new IllegalStateException("Need more arguments. To run REGENT use 'REGENT   #ofRepeats  datasetFile  weightLearningSettingsFile ruleFile RegentSetting TopGenSettings'");
+        }
+        if (arg.length > 7) {
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
-        Double treshold = 0.0000002;
-        Long lengthOfOpenList = 2l;
-        Long numberOfSuccessors = 1l;
-
-        TopGenSettings tgSetting = new TopGenSettings(treshold, numberOfSuccessors, lengthOfOpenList);
-
-        long populationSize = 4;
+        /*long populationSize = 4;
         long tournamentSize = 1;
         Integer numberOfMutationOfPopulation = 1;
         Integer numberOfMutationOfCrossovers = 1;
-        KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, omega);
         Double probabilityOfNodeDeletion = 0.4;
         Long maxFitness = 1000l;
         Integer numberOfCrossoverChildren = 1;
-        Integer numberOfElites = 1;
-        RegentSetting regentSetting = new RegentSetting(tournamentSize, populationSize, tgSetting, numberOfMutationOfPopulation, numberOfMutationOfCrossovers, kbannSetting, probabilityOfNodeDeletion, maxFitness, numberOfCrossoverChildren, numberOfElites);
+        Integer numberOfElites = 1;*/
 
+        TopGenSettings tgSetting = TopGenSettings.create(new File(arg[6]));
+        RegentSetting regentSetting = RegentSetting.create(new File(arg[5]),tgSetting, randomGenerator);
 
-        // nedodelana funkcionalita setting pro KBANN algoritmus (omega) a dalsich pravidel, ktere se mohou vkladat do site (specific) (ty jsou totiz delany expertem)
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
+        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, tgSetting.getOmega());
+        Learnable learn = (regent) -> ((Regent) regent).learn(dataset, wls, regentSetting, new KBANNSettings(randomGenerator,tgSetting.getOmega()));
 
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            Regent regent = Regent.create(file, specific, randomGenerator, omega);
-
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-            System.out.println(regent.getNeuralNetwork());
-            currentResult.setInitNetwork(regent.getNeuralNetwork().getCopy());
-
-
-            long start = System.nanoTime();
-            regent.learn(dataset, wls, regentSetting, kbannSetting);
-            long end = System.nanoTime();
-
-            Tools.printEvaluation(regent.getNeuralNetwork(), dataset);
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(regent.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(regent.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
-
-
 
     /*private void runMAC() {
         File wlsFile = new File("./ruleExamples/sampleInput/wlsSettings.txt");
@@ -278,53 +246,12 @@ public class Main {
     }*/
 
 
-
-
-
-    /*
-    private void runKBANN(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "KBANN";
-        File file = new File(arg[4]);
-        Double omega = 4.0;
-        List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
-
-        // nedodelana funkcionalita setting pro KBANN algoritmus (omega) a dalsich pravidel, ktere se mohou vkladat do site (specific) (ty jsou totiz delany expertem)
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            KBANN kbann = new KBANN(file, specific, randomGenerator, omega);
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-            currentResult.setInitNetwork(kbann.getNeuralNetwork().getCopy());
-
-
-            TADY TO ZPARAMETRIZOVAT DO LAMBDA FUNKCE !!!!
-            long start = System.nanoTime();
-            kbann.learn(dataset, wls);
-            long end = System.nanoTime();
-
-            Tools.printEvaluation(kbann.getNeuralNetwork(), dataset);
-
-            System.out.println("ponovu");
-            System.out.println(kbann.getNeuralNetwork().getClassifier().getTreshold());
-            System.out.println("AUC\t" + AUCCalculation.create(kbann.getNeuralNetwork(),dataset).computeAUC());
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(kbann.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(kbann.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
-    }
-     */
     /*private void run() {
         NeuralNetwork network = simpleNetwork();
         List<Double> input = new ArrayList<>();
         input.add(1d);
         input.add(-5d);
         input.add(0.5);
-
 
         List<Double> output = network.evaluate(input);
         System.out.println("results");
@@ -333,7 +260,7 @@ public class Main {
         texFile tex = TikzExporter.export(network);
         File file = tex.saveAs("./pdfexport/network.tex");
         texFile.build(file);
-    }*/
+    }
 
     private NeuralNetwork simpleNetwork() {
         System.out.println("otestovat jeste jak se to chova s copy");
@@ -390,7 +317,7 @@ public class Main {
 
         System.out.println("////\n");
         return network;
-    }
+    }*/
 
 
 }
