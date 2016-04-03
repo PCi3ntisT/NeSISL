@@ -55,6 +55,8 @@ public class Main {
         }
         // algName  #runs   datasetFile wlsFile ruleFile KBANNsetting ruleSpecificFile
 
+        // DODELAT ADRESU VYSTUPNIHO SOUBORU PRO EXPERIMENTS JE TO JE DULEZITE PRO TO MNOHONASOBNE NASTAVENI
+
         double simga = 1d;
         double mu = 0.0d;
         int seed = 7;
@@ -148,7 +150,6 @@ public class Main {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
 
-
     private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run Dynamic Node Creation use 'DNC   #ofRepeats  datasetFile  weightLearningSettingsFile  DNCSetting'");
@@ -185,8 +186,30 @@ public class Main {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
     }
 
+    private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        String algName = "TopGen";
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run TopGen use 'TopGen   #ofRepeats  datasetFile  weightLearningSettingsFile ruleFile TopGenSettings'");
+        }
+        if (arg.length > 6) {
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
+        List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
-    private void runREGENT(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        /*Double treshold = 0.0001;
+        Long lengthOfOpenList = 100l;
+        Long numberOfSuccessors = 10l;*/
+
+        TopGenSettings tgSetting = TopGenSettings.create(new File(arg[5]));
+
+        Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
+        Learnable learn = (topGen) -> ((TopGen) topGen).learn(dataset, wls, tgSetting);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+    }
+
+
+    private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
         File file = new File(arg[4]);
         Double omega = 4.0;
@@ -231,51 +254,6 @@ public class Main {
             currentResult.setRunningTime(end - start);
             currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(regent.getNeuralNetwork(), dataset));
             currentResult.setFinalNetwork(regent.getNeuralNetwork().getCopy());
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
-
-        ExperimentResult.storeResultsResults(results, algName, datasetFile);
-    }
-
-    private void runTopGen(String[] arg, int numberOfRepeats, File datasetFile, File wlsFile, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        String algName = "TopGen";
-        File file = new File(arg[4]);
-        Double omega = 4.0;
-        List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
-
-        Double treshold = 0.0001;
-        Long lengthOfOpenList = 100l;
-        Long numberOfSuccessors = 10l;
-
-        TopGenSettings tgSetting = new TopGenSettings(treshold, numberOfSuccessors, lengthOfOpenList);
-
-        KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, omega);
-
-        // nedodelana funkcionalita setting pro KBANN algoritmus (omega) a dalsich pravidel, ktere se mohou vkladat do site (specific) (ty jsou totiz delany expertem)
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
-
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-        List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            //List<ExperimentResult> results = IntStream.range(0, numberOfRepeats).mapToObj(idx -> {
-            System.out.println("starting topget\t" + idx);
-            TopGen topgen = TopGen.create(file, specific, randomGenerator, omega);
-
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, datasetFile);
-            currentResult.setInitNetwork(topgen.getNeuralNetwork().getCopy());
-
-            long start = System.nanoTime();
-            topgen.learn(dataset, wls, tgSetting, kbannSetting);
-            long end = System.nanoTime();
-
-            System.out.println("from\t" + idx);
-            Tools.printEvaluation(topgen.getNeuralNetwork(), dataset);
-            System.out.println("to\t" + idx);
-
-            currentResult.setRunningTime(end - start);
-            currentResult.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(topgen.getNeuralNetwork(), dataset));
-            currentResult.setFinalNetwork(topgen.getNeuralNetwork().getCopy());
-
-            System.out.println("ending topget\t" + idx);
             return currentResult;
         }).collect(Collectors.toCollection(ArrayList::new));
 

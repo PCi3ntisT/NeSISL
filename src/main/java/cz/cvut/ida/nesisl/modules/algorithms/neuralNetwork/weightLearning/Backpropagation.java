@@ -42,7 +42,7 @@ public class Backpropagation {
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
-            double currentError = Tools.computeSquaredTrainTotalError(network, dataset) + Tools.computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+            double currentError = Tools.computeSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
             errors.add(currentError);
             iteration++;
         }

@@ -22,4 +22,5 @@ public interface Dataset {
 
     public File getOriginalFile();
 
+    public List<Sample> getNodeTrainData(NeuralNetwork network);
 }

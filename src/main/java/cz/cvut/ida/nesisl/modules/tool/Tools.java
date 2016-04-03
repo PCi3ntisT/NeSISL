@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.tool;
 
+import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
@@ -184,7 +185,7 @@ public class Tools {
         });
     }
 
-    public static Map<Sample, Boolean> classify(Map<Sample, Results> results) {
+    public static Map<Sample, Boolean> classify(Classifier classifier, Map<Sample, Results> results) {
         /*return results.entrySet().parallelStream().map(entry -> {
                     Boolean classicifaction = isClassifiedCorrectly(entry.getKey(),results.get(entry.getKey()));
                     return new HashMap.SimpleEntry<>(entry.getKey(), classicifaction);
@@ -192,19 +193,20 @@ public class Tools {
         ).collect(Collectors.toCollection(HashMap::new));*/
         HashMap<Sample, Boolean> map = new HashMap<>();
         results.entrySet().forEach(entry -> {
-                    Boolean classicifaction = isClassifiedCorrectly(entry.getKey(), results.get(entry.getKey()));
-                    map.put(entry.getKey(), classicifaction);
+                    Boolean classification = isClassifiedCorrectly(classifier,entry.getKey(), results.get(entry.getKey()));
+                    map.put(entry.getKey(), classification);
                 }
         );
         return map;
     }
 
-    private static Boolean isClassifiedCorrectly(Sample sample, Results result) {
-        DoubleStream diff = IntStream.range(0, result.getComputedOutputs().size()).mapToDouble(idx ->
-                        sample.getOutput().get(idx).getValue() - result.getComputedOutputs().get(idx)
-        );
-        //return diff.sum() < 0.1;
-        return diff.max().orElse(0) < 0.25;
+    private static Boolean isClassifiedCorrectly(Classifier classifier, Sample sample, Results result) {
+        for (int idx = 0; idx < result.getComputedOutputs().size(); idx++) {
+            if(!isZero(Math.abs(sample.getOutput().get(idx).getValue() - classifier.classifyToDouble(result.getComputedOutputs().get(idx))))){
+                return false;
+            }
+        }
+        return true;
     }
 
     public static Double medianDouble(List<Double> list) {
@@ -245,4 +247,11 @@ public class Tools {
         return list.subList(list.size() - timeWindow,list.size()).stream().mapToDouble(d -> d).average().orElse(0);
     }
 
+    public static double computeSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
+        return computeSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+    }
+
+    public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> nodeTrainData, NeuralNetwork network) {
+        return evaluateAllAndGetResults(nodeTrainData, network);
+    }
 }

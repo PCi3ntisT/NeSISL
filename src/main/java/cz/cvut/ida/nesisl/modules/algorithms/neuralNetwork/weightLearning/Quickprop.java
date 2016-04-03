@@ -8,6 +8,7 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -55,13 +56,13 @@ public class Quickprop {
                 previousWeightDeltas = current.getRight();
             }
 
+            throw new NotImplementedException();
+            //error = Tools.computeSquaredTrainTotalError(network, dataset, wls);
+            //System.out.println(error);
 
-            error = Tools.computeSquaredTrainTotalError(network, dataset, wls);
-            System.out.println(error);
-
-            eps = Math.abs(error - previousError);
-            previousError = error;
-            System.out.println(iteration + "it:\t" + error);
+            //eps = Math.abs(error - previousError);
+            //previousError = error;
+            //System.out.println(iteration + "it:\t" + error);
         }
         return error;
     }
@@ -89,7 +90,8 @@ public class Quickprop {
     }
 
     private static void updateWeight(Edge edge, Double currentPartialDerivative, Double previousPartialDerivatives, Double previousWeightDelta, Map<Edge, Double> weightDeltas, NeuralNetwork network, WeightLearningSetting wls) {
-
+        throw new NotImplementedException();
+        /*
         Double alfa = currentPartialDerivative / (previousPartialDerivatives - currentPartialDerivative);
 
         if (alfa > wls.getMaxAlpha() || alfa * previousWeightDelta * currentPartialDerivative > 0) {
@@ -106,6 +108,7 @@ public class Quickprop {
         // tady by mohla byt jeste ochrana proti moc velkym hodnotam
         weightDeltas.put(edge, edgeUpdate);
         network.setEdgeWeight(edge, finalValue);
+        */
     }
 
 }

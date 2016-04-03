@@ -75,6 +75,11 @@ public class DatasetImpl implements Dataset {
     }
 
     @Override
+    public List<Sample> getNodeTrainData(NeuralNetwork network) {
+        return getTrainData(network); // TODO  v pripade ze pustim topGen s dvema rozdelenyma trainSetama, tak normalne se train data jako jedna cast at to nemusim predelatvat :)
+    }
+
+    @Override
     public List<Sample> getTestData(NeuralNetwork network) {
         // tohle jeste predelat ;)
         return getTrainData(network);

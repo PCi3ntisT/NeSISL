@@ -14,15 +14,11 @@ public class WeightLearningSetting {
     public static final String LEARNING_RATE_TOKEN = "learningRate";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
-    public static final String QUICKPROP_ALFA_TOKEN = "alpha";
-    public static final String QUICKPROP_EPSILON_TOKEN = "quickpropEpsilon";
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
     public static final String PENALTY_EPSILON_TOKEN = "SLFPenaltyEpsilon";
     public static final String SLF_THRESHOLD_TOKEN = "slfThreshold";
 
     private final Double epsilonDifference;
-    private final Double quickpropEpsilon;
-    private final Double alpha;
     private final Double learningRate;
     private final Double momentumAlpha;
     private final Long epochLimit;
@@ -31,10 +27,8 @@ public class WeightLearningSetting {
     private final Double slfThreshold;
     private final Double penaltyEpsilon;
 
-    public WeightLearningSetting(Double epsilonDifference, Double quickpropEpsilon, Double alpha, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
+    public WeightLearningSetting(Double epsilonDifference,  Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
         this.epsilonDifference = epsilonDifference;
-        this.quickpropEpsilon = quickpropEpsilon;
-        this.alpha = alpha;
         this.learningRate = learningRate;
         this.momentumAlpha = momentumAlpha;
         this.epochLimit = epochLimit;
@@ -47,8 +41,6 @@ public class WeightLearningSetting {
 
     public static WeightLearningSetting parse(File file) {
         Double learningRate = null;
-        Double alpha = null;
-        Double quickpropEpsilon = null;
         Double epsilonDifference = null;
         Long epochLimit = null;
         Double momentumAlpha = null;
@@ -83,12 +75,6 @@ public class WeightLearningSetting {
                     case LEARNING_RATE_TOKEN:
                         learningRate = Double.valueOf(value);
                         break;
-                    case QUICKPROP_ALFA_TOKEN:
-                        alpha = Double.valueOf(value);
-                        break;
-                    case QUICKPROP_EPSILON_TOKEN:
-                        quickpropEpsilon = Double.valueOf(value);
-                        break;
                     case MOMENTUM_ALPHA_TOKEN:
                         momentumAlpha = Double.valueOf(value);
                         break;
@@ -114,7 +100,7 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(epsilonDifference, quickpropEpsilon, alpha, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
+        return new WeightLearningSetting(epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
     }
 
     public Double getEpsilonDifference() {
@@ -129,20 +115,6 @@ public class WeightLearningSetting {
             System.out.println("Be aware that 'learningRate' contains null value.");
         }
         return learningRate;
-    }
-
-    public Double getMaxAlpha() {
-        if (null == alpha) {
-            System.out.println("Be aware that 'alpha' contains null value.");
-        }
-        return alpha;
-    }
-
-    public Double getQuickpropEpsilon() {
-        if (null == quickpropEpsilon) {
-            System.out.println("Be aware that 'quickpropEpsilon' contains null value.");
-        }
-        return quickpropEpsilon;
     }
 
     public long getEpochLimit() {
@@ -165,10 +137,6 @@ public class WeightLearningSetting {
 
     public Double getSLFThreshold() {
         return slfThreshold;
-    }
-
-    public Double getAlpha() {
-        return alpha;
     }
 
     public Integer getShortTimeWindow() {

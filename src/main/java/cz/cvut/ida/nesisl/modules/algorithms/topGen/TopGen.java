@@ -7,7 +7,8 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.*;
@@ -21,15 +22,13 @@ import java.util.stream.Stream;
 /**
  * Created by EL on 21.3.2016.
  */
-public class TopGen {
+public class TopGen implements NeuralNetworkOwner {
 
     private NeuralNetwork network;
-    private KBANN kbann;
     private final RandomGenerator randomGenerator;
     private Double networkError = Double.MAX_VALUE;
 
     public TopGen(KBANN kbann, RandomGeneratorImpl randomGenerator) {
-        this.kbann = kbann;
         this.randomGenerator = randomGenerator;
         this.network = kbann.getNeuralNetwork();
     }
@@ -38,17 +37,13 @@ public class TopGen {
         return network;
     }
 
-    public void setKbann(KBANN kbann) {
-        this.kbann = kbann;
-    }
-
-    public void learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings, KBANNSettings kbannSetting) {
-        // pairs <KBANN, (mean/average)dataSquaredError>
+    public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings) {
+        KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, tgSettings.getOmega());
         Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
-        Double error = Tools.computeAverageSuqaredTotalError(network, dataset);
+        Double error = Tools.computeSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
 
         Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
-            if (t1.getT() == t2.getT() && t1.getW() == t2.getW()) {
+            if (Tools.isZero(t1.getT() - t2.getT()) && Tools.isZero(t1.getW() - t2.getW())) {
                 return 0;
             } else if (t1.getT() >= t2.getT()) {
                 return -1;
@@ -59,12 +54,12 @@ public class TopGen {
         PriorityQueue<Triple<NeuralNetwork, Double, Double>> queue = new PriorityQueue<>(comparator);
         queue.add(new Triple<>(network, error, 1.0));
 
-
-        while (!queue.isEmpty()) {
+        List<Double> errors = new ArrayList<>();
+        long iteration = 0;
+        while (!queue.isEmpty() && tgSettings.canContinue(iteration,errors)) {
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
             updateNetwork(current);
 
-            System.out.println(current.getT() + "\t < \t" + tgSettings.getThreshold());
             if (current.getT() < tgSettings.getThreshold()) {
                 break;
             }
@@ -73,8 +68,6 @@ public class TopGen {
             queue.addAll(successors);
 
             Collections.sort(successors, comparator);
-            System.out.println("\t" + successors.get(0).getT());
-
 
             if (queue.size() > tgSettings.getLengthOfOpenList()) {
                 PriorityQueue<Triple<NeuralNetwork, Double, Double>> nextRound = new PriorityQueue<>(comparator);
@@ -85,7 +78,11 @@ public class TopGen {
                 });
                 queue = nextRound;
             }
+            iteration++;
+            errors.add(networkError);
         }
+        network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
+        return network;
     }
 
     private void updateNetwork(Triple<NeuralNetwork, Double, Double> triple) {
@@ -97,13 +94,17 @@ public class TopGen {
 
     private List<Triple<NeuralNetwork, Double, Double>> generateAndLearnSuccessors(NeuralNetwork network, Dataset dataset, TopGenSettings tgSettings, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset);
-        Stream<Triple<Pair<Node, Boolean>, Long, Long>> cutted = generated.stream().limit(tgSettings.getNumberOfSuccessors());
-        return cutted.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(), triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting)).collect(Collectors.toCollection(ArrayList::new));
+        Stream<Triple<Pair<Node, Boolean>, Long, Long>> cut = generated.stream().limit(tgSettings.getNumberOfSuccessors());
+        return cut.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(), triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting, tgSettings)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> generateSorted(NeuralNetwork network, Dataset dataset) {
-        Map<Sample, Results> results = Tools.evaluateAllAndGetResults(dataset, network);
-        Map<Sample, Boolean> correctlyClassified = Tools.classify(results);
+        if(null == network.getClassifier()){
+            network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        }
+
+        Map<Sample, Results> results = Tools.evaluateOnAndGetResults(dataset.getNodeTrainData(network),network);
+        Map<Sample, Boolean> correctlyClassified = Tools.classify(network.getClassifier(),results);
 
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = computeValues(network, results, correctlyClassified);
 
@@ -129,14 +130,15 @@ public class TopGen {
         return addNode(picked.getK().getLeft(), picked.getK().getRight(), currentNetwork, kbannSettings, randomGenerator);
     }
 
-    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
+    private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting, TopGenSettings tgSettings) {
         network = addNode(node, isFalsePositive, network, kbannSetting, randomGenerator);
 
-        double learningRate = previousLearningRate * wls.getLearningRate(); // misto wls.getLearningRate by tu melo byt neco ve smyslu decay, ktere je ale parametrem tgSettings
-        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMaximumNumberOfHiddenNodes(), wls.getSizeOfCasCorPool(), wls.getMaxAlpha(), wls.getQuickpropEpsilon(), wls.getEpochLimit(), wls.getMomentumAlpha());
+        double learningRate = previousLearningRate * tgSettings.getLearningRateDecay();
+        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(),wls.getLongTimeWindow(),wls.getPenaltyEpsilon(), wls.getSLFThreshold());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
-        double error = Tools.computeAverageSuqaredTotalError(network, dataset);
+        double error = Tools.computeAverageSquaredTotalError(network, dataset);
+        network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
         return new Triple<>(network, error, learningRate);
     }
 
@@ -225,8 +227,8 @@ public class TopGen {
     }
 
 
-    public static TopGen create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega) {
-        KBANN kbann = new KBANN(file, specific, randomGenerator, omega);
+    public static TopGen create(File ruleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, TopGenSettings topGenSettings) {
+        KBANN kbann = KBANN.create(ruleFile, specific, new KBANNSettings(randomGenerator,topGenSettings.getOmega()));
         return new TopGen(kbann, randomGenerator);
     }
 

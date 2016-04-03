@@ -72,7 +72,7 @@ public class MultilayeredConstructiveArchitecture {
             } else {
                 Backpropagation.feedforwardBackpropagation(network, dataset, wls);
             }
-            currentError = Tools.computeSuqaredTotalError(network, dataset, wls);
+            currentError = Tools.computeSquaredTrainTotalError(network, dataset, wls);
             epochDifference = Math.abs(error - currentError);
             error = currentError;
             System.out.println("c\t" + error);
@@ -137,7 +137,7 @@ public class MultilayeredConstructiveArchitecture {
 
     private static Pair<Set<Pair<Edge, Double>>, Double> learnCandidatesConnections(Dataset dataset, Node node, Set<Pair<Edge, Double>> edges, NeuralNetwork network, WeightLearningSetting wls) {
         Double correlation = Double.MIN_VALUE;
-        Map<Sample, Results> cache = Tools.evaluateAllAndGetResults(dataset, network); // tohle by asi nebylo od veci cachovat nekde na vyssi urovni, kdyz to stejnak pouzivaji vsichni
+        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network); // tohle by asi nebylo od veci cachovat nekde na vyssi urovni, kdyz to stejnak pouzivaji vsichni
         Set<Pair<Edge, Double>> currentEdges = edges;
         Double epsilon = Double.MAX_VALUE;
         while (true) {
@@ -199,7 +199,7 @@ public class MultilayeredConstructiveArchitecture {
                 }));
         double correlation = outputs.entrySet().parallelStream().mapToDouble(entry -> Math.abs(entry.getValue())).sum();
 
-        Map<Sample, Results> cache = Tools.evaluateAllAndGetResults(dataset, network);
+        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network);
 
         // tady ten update vah zkontrolovat, jestli to jde spravnym smerem
         originalEdges.forEach(pair -> {

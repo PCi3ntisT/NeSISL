@@ -7,6 +7,7 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
@@ -64,6 +65,7 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
             iteration++;
         }
+        this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return network;
     }
 
