@@ -50,7 +50,7 @@ public class Main {
 
         double simga = 1d;
         double mu = 0.0d;
-        int seed = 7;
+        int seed = 13;
         int numberOfRepeats = Integer.valueOf(arg[1]);
         File datasetFile = new File(arg[2]);
         File wlsFile = new File(arg[3]);

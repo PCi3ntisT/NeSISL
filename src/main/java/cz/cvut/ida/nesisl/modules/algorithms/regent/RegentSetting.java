@@ -18,6 +18,7 @@ public class RegentSetting {
     public static final String FITNESS_LIMIT_TOKEN = "maxAllowedFitness";
     public static final String CROSSOVER_CHILDREN_TOKEN = "percentageOfCrossoverChildrenPairs";
     public static final String ELITES_TOKEN = "numberOfElites";
+    public static final String EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN = "edgeWieghtCrossoverLimit";
 
     private final long tournamentSize;
     private final long populationSize;
@@ -30,8 +31,9 @@ public class RegentSetting {
     private final Integer percentageOfCrossoverChildrenPairs;
     private final Integer numberOfElites;
     private Long computedFitness = 0l;
+    private final Double edgeWeightLimitAfterCrossover;
 
-    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites) {
+    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites, Double edgeWeightLimitAfterCrossover) {
         this.tournamentSize = tournamentSize;
         this.populationSize = populationSize;
         this.topGenSettings = topGenSettings;
@@ -42,6 +44,7 @@ public class RegentSetting {
         this.maxAllowedFitness = maxAllowedFitness;
         this.percentageOfCrossoverChildrenPairs = numberOfCrossoverChildren;
         this.numberOfElites = numberOfElites;
+        this.edgeWeightLimitAfterCrossover = edgeWeightLimitAfterCrossover;
     }
 
     public long getTournamentSize() {
@@ -115,6 +118,7 @@ public class RegentSetting {
         Integer percentageOfCrossoverChildren = null;
         Integer numberOfElites = null;
         Double probabilityOfNodeDeletion = null;
+        Double edgeLimitCrossOver = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -157,6 +161,9 @@ public class RegentSetting {
                     case TOURNAMENT_SIZE_TOKEN:
                         tournamentSize = Long.valueOf(value);
                         break;
+                    case EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN:
+                        edgeLimitCrossOver = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -168,6 +175,10 @@ public class RegentSetting {
             e.printStackTrace();
         }
 
-        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites);
+        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites,edgeLimitCrossOver);
+    }
+
+    public Double getEdgeWeightLimitAfterCrossover() {
+        return edgeWeightLimitAfterCrossover;
     }
 }

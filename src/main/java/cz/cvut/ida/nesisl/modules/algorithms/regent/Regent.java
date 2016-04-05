@@ -115,8 +115,8 @@ public class Regent implements NeuralNetworkOwner {
         NeuralNetwork networkA = constructNetwork(first, setA);
         NeuralNetwork networkB = constructNetwork(first, setB);
 
-        networkA = fillForwardEdges(networkA, nodeOriginalNetwork, first, second, dataset);
-        networkB = fillForwardEdges(networkB, nodeOriginalNetwork, first, second, dataset);
+        networkA = fillForwardEdges(networkA, nodeOriginalNetwork, first, second, dataset,regentSetting);
+        networkB = fillForwardEdges(networkB, nodeOriginalNetwork, first, second, dataset,regentSetting);
 
         List<NeuralNetwork> result = new ArrayList<>();
         result.add(networkA);
@@ -125,7 +125,7 @@ public class Regent implements NeuralNetworkOwner {
         return result;
     }
 
-    private NeuralNetwork fillForwardEdges(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork, NeuralNetwork first, NeuralNetwork second, Dataset dataset) {
+    private NeuralNetwork fillForwardEdges(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork, NeuralNetwork first, NeuralNetwork second, Dataset dataset, RegentSetting regentSetting) {
         Set<Node> firstNetworkNodes = new HashSet<>();
         firstNetworkNodes.addAll(first.getHiddenNodes());
 
@@ -141,7 +141,7 @@ public class Regent implements NeuralNetworkOwner {
 
         network = fillForwardEdges(firstNodes, network, first);
         network = fillForwardEdges(secondNodes, network, second);
-        network = fullyConnectAdjacentLayers(network, nodeOriginalNetwork);
+        network = fullyConnectAdjacentLayers(network, nodeOriginalNetwork,regentSetting);
         network = fillInputOutputEdges(network, first, second);
         network = correctBias(network, nodeOriginalNetwork, dataset);
 
@@ -244,7 +244,7 @@ public class Regent implements NeuralNetworkOwner {
         return network;
     }
 
-    private NeuralNetwork fullyConnectAdjacentLayers(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork) {
+    private NeuralNetwork fullyConnectAdjacentLayers(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork, RegentSetting regentSetting) {
         List<Node> previousLayer = network.getInputNodes();
         List<Node> currentLayer = null;
         HashSet<Pair<Node, Node>> edges = network.getWeights().entrySet().stream().map(entry -> entry.getKey().getAsPair()).collect(Collectors.toCollection(HashSet::new));
@@ -261,7 +261,7 @@ public class Regent implements NeuralNetworkOwner {
             currentLayer.stream().filter(Node::isModifiable).forEach(currentNode ->
                             finalPreviousLayer.stream().filter(source -> !edges.contains(new Pair<>(source, currentNode)))
                                     .forEach(previousNode ->
-                                                    network.addEdgeStateful(previousNode, currentNode, randomGenerator.nextDouble(), Edge.Type.FORWARD)
+                                                    network.addEdgeStateful(previousNode, currentNode, randomGenerator.nextDouble() * regentSetting.getEdgeWeightLimitAfterCrossover(), Edge.Type.FORWARD)
                                     )
             );
 
