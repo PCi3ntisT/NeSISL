@@ -7,12 +7,10 @@ import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.ExperimentsTool;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -29,14 +27,14 @@ public class PropositionalFormulaeGenerator {
     private final List<Operator> operators;
 
     public static void main(String[] args) {
-        List<Operator> l = new ArrayList<>();
-        l.add(Operator.AND);
-        l.add(Operator.OR);
-        l.add(Operator.XOR);
+        List<Operator> selectedOperators = new ArrayList<>();
+        selectedOperators.add(Operator.AND);
+        selectedOperators.add(Operator.OR);
+        selectedOperators.add(Operator.XOR);
         //l.add(Operator.IMPLICATION);
-        PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(4, 4, 4, l);
+        PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(7, 6, 4, selectedOperators);
         File target = new File("." + File.separator + "experiments" + File.separator + "artificial");
-        prop.generateAndStoreToFolder(target, 600, 0.2);
+        prop.generateAndStoreToFolder(target, 11000, 0.2);
     }
 
     public PropositionalFormulaeGenerator(int numberOfAtoms, int maximalNumberOfFormulasInFormula, int maximalDepth, List<Operator> operators) {
@@ -51,28 +49,193 @@ public class PropositionalFormulaeGenerator {
     }
 
     public void generateAndStoreToFolder(File folder, int maxNumberOfGenerated, double minimalTresholdForEachClass) {// folder, min number of zero and ones
+        System.out.println("generating datasets");
         List<Formula> formulae = generate(maxNumberOfGenerated);
+
+        System.out.println("generating negated");
         List<Formula> allSpace = generateNegatedFormulae(formulae);
+
+        System.out.println("generating dataset");
         List<Pair<Formula, List<Sample>>> datasets = generateDatasets(allSpace);
-        List<Pair<Formula, List<Sample>>> fileteredDatasets = filterDatasets(datasets, minimalTresholdForEachClass);
-        storeToFolder(folder, fileteredDatasets);
+
+        System.out.println("threshold filter");
+        List<Pair<Formula, List<Sample>>> filteredDatasets = filterDatasets(datasets, minimalTresholdForEachClass);
+
+        System.out.println("filtering same outputs");
+        List<Pair<Formula, List<Sample>>> finalDatasets = filterSameOutputs(filteredDatasets);
+        System.out.println("final size\t" + finalDatasets.size());
+
+
+        System.out.println("storing");
+        storeToFolder(folder, finalDatasets);
+
+        System.out.println("done");
     }
 
-    private void storeToFolder(File folder, List<Pair<Formula, List<Sample>>> fileteredDatasets) {
+    private List<Pair<Formula, List<Sample>>> filterSameOutputs(List<Pair<Formula, List<Sample>>> datasets) {
+        List<Pair<Formula, List<Sample>>> result = new ArrayList<>();
+        Set<String> alreadyIn = new HashSet<>();
+        for (Pair<Formula, List<Sample>> record : datasets) {
+            String cannonic = canonicalString(record.getRight());
+            if (!alreadyIn.contains(cannonic)) {
+                alreadyIn.add(cannonic);
+                result.add(record);
+            }
+        }
+        return result;
+    }
+
+    private String canonicalString(List<Sample> list) {
+        StringBuilder sb = new StringBuilder();
+        Comparator<? super Sample> comparator = (s1, s2) -> {
+            for (int idx = 0; idx < s1.getInput().size(); idx++) {
+                Double v1 = s1.getInput().get(idx).getValue();
+                Double v2 = s2.getInput().get(idx).getValue();
+                if (!Tools.isZero(Math.abs(v1 - v2))) {
+                    return Double.compare(v1, v2);
+                }
+            }
+            return 0;
+        };
+        Collections.sort(list, comparator);
+        list.forEach(sample -> sb.append(outputToString(sample)).append("|"));
+        return sb.toString();
+    }
+
+    private String outputToString(Sample sample) {
+        return sample.getOutput().stream().map(value -> value.getValue() + ",")
+                .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+                .toString().trim();
+    }
+
+    private void storeToFolder(File folder, List<Pair<Formula, List<Sample>>> filteredDatasets) {
         if (!folder.exists()) {
             folder.mkdirs();
         }
-        fileteredDatasets.forEach(p -> storeToFolder(p.getLeft(), p.getRight(), folder));
+        StringBuilder formulaeOverview = new StringBuilder();
+
+        List<Triple<Integer, Long, Formula>> cnfList = new ArrayList<>();
+        List<Triple<Integer, Long, Formula>> weightedList = new ArrayList<>();
+        List<Triple<Integer, Long, Formula>> expList = new ArrayList<>();
+
+        IntStream.range(0, filteredDatasets.size()).forEach(idx -> {
+            Pair<Formula, List<Sample>> p = filteredDatasets.get(idx);
+            Triple<Long, Long, Long> scores = computeScores(p.getLeft());
+            storeToFolder(p.getLeft(), p.getRight(), scores, folder, idx);
+            formulaeOverview.append(idx + "\t" + scores.getK() + "\t" + scores.getT() + "\t" + scores.getW() + "\t" + p.getLeft() + "\n");
+
+            cnfList.add(new Triple<>(idx, scores.getK(), p.getLeft()));
+            weightedList.add(new Triple<>(idx, scores.getT(), p.getLeft()));
+            expList.add(new Triple<>(idx, scores.getW(), p.getLeft()));
+        });
+
+        try {
+            File description = new File(folder.getAbsolutePath() + File.separator + "description.txt");
+            FileWriter formulaWriter = new FileWriter(description);
+            formulaWriter.write(formulaeOverview.toString());
+            formulaWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        storeSorteredScores(cnfList, folder, "cnf.txt");
+        storeSorteredScores(expList, folder, "exp.txt");
+        storeSorteredScores(weightedList, folder, "weighted.txt");
     }
 
-    private void storeToFolder(Formula formula, List<Sample> samples, File parent) {
-        File folder = new File(parent.getAbsoluteFile() + File.separator + formula.getScore());
+    private void storeSorteredScores(List<Triple<Integer, Long, Formula>> list, File folder, String fileName) {
+        Comparator<? super Triple<Integer, Long, Formula>> comparator = (t1, t2) -> {
+            if(t1.getT() == t2.getT()){
+                return t1.getK().compareTo(t2.getK());
+            }
+            return t1.getT().compareTo(t2.getT());
+        };
+        Collections.sort(list, comparator);
+        try {
+            File file = new File(folder + File.separator + fileName);
+            FileWriter formulaWriter = new FileWriter(file);
+            for(Triple<Integer,Long,Formula> triple : list){
+                formulaWriter.write(triple.getK() + "\t" + triple.getT() + "\t" + triple.getW() + "\n");
+            }
+            formulaWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Triple<Long, Long, Long> computeScores(Formula formula) {
+        Long cnf = computeCNFScore(formula);
+        Long weighted = computeWeightedScore(formula);
+        Long exp = computeExpScore(formula);
+        return new Triple<>(cnf, weighted, exp);
+    }
+
+    private Long computeCNFScore(Formula formula) {
+        File tmp = storeToTmpFile(formula);
+        return convertAndRetrieveCNF(tmp);
+    }
+
+    private Long convertAndRetrieveCNF(File file) {
+        ProcessBuilder builder = new ProcessBuilder("python", ".." + File.separator + "PBL-master" + File.separator + "include" + File.separator + "convertor.py", file.getAbsolutePath());
+        Process process = null;
+        try {
+            builder = builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            builder = builder.redirectError(ProcessBuilder.Redirect.INHERIT);
+            process = builder.start();
+            process.waitFor();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(file));
+            String line = reader.readLine();
+            return cnfToScore(line.trim());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        throw new IllegalStateException("Error during computing CNF - CNF value not found in computed output.");
+    }
+
+    private Long cnfToScore(String cnf) {
+        return (long) cnf.split("&").length;
+    }
+
+
+    private File storeToTmpFile(Formula formula) {
+        long timeStamp = System.nanoTime();
+        String threadName = Thread.currentThread().getName();
+        File tmpFile = null;
+        try {
+            tmpFile = File.createTempFile("tempfile" + threadName + "_" + timeStamp, ".tmp");
+            FileWriter formulaWriter = new FileWriter(tmpFile);
+            String expressToken = "Main_Exp : ";
+            formulaWriter.write(expressToken + formula.toString());
+            formulaWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tmpFile;
+    }
+
+    private Long computeWeightedScore(Formula formula) {
+        return formula.getWeightedScore();
+    }
+
+    private Long computeExpScore(Formula formula) {
+        return formula.getScore();
+    }
+
+    private void storeToFolder(Formula formula, List<Sample> samples, Triple<Long, Long, Long> scores, File parent, int idx) {
+        File folder = new File(parent.getAbsoluteFile() + File.separator + idx);
         if (!folder.exists()) {
             folder.mkdirs();
         }
         //folder.length()
-        int children = folder.listFiles().length;
-        File target = new File(parent.getAbsoluteFile() + File.separator + formula.getScore() + File.separator + (children + 1));
+        //int children = folder.listFiles().length;
+        //File target = new File(parent.getAbsoluteFile() + File.separator + formula.getScore() + File.separator + (children + 1));
+        File target = folder;
 
         if (!target.exists()) {
             target.mkdirs();
@@ -82,7 +245,11 @@ public class PropositionalFormulaeGenerator {
 
         try {
             FileWriter formulaWriter = new FileWriter(formulaDescription);
-            formulaWriter.write(formula.toString());
+            formulaWriter.write(formula.toString() + "\n");
+            formulaWriter.write("order :\t" + idx + "\n");
+            formulaWriter.write("CNF :\t" + scores.getK() + "\n");
+            formulaWriter.write("weighted :\t" + scores.getT() + "\n");
+            formulaWriter.write("exp :\t" + scores.getW() + "\n");
             formulaWriter.close();
 
             FileWriter dataWriter = new FileWriter(data);
@@ -90,7 +257,6 @@ public class PropositionalFormulaeGenerator {
             for (Sample sample : samples) {
                 dataWriter.write(sample + "\n");
             }
-
             dataWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -139,8 +305,8 @@ public class PropositionalFormulaeGenerator {
     private List<Pair<Formula, List<Sample>>> generateDatasets(List<Formula> formulae) {
         List<Pair<List<Boolean>, List<Value>>> inputs = IntStream.range(0, (int) Math.pow(2, numberOfAtoms)).mapToObj(idx -> generateInput(idx)).collect(Collectors.toCollection(ArrayList::new));
         Stream<Pair<Formula, List<Sample>>> stream = formulae.parallelStream().map(formula ->
-                        new Pair<Formula, List<Sample>>(formula,
-                                inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new))));
+                new Pair<Formula, List<Sample>>(formula,
+                        inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new))));
         return stream.collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -177,8 +343,9 @@ public class PropositionalFormulaeGenerator {
             }
             previousLength = successors.size();
             generated.addAll(successors);
+            System.out.println(generated.size());
         }
-
+        generated = generated.subList(0,maxNumberOfGenerated);
         return generated;
     }
 
@@ -234,6 +401,12 @@ public class PropositionalFormulaeGenerator {
         boolean sameOperator = (first.getOperator() == Operator.OR && second.getOperator() == Operator.OR) ||
                 (first.isTerminal() && second.getOperator() == Operator.OR) ||
                 (second.isTerminal() && first.getOperator() == Operator.OR);
+
+        if (sameOperator && !second.isTerminal()
+                && (second.getFirst() == first || (!second.isNegation() && second.getSecond() == first))) {
+            // duplicates
+            return false;
+        }
 
         if (sameOperator) {
             return first.getWidth() + second.getWidth() <= maximalNumberOfFormulasInFormula;

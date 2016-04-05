@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.experiments.generator;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -12,6 +14,7 @@ public class Formula {
     private final Literal literal;
     private final Operator operator;
     private final boolean negation;
+    public final static String NEGATION_TOKEN = "~";
 
     public Formula(Formula formula) {
         this.first = formula;
@@ -20,7 +23,6 @@ public class Formula {
         this.negation = true;
         this.literal = null;
     }
-
 
     public Formula(Literal literal) {
         this.first = null;
@@ -39,7 +41,7 @@ public class Formula {
     }
 
     public int getWidth() {
-        if(isTerminal() || isNegation() ){
+        if (isTerminal() || isNegation()) {
             return 1;
         }
         if (canBeFlattened()) {
@@ -62,13 +64,16 @@ public class Formula {
     }
 
     private boolean canBeFlattened() {
-        if(isNegation()){
+        if (isNegation()) {
             return false;
         }
         if (isTerminal() || (null != first && null != second && first.isTerminal() && second.isTerminal())) {
             return true;
         }
-        if(first.getOperator() == Operator.IMPLICATION || second.getOperator() == Operator.IMPLICATION){
+        if(first.getOperator() == Operator.XOR || second.getOperator() == Operator.XOR || Operator.XOR == operator ){
+            return false;
+        }
+        if (first.getOperator() == Operator.IMPLICATION || second.getOperator() == Operator.IMPLICATION) {
             return false;
         }
         if ((first.isTerminal() && operator == second.getOperator()) ||
@@ -94,8 +99,8 @@ public class Formula {
         if (isTerminal()) {
             return " " + literal + " ";
         }
-        if(isNegation()){
-            return " ! ( " + first + " ) ";
+        if (isNegation()) {
+            return " " + NEGATION_TOKEN + " ( " + first + " ) ";
         }
         if (canBeFlattened()) {
             return first + " " + operator + " " + second;
@@ -126,7 +131,7 @@ public class Formula {
         if (!tokenizer.hasMoreTokens()) {
             return 0;
         }
-        long count = 0;
+        long count = 1;
         while (tokenizer.hasMoreTokens()) {
             String token = tokenizer.nextToken();
 
@@ -143,10 +148,9 @@ public class Formula {
                     || Operator.OR.toString().equals(token)
                     || Operator.IMPLICATION.toString().equals(token)
                     || Operator.XOR.toString().equals(token)
-                    || "!".equals(token) ) {
+                    || NEGATION_TOKEN.equals(token)) {
                 continue;
             }
-            count++;
         }
         return count * count;
     }
@@ -176,4 +180,49 @@ public class Formula {
     public boolean isNegation() {
         return negation;
     }
+
+    private final Long baseWeight = 1l;
+    private final Long negationWeight = 1l;
+    private final Long orWeight = 1l;
+    private final Long andWeight = 2l;
+    private final Long xorWeight = orWeight + 2 * (andWeight + negationWeight);
+    private final Long implicationWeight = negationWeight + orWeight + andWeight;
+
+    public Long getFlattenedWeightedScore(Operator operator) {
+        if(canBeFlattened() && this.operator == operator){
+            return first.getFlattenedWeightedScore(this.operator) + second.getFlattenedWeightedScore(this.operator);
+        }
+        return getWeightedScore();
+    }
+
+
+    public Long getWeightedScore() {
+        if (isTerminal()) {
+            return baseWeight;
+        }
+        if (isNegation()) {
+            return negationWeight;
+        }
+
+        Long weight = 0l;
+        if (canBeFlattened()) {
+            weight = first.getFlattenedWeightedScore(operator) + second.getFlattenedWeightedScore(operator);
+        } else {
+            weight = first.getWeightedScore() + second.getWeightedScore();
+        }
+
+        switch (operator) {
+            case OR:
+                return weight * andWeight;
+            case AND:
+                return weight * andWeight;
+            case XOR:
+                return weight * xorWeight;
+            case IMPLICATION:
+                return weight * implicationWeight;
+            default:
+                throw new IllegalStateException("Unknown type of operator");
+        }
+    }
+
 }
