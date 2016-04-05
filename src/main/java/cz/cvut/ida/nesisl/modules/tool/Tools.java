@@ -11,6 +11,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
@@ -253,5 +254,9 @@ public class Tools {
 
     public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> nodeTrainData, NeuralNetwork network) {
         return evaluateAllAndGetResults(nodeTrainData, network);
+    }
+
+    public static String retrieveParentFolderName(File file) {
+        return file.getParentFile().getName();
     }
 }
