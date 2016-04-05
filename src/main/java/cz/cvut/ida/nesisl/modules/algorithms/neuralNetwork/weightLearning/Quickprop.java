@@ -43,7 +43,7 @@ public class Quickprop {
 
         long iteration = 0;
 
-        while (eps > wls.getEpsilonDifference()) { // pridat stopku po urcitem poctu iteraci (to same pridat do BP)
+        while (eps > wls.getEpsilonConvergent()) { // pridat stopku po urcitem poctu iteraci (to same pridat do BP)
             iteration++;
             System.out.println("iteration\t" + iteration);
 
