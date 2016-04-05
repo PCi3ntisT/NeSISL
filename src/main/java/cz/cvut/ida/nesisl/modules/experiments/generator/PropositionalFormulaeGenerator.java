@@ -254,6 +254,7 @@ public class PropositionalFormulaeGenerator {
 
             FileWriter dataWriter = new FileWriter(data);
             dataWriter.write(DatasetImpl.TRAIN_TOKEN + "\n");
+            dataWriter.write(input(samples.get(0)) + DatasetImpl.INPUT_OUTPUT_DELIMITER + output(samples.get(0)) + "\n");
             for (Sample sample : samples) {
                 dataWriter.write(sample + "\n");
             }
@@ -261,6 +262,18 @@ public class PropositionalFormulaeGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String input(Sample sample) {
+        StringBuilder sb = new StringBuilder();
+        IntStream.range(0, sample.getInput().size()).forEach(idx -> sb.append("\t").append(Literal.literals.charAt(idx)));
+        return sb.toString();
+    }
+
+    private String output(Sample sample) {
+        StringBuilder sb = new StringBuilder();
+        IntStream.range(0, sample.getOutput().size()).forEach(idx -> sb.append("\t").append(Literal.outputLiterals.charAt(idx)));
+        return sb.toString();
     }
 
     private List<Pair<Formula, List<Sample>>> filterDatasets(List<Pair<Formula, List<Sample>>> datasets, double minimalTresholdForEachClass) {
