@@ -9,16 +9,16 @@ import java.util.List;
  * Created by EL on 13.2.2016.
  */
 public class WeightLearningSetting {
-    public static final String EPSILON_TOKEN = "epsilon";
+    public static final String EPSILON_TOKEN = "epsilonConvergent";
     public static final String EPOCH_TOKEN = "epochLimit";
     public static final String LEARNING_RATE_TOKEN = "learningRate";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
     public static final String PENALTY_EPSILON_TOKEN = "SLFPenaltyEpsilon";
-    public static final String SLF_THRESHOLD_TOKEN = "slfThreshold";
+    public static final String SLF_THRESHOLD_TOKEN = "SLFThreshold";
 
-    private final Double epsilonDifference;
+    private final Double epsilonConvergent;
     private final Double learningRate;
     private final Double momentumAlpha;
     private final Long epochLimit;
@@ -26,9 +26,10 @@ public class WeightLearningSetting {
     private final Integer longTimeWindow;
     private final Double slfThreshold;
     private final Double penaltyEpsilon;
+    private final File file;
 
-    public WeightLearningSetting(Double epsilonDifference,  Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
-        this.epsilonDifference = epsilonDifference;
+    public WeightLearningSetting(File file, Double epsilonConvergent, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
+        this.epsilonConvergent = epsilonConvergent;
         this.learningRate = learningRate;
         this.momentumAlpha = momentumAlpha;
         this.epochLimit = epochLimit;
@@ -36,6 +37,7 @@ public class WeightLearningSetting {
         this.longTimeWindow = longTimeWindow;
         this.penaltyEpsilon = penaltyEpsilon;
         this.slfThreshold = slfThreshold;
+        this.file = file;
     }
 
 
@@ -100,14 +102,11 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
+        return new WeightLearningSetting(file, epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
     }
 
-    public Double getEpsilonDifference() {
-        if (null == epsilonDifference) {
-            System.out.println("Be aware that 'epsilonDifference' contains null value.");
-        }
-        return epsilonDifference;
+    public Double getEpsilonConvergent() {
+        return epsilonConvergent;
     }
 
     public Double getLearningRate() {
@@ -151,6 +150,10 @@ public class WeightLearningSetting {
         if (iteration > epochLimit) {
             return false;
         }
-        return !(errors.size() > longTimeWindow && Tools.hasConverged(errors, longTimeWindow, shortTimeWindow, epsilonDifference));
+        return !(errors.size() > longTimeWindow && Tools.hasConverged(errors, longTimeWindow, shortTimeWindow, epsilonConvergent));
+    }
+
+    public File getFile() {
+        return file;
     }
 }

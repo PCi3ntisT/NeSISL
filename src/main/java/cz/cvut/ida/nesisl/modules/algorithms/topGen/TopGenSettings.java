@@ -10,16 +10,16 @@ import java.util.List;
  */
 public class TopGenSettings {
 
-    public static final String THRESHOLD_TOKEN = "threshold";
+    public static final String EPSILON_LIMIT_TOKEN = "epsilonLimit";
     public static final String OMEGA_TOKEN = "omega";
     public static final String SUCCESSORS_GENERATED_LIMIT_TOKEN = "successorsLimit";
     public static final String OPEN_LIST_LIMIT_TOKEN = "openListLength";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
-    public static final String LEARNInG_RATE_DECAY_TOKEN = "learningRateDecay";
+    public static final String LEARNING_RATE_DECAY_TOKEN = "learningRateDecay";
 
-    private final Double threshold;
+    private final Double epsilonLimit;
     private final Double omega;
     private final Double epsilon;
     private final Long numberOfSuccessors;
@@ -28,8 +28,8 @@ public class TopGenSettings {
     private final Integer longTimeWindow;
     private final Double learningRateDecay;
 
-    public TopGenSettings(Double threshold, Long numberOfSuccessors, Long lengthOfOpenList, Double omega,Integer  longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay) {
-        this.threshold = threshold;
+    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega,Integer  longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay) {
+        this.epsilonLimit = epsilonLimit;
         this.numberOfSuccessors = numberOfSuccessors;
         this.lengthOfOpenList = lengthOfOpenList;
         this.omega = omega;
@@ -39,8 +39,8 @@ public class TopGenSettings {
         this.learningRateDecay = learningRateDecay;
     }
 
-    public Double getThreshold() {
-        return threshold;
+    public Double getEpsilonLimit() {
+        return epsilonLimit;
     }
 
     public Long getNumberOfSuccessors() {
@@ -82,7 +82,7 @@ public class TopGenSettings {
                 }
 
                 switch (token) {
-                    case THRESHOLD_TOKEN:
+                    case EPSILON_LIMIT_TOKEN:
                         threshold = Double.valueOf(value);
                         break;
                     case OMEGA_TOKEN:
@@ -103,7 +103,7 @@ public class TopGenSettings {
                     case EPSILON_CONVERGENT_TOKEN:
                         epsilon = Double.valueOf(value);
                         break;
-                    case LEARNInG_RATE_DECAY_TOKEN:
+                    case LEARNING_RATE_DECAY_TOKEN:
                         learningRateDecay = Double.valueOf(value);
                         break;
                     default:

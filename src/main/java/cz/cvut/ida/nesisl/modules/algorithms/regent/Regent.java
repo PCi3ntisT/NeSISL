@@ -377,7 +377,7 @@ public class Regent implements NeuralNetworkOwner {
 
 
     private List<Pair<NeuralNetwork, NeuralNetwork>> tournamentSelectionForCrossover(List<Individual> population, RegentSetting regentSetting) {
-        return tournamentSelection(population, regentSetting, regentSetting.getNumberOfCrossoverChildren());
+        return tournamentSelection(population, regentSetting, regentSetting.getNumberOfCrossoverChildrenPairs());
     }
 
     private void addEvaluatedSuccessors(List<NeuralNetwork> parents, List<Individual> successors, RegentSetting regentSetting, Dataset dataset, WeightLearningSetting wls) {
@@ -463,7 +463,7 @@ public class Regent implements NeuralNetworkOwner {
     }
 
     private Individual tournamentSelection(List<Individual> population, RegentSetting regentSetting, Individual alreadySelected) {
-        long tournamentSize = regentSetting.getTournamentSize();
+        long tournamentSize = Math.min(regentSetting.getTournamentSize(), population.size());
         Individual selected = chooseIndividual(population);
         while(alreadySelected == selected){
             selected = chooseIndividual(population);

@@ -25,12 +25,10 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
-import javax.xml.crypto.Data;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -84,17 +82,19 @@ public class Main {
                 break;
         }
 
+        throw new IllegalStateException("reimplements how xperiments results are stored");
+
         //System.out.println("zkontrolovat jestli vsechny forEach jsou spravne a nemely by byt nahrazeny forEachOrdered");
     }
 
-    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset) {
-        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, dataset);
-        ExperimentResult.storeResultsResults(results, algName, dataset.getOriginalFile());
+    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        ExperimentResult.storeResults(results, algName, dataset.getOriginalFile(), settingFile, wls);
     }
 
-    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset) {
+    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
         return IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile());
+            ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile(), settingFile, wls);
             NeuralNetworkOwner alg = initialize.initialize();
             currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
@@ -113,20 +113,20 @@ public class Main {
         if (arg.length < 6) {
             throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile    KBANNsetting    [ruleSpecificFile]'");
         }
+        if (arg.length > 6) {
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
 
         String algName = "KBANN";
         File ruleFile = new File(arg[4]);
         KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, new File(arg[5]));
 
-        if (arg.length > 6) {
-            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
-        }
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
         Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
         Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, wls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, ruleFile, wls);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -135,12 +135,13 @@ public class Main {
         }
         String algName = "CasCor";
 
-        CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(new File(arg[4]));
+        File settingFile = new File(arg[4]);
+        CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(settingFile);
 
         Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
         Learnable learn = (cascadeCorrelation) -> ((CascadeCorrelation) cascadeCorrelation).learn(dataset, wls, ccSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
     private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -156,12 +157,13 @@ public class Main {
         double ca = 0.001;
         long hiddenNodesLimit = 70;
          */
-        DNCSetting dncSetting = DNCSetting.create(new File(arg[4]));
+        File settingFile = new File(arg[4]);
+        DNCSetting dncSetting = DNCSetting.create(settingFile);
 
         Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
         Learnable learn = (dnc) -> ((DynamicNodeCreation) dnc).learn(dataset, wls, dncSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
     private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -173,10 +175,11 @@ public class Main {
         /*Double penaltyEpsilon = 0.0001;
         Double treshold = 0.1;//0.1;*/
 
-        Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(new File(arg[4]), dataset, randomGenerator);
+        File settingFile = new File(arg[4]);
+        Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(settingFile, dataset, randomGenerator);
         Learnable learn = (slf) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(dataset, wls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
     private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -192,22 +195,22 @@ public class Main {
         /*Double treshold = 0.0001;
         Long lengthOfOpenList = 100l;
         Long numberOfSuccessors = 10l;*/
-
-        TopGenSettings tgSetting = TopGenSettings.create(new File(arg[5]));
+        File settingFile = new File(arg[5]);
+        TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
         Learnable learn = (topGen) -> ((TopGen) topGen).learn(dataset, wls, tgSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
 
     private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
-        if (arg.length < 7) {
-            throw new IllegalStateException("Need more arguments. To run REGENT use 'REGENT   #ofRepeats  datasetFile  weightLearningSettingsFile ruleFile RegentSetting TopGenSettings'");
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run REGENT use 'REGENT   #ofRepeats  datasetFile  weightLearningSettingsFile ruleFile RegentSetting'");
         }
-        if (arg.length > 7) {
+        if (arg.length > 6) {
             throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
         }
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
@@ -221,13 +224,13 @@ public class Main {
         Integer numberOfCrossoverChildren = 1;
         Integer numberOfElites = 1;*/
 
-        TopGenSettings tgSetting = TopGenSettings.create(new File(arg[6]));
-        RegentSetting regentSetting = RegentSetting.create(new File(arg[5]),tgSetting, randomGenerator);
+        File settingFile = new File(arg[5]);
+        RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
-        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, tgSetting.getOmega());
-        Learnable learn = (regent) -> ((Regent) regent).learn(dataset, wls, regentSetting, new KBANNSettings(randomGenerator,tgSetting.getOmega()));
+        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
+        Learnable learn = (regent) -> ((Regent) regent).learn(dataset, wls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
     /*private void runMAC() {

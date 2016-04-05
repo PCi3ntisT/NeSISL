@@ -4,6 +4,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
@@ -37,11 +38,15 @@ public class ExperimentResult {
     private Double accuracy;
 
 
-    public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile) {
+    public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
         this.datasetFile = datasetFile;
         this.numberOfRepeats = numberOfRepeats;
         this.learningAlg = learningAlg;
-        this.myAdress = datasetFile.getAbsoluteFile().getParent() + "" + File.separator + "" + learningAlg + File.separator + learningAlg + "_" + numberOfRepeats;
+        this.myAdress = datasetFile.getAbsoluteFile().getParent() + File.separator +
+                learningAlg + File.separator +
+                Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
+                Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
+                learningAlg + "_" + numberOfRepeats;
     }
 
     public File getDatasetFile() {
@@ -135,8 +140,12 @@ public class ExperimentResult {
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
     }
 
-    public static void storeResultsResults(List<ExperimentResult> results, String learningAlg, File datasetFile) {
-        String experimentsFile = datasetFile.getAbsoluteFile().getParent() + File.separator + learningAlg + File.separator + "results.txt";
+    public static void storeResults(List<ExperimentResult> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
+        String experimentsFile = datasetFile.getAbsoluteFile().getParent() + File.separator +
+                learningAlg + File.separator +
+                Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
+                Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
+                "results.txt";
         File expFile = new File(experimentsFile);
         PrintWriter writer = null;
         try {

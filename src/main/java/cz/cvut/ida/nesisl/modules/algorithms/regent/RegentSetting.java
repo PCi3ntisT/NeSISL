@@ -10,24 +10,24 @@ import java.io.*;
  * Created by EL on 23.3.2016.
  */
 public class RegentSetting {
-    public static final String TOURNAMEN_SIZE_TOKEN = "tournamentSize";
+    public static final String TOURNAMENT_SIZE_TOKEN = "tournamentSize";
     public static final String POPULATION_SIZE_TOKEN = "populationSize";
-    public static final String MUTATION_OF_POPULATION_TOKEN = "numberOfMutationInPopulation";
-    public static final String MUTATION_OF_CROSSOVERS_TOKEN = "numberOfMutationOfCrossovers";
+    public static final String MUTATION_OF_POPULATION_TOKEN = "percentageOfMutationInPopulation";
+    public static final String MUTATION_OF_CROSSOVERS_TOKEN = "percentageOfMutationOfCrossovers";
     public static final String NODE_DELETION_PROBABILITY_TOKEN = "probabilityOfNodeDeletion";
     public static final String FITNESS_LIMIT_TOKEN = "maxAllowedFitness";
-    public static final String CROSSOVER_CHILDREN_TOKEN = "numberOfCrossoverChildren";
+    public static final String CROSSOVER_CHILDREN_TOKEN = "percentageOfCrossoverChildrenPairs";
     public static final String ELITES_TOKEN = "numberOfElites";
 
     private final long tournamentSize;
     private final long populationSize;
     private final TopGenSettings topGenSettings;
-    private final Integer numberOfMutationOfPopulation;
-    private final Integer numberOfMutationOfCrossovers;
+    private final Integer percentageOfMutationOfPopulation;
+    private final Integer percentageOfMutationOfCrossovers;
     private final KBANNSettings KBANNSetting;
     private final Double probabilityOfNodeDeletion;
     private final Long maxAllowedFitness;
-    private final Integer numberOfCrossoverChildren;
+    private final Integer percentageOfCrossoverChildrenPairs;
     private final Integer numberOfElites;
     private Long computedFitness = 0l;
 
@@ -35,12 +35,12 @@ public class RegentSetting {
         this.tournamentSize = tournamentSize;
         this.populationSize = populationSize;
         this.topGenSettings = topGenSettings;
-        this.numberOfMutationOfPopulation = numberOfMutationOfPopulation;
-        this.numberOfMutationOfCrossovers = numberOfMutationOfCrossovers;
+        this.percentageOfMutationOfPopulation = numberOfMutationOfPopulation;
+        this.percentageOfMutationOfCrossovers = numberOfMutationOfCrossovers;
         this.KBANNSetting = KBANNSetting;
         this.probabilityOfNodeDeletion = probabilityOfNodeDeletion;
         this.maxAllowedFitness = maxAllowedFitness;
-        this.numberOfCrossoverChildren = numberOfCrossoverChildren;
+        this.percentageOfCrossoverChildrenPairs = numberOfCrossoverChildren;
         this.numberOfElites = numberOfElites;
     }
 
@@ -75,8 +75,8 @@ public class RegentSetting {
         }
     }
 
-    public Integer getNumberOfCrossoverChildren() {
-        return numberOfCrossoverChildren;
+    public Integer getNumberOfCrossoverChildrenPairs() {
+        return (int) (populationSize * (percentageOfCrossoverChildrenPairs / 100.0));
     }
 
     public Integer getNumberOfElites() {
@@ -90,11 +90,11 @@ public class RegentSetting {
     }
 
     public Integer getNumberOfMutationOfPopulation() {
-        return numberOfMutationOfPopulation;
+        return (int) (populationSize * (percentageOfMutationOfPopulation / 100.0));
     }
 
     public Integer getNumberOfMutationOfCrossovers() {
-        return numberOfMutationOfCrossovers;
+        return (int) (populationSize * (percentageOfMutationOfCrossovers / 100.0));
     }
 
     public KBANNSettings getKBANNSetting() {
@@ -105,13 +105,14 @@ public class RegentSetting {
         return probabilityOfNodeDeletion;
     }
 
-    public static RegentSetting create(File file, TopGenSettings tgSetting, RandomGeneratorImpl randomGenerator) {
+    public static RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
+        TopGenSettings tgSetting = TopGenSettings.create(file);
         Long tournamentSize = null;
         Long populationSize = null;
         Long maxAllowedFitness = null;
-        Integer numberOfMutationOfPopulation = null;
-        Integer numberOfMutationOfCrossovers = null;
-        Integer numberOfCrossoverChildren = null;
+        Integer percentageOfMutationOfPopulation = null;
+        Integer percentageOfMutationOfCrossovers = null;
+        Integer percentageOfCrossoverChildren = null;
         Integer numberOfElites = null;
         Double probabilityOfNodeDeletion = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -133,7 +134,7 @@ public class RegentSetting {
 
                 switch (token) {
                     case CROSSOVER_CHILDREN_TOKEN:
-                        numberOfCrossoverChildren = Integer.valueOf(value);
+                        percentageOfCrossoverChildren = Integer.valueOf(value);
                         break;
                     case ELITES_TOKEN:
                         numberOfElites = Integer.valueOf(value);
@@ -142,10 +143,10 @@ public class RegentSetting {
                         maxAllowedFitness = Long.valueOf(value);
                         break;
                     case MUTATION_OF_CROSSOVERS_TOKEN:
-                        numberOfMutationOfCrossovers = Integer.valueOf(value);
+                        percentageOfMutationOfCrossovers = Integer.valueOf(value);
                         break;
                     case MUTATION_OF_POPULATION_TOKEN:
-                        numberOfMutationOfPopulation = Integer.valueOf(value);
+                        percentageOfMutationOfPopulation = Integer.valueOf(value);
                         break;
                     case NODE_DELETION_PROBABILITY_TOKEN:
                         probabilityOfNodeDeletion = Double.valueOf(value);
@@ -153,7 +154,7 @@ public class RegentSetting {
                     case POPULATION_SIZE_TOKEN:
                         populationSize = Long.valueOf(value);
                         break;
-                    case TOURNAMEN_SIZE_TOKEN:
+                    case TOURNAMENT_SIZE_TOKEN:
                         tournamentSize = Long.valueOf(value);
                         break;
                     default:
@@ -167,6 +168,6 @@ public class RegentSetting {
             e.printStackTrace();
         }
 
-        return new RegentSetting(tournamentSize, populationSize, tgSetting, numberOfMutationOfPopulation, numberOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, numberOfCrossoverChildren, numberOfElites);
+        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites);
     }
 }

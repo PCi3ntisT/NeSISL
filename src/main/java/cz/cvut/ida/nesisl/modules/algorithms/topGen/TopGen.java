@@ -60,7 +60,7 @@ public class TopGen implements NeuralNetworkOwner {
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
             updateNetwork(current);
 
-            if (current.getT() < tgSettings.getThreshold()) {
+            if (current.getT() < tgSettings.getEpsilonLimit()) {
                 break;
             }
 
@@ -134,7 +134,7 @@ public class TopGen implements NeuralNetworkOwner {
         network = addNode(node, isFalsePositive, network, kbannSetting, randomGenerator);
 
         double learningRate = previousLearningRate * tgSettings.getLearningRateDecay();
-        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getEpsilonDifference(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(),wls.getLongTimeWindow(),wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(),wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(),wls.getLongTimeWindow(),wls.getPenaltyEpsilon(), wls.getSLFThreshold());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
         double error = Tools.computeAverageSquaredTotalError(network, dataset);

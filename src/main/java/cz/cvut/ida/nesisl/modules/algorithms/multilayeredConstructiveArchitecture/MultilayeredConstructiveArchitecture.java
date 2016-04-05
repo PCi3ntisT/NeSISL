@@ -6,10 +6,7 @@ import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CandidateWrapper;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
-import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
@@ -19,7 +16,6 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.io.File;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -88,7 +84,7 @@ public class MultilayeredConstructiveArchitecture {
             }
 
             // TODO
-            if (numberOfAddedNodes > wls.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonDifference()) {
+            if (numberOfAddedNodes > wls.getMaximumNumberOfHiddenNodes() || epochDifference < wls.getEpsilonConvergent()) {
                 break;
             }
 
@@ -156,7 +152,7 @@ public class MultilayeredConstructiveArchitecture {
 
             currentEdges = current.getRight();
 
-            if (wls.getEpsilonDifference() > epsilon) {
+            if (wls.getEpsilonConvergent() > epsilon) {
                 break;
             }
         }

@@ -1,7 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation;
 
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.util.List;
@@ -13,20 +12,20 @@ public class CascadeCorrelationSetting {
 
     public static final String POOL_SIZE_LIMIT_TOKEN = "poolSizeLimit";
     public static final String HIDDEN_NODE_LIMIT_TOKEN = "hiddenNodeLimit";
-    public static final String EPSILON_TOKEN = "epsilon";
+    public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String CANDIDATE_ITERATION_LEARNING_LIMIT_TOKEN = "candidateIterationLearningLimit";
 
     private long sizeOfCasCorPool;
     private long maximumNumberOfHiddenNodes;
-    private final Double epsilonDifference;
+    private final Double epsilonConvergent;
     private final Integer shortTimeWindow;
     private final Integer longTimeWindow;
     private final Long maxCandidateIteration;
 
-    public CascadeCorrelationSetting(Double epsilonDifference, Integer shortTimeWindow, Integer longTimeWindow, long sizeOfCasCorPool, long maximumNumberOfHiddenNodes, long maxCandidateIteration) {
-        this.epsilonDifference = epsilonDifference;
+    public CascadeCorrelationSetting(Double epsilonConvergent, Integer shortTimeWindow, Integer longTimeWindow, long sizeOfCasCorPool, long maximumNumberOfHiddenNodes, long maxCandidateIteration) {
+        this.epsilonConvergent = epsilonConvergent;
         this.shortTimeWindow = shortTimeWindow;
         this.longTimeWindow = longTimeWindow;
         this.sizeOfCasCorPool = sizeOfCasCorPool;
@@ -34,8 +33,8 @@ public class CascadeCorrelationSetting {
         this.maxCandidateIteration = maxCandidateIteration;
     }
 
-    public Double getEpsilonDifference() {
-        return epsilonDifference;
+    public Double getEpsilonConvergent() {
+        return epsilonConvergent;
     }
 
     public Integer getShortTimeWindow() {
@@ -63,11 +62,11 @@ public class CascadeCorrelationSetting {
     }
 
     public boolean canStopLearningCandidatConnection(List<Double> correlations, long iteration) {
-        return  iteration > maxCandidateIteration || Tools.hasConverged(correlations,getLongTimeWindow(),getShortTimeWindow(),getEpsilonDifference());
+        return  iteration > maxCandidateIteration || Tools.hasConverged(correlations,getLongTimeWindow(),getShortTimeWindow(), getEpsilonConvergent());
     }
 
     public boolean stopCascadeCorrelation(long numberOfAddedNodes, List<Double> errors) {
-        return numberOfAddedNodes > getMaximumNumberOfHiddenNodes() || Tools.hasConverged(errors,getLongTimeWindow(),getShortTimeWindow(),getEpsilonDifference());
+        return numberOfAddedNodes > getMaximumNumberOfHiddenNodes() || Tools.hasConverged(errors,getLongTimeWindow(),getShortTimeWindow(), getEpsilonConvergent());
     }
 
     public static CascadeCorrelationSetting create(File file) {
@@ -76,7 +75,7 @@ public class CascadeCorrelationSetting {
         Long candidateIterationLimit = null;
         Integer shortTimeWindow = null;
         Integer longTimeWindow = null;
-        Double epsilonDifference = null;
+        Double epsilonConvergent = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -95,8 +94,8 @@ public class CascadeCorrelationSetting {
                 }
 
                 switch (token) {
-                    case EPSILON_TOKEN:
-                        epsilonDifference = Double.valueOf(value);
+                    case EPSILON_CONVERGENT_TOKEN:
+                        epsilonConvergent = Double.valueOf(value);
                         break;
                     case POOL_SIZE_LIMIT_TOKEN:
                         poolSizeLimit = Long.valueOf(value);
@@ -123,6 +122,6 @@ public class CascadeCorrelationSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new CascadeCorrelationSetting(epsilonDifference, shortTimeWindow, longTimeWindow, poolSizeLimit, hiddenNodeLimit, candidateIterationLimit);
+        return new CascadeCorrelationSetting(epsilonConvergent, shortTimeWindow, longTimeWindow, poolSizeLimit, hiddenNodeLimit, candidateIterationLimit);
     }
 }
