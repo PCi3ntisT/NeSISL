@@ -135,7 +135,7 @@ public class RegentSetting {
         return computedFitness;
     }
 
-    public RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
+    public static RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
         TopGenSettings tgSetting = TopGenSettings.create(file);
         Long tournamentSize = null;
         Long populationSize = null;

@@ -45,9 +45,6 @@ public class Main {
             System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLF, TopGen, REGENT; write as first argument to see more.");
             System.exit(0);
         }
-        // algName  #runs   datasetFile wlsFile ruleFile KBANNsetting ruleSpecificFile
-
-        // DODELAT ADRESU VYSTUPNIHO SOUBORU PRO EXPERIMENTS JE TO JE DULEZITE PRO TO MNOHONASOBNE NASTAVENI
 
         double simga = 1d;
         double mu = 0.0d;
@@ -72,6 +69,7 @@ public class Main {
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
         Dataset dataset = DatasetImpl.createDataset(datasetFile);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
+
         Main main = new Main();
         switch (arg[0]) {
             case "KBANN":
@@ -96,10 +94,6 @@ public class Main {
                 System.out.println("Unknown algorithm '" + arg[0] + "'.");
                 break;
         }
-
-        throw new IllegalStateException("reimplements how xperiments results are stored");
-
-        //System.out.println("zkontrolovat jestli vsechny forEach jsou spravne a nemely by byt nahrazeny forEachOrdered");
     }
 
     private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
