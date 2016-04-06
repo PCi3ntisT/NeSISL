@@ -107,11 +107,14 @@ public class Main {
             NeuralNetworkOwner alg = initialize.initialize();
             currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
-            long start = System.nanoTime();
+            long start = System.currentTimeMillis();
             NeuralNetwork learnedNetwork = learn.learn(alg);
-            long end = System.nanoTime();
+            long end = System.currentTimeMillis();
 
+            /*
             Tools.printEvaluation(learnedNetwork, dataset);
+            System.out.println("\t" + learnedNetwork.getClassifier().getTreshold());
+            */
 
             currentResult.addExperiment(learnedNetwork, start, end, dataset);
             return currentResult;
@@ -128,14 +131,15 @@ public class Main {
 
         String algName = "KBANN";
         File ruleFile = new File(arg[4]);
-        KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, new File(arg[5]));
+        File settingFile = new File(arg[5]);
+        KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, settingFile);
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
         Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
         Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, wls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, ruleFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -177,7 +181,7 @@ public class Main {
 
     private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 6) {
-            throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure '");
+            throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure'");
         }
         String algName = "SLF";
 
@@ -188,7 +192,7 @@ public class Main {
         Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(settingFile, dataset, randomGenerator);
         Learnable learn = (slf) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(dataset, wls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, wls.getFile(), wls);
     }
 
     private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {

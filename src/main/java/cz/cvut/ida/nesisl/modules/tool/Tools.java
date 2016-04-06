@@ -181,7 +181,11 @@ public class Tools {
 
             sample.getInput().forEach(val -> System.out.print(val.getValue() + "\t"));
             System.out.print("|");
-            output.forEach(val -> System.out.print("\t" + val + " (" + network.getClassifier().classifyToOneZero(val) + ")"));
+            IntStream.range(0,output.size()).forEach(idx -> {
+                Double val = output.get(idx);
+                String classified = (Tools.isZero(Math.abs(sample.getOutput().get(idx).getValue() - network.getClassifier().classifyToDouble(val)))) ? "T" : "F";
+                System.out.print("\t" + val + " (" + classified + ")");
+            });
             System.out.println();
         });
     }

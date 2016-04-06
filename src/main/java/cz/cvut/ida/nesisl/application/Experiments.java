@@ -19,7 +19,7 @@ public class Experiments {
                 "logic" + File.separator + "xor4",
                 "logic" + File.separator + "xor4Reversed",
                 */
-                "logic" + File.separator + "allOrNothing",
+                //"logic" + File.separator + "allOrNothing",
                 /*"logic" + File.separator + "doubleImplication",
                 "logic" + File.separator + "or2clauses",
                 "logic" + File.separator + "threeIndependentClauses",
@@ -35,17 +35,22 @@ public class Experiments {
                 //"logic" + File.separator + "xor2",
                 //"logic" + File.separator + "xor3"
                 //"iris" + File.separator
+
+                "artificialLogic" + File.separator + "200",
         };
         String experimentFolder = "." + File.separator + "experiments" + File.separator;
 
         Arrays.stream(domains).forEach(domain -> {
             String folder = experimentFolder + domain + File.separator;
             String data = folder + "data.txt";
-            String wls = folder + "wlsSettings.txt";
-            String slfInput = folder + "SLFinput.txt";
+            //String wls = folder + "wlsSettings.txt";
+            String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + "_0_0_0_0_0_0_0_0" + File.separator + "wlsSetting.txt";
+            //String slfInput = folder + "SLFinput.txt";
+            //String KBANNinput = folder + "KBANNinput.txt";
             String KBANNinput = folder + "KBANNinput.txt";
+            String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "_0" + File.separator + "kbannSetting.txt";
             try {
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput});
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput,KBANNsetting});
                 /*Main.main(new String[]{"CasCor", numberOfRepeats, data, wls});
                 Main.main(new String[]{"DNC", numberOfRepeats, data, wls});
                 Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});

@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 /**
  * Created by EL on 31.3.2016.
  */
-public class AUCCalculation {
+public class RocAucCalculation {
 
     private static final String AUC_VALUE_LINE_START = "Area Under the Curve for ROC is";
 
@@ -25,17 +25,17 @@ public class AUCCalculation {
     private final HashMap<Sample,Results> evaluation;
     private Double aucValue;
 
-    public AUCCalculation(NeuralNetwork network, Map<Sample,Results> evaluation) {
+    public RocAucCalculation(NeuralNetwork network, Map<Sample, Results> evaluation) {
         this.network = network;
         this.evaluation = new HashMap(evaluation);
     }
 
-    public static AUCCalculation create(NeuralNetwork network, Dataset dataset) {
-        return AUCCalculation.create(network, Tools.evaluateOnTestAllAndGetResults(dataset, network));
+    public static RocAucCalculation create(NeuralNetwork network, Dataset dataset) {
+        return RocAucCalculation.create(network, Tools.evaluateOnTestAllAndGetResults(dataset, network));
     }
 
-    public static AUCCalculation create(NeuralNetwork network, Map<Sample,Results> evaluation) {
-        return new AUCCalculation(network, evaluation);
+    public static RocAucCalculation create(NeuralNetwork network, Map<Sample,Results> evaluation) {
+        return new RocAucCalculation(network, evaluation);
     }
 
     public Double computeAUC() {
@@ -65,7 +65,8 @@ public class AUCCalculation {
     }
 
     private Double runAndRetrieveAUC(File file) throws IOException, InterruptedException {
-        ProcessBuilder builder = new ProcessBuilder("java","-jar", "." + File.separator + "auc.jar", file.getAbsolutePath(), "list");
+        File aucJarFile = new File("." + File.separator + "auc.jar");
+        ProcessBuilder builder = new ProcessBuilder("java","-jar", aucJarFile.getAbsolutePath(), file.getAbsolutePath(), "list");
         Process process = null;
         try {
             process = builder.start();
@@ -84,7 +85,7 @@ public class AUCCalculation {
                 return Double.valueOf(val);
             }
         }
-        throw new IllegalStateException("Error during computing AUC - AUC value not found in computed output.");
+        throw new IllegalStateException("Error during computing ROC AUC - ROC AUC value not found in computed output.");
     }
 
     private void writeData(File file, String data) throws IOException {

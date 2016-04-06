@@ -135,7 +135,7 @@ public class ExperimentResult {
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
         this.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(evaluation));
-        this.setRocAuc(AUCCalculation.create(network, evaluation).computeAUC());
+        this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
         this.setThreshold(network.getClassifier().getTreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
     }
