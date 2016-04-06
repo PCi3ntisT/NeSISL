@@ -63,10 +63,14 @@ public class GridSearchGenerator {
         map.put(RegentSetting.MUTATION_OF_POPULATION_TOKEN, orderedList("10", "30", "60"));
         map.put(RegentSetting.MUTATION_OF_CROSSOVERS_TOKEN, orderedList("10", "20", "40"));
         map.put(RegentSetting.NODE_DELETION_PROBABILITY_TOKEN, orderedList("0.1", "0.3", "0.7"));
-        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("0.01", "0.1", "0.3"));
         map.put(RegentSetting.CROSSOVER_CHILDREN_TOKEN, orderedList("10", "20", "50"));
         map.put(RegentSetting.ELITES_TOKEN, orderedList("1", "2"));
         map.put(RegentSetting.EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN, orderedList("0.2"));
+        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("50000"));
+        map.put(RegentSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("20"));
+        map.put(RegentSetting.LONG_TIME_WINDOW_TOKEN, orderedList("60"));
+        map.put(RegentSetting.EPSILON_LIMIT_TOKEN, orderedList("0.1"));
+
 
         // TopGen part
         map.put(TopGenSettings.EPSILON_LIMIT_TOKEN, orderedList("0.01", "0.1", "0.3"));

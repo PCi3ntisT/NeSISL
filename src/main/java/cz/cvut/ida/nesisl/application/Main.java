@@ -42,7 +42,8 @@ public class Main {
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", ""};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/sampleInput/SLFinput.txt"};
         if (arg.length < 4) {
-            throw new IllegalStateException("Right setting in form 'algorithm numberOfRuns dataset weightLearningSetting [...]'. Possible algorithms KBANN, CasCor, DNC, SLF, TopGen, REGENT; write as first argument to see more.");
+            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLF, TopGen, REGENT; write as first argument to see more.");
+            System.exit(0);
         }
         // algName  #runs   datasetFile wlsFile ruleFile KBANNsetting ruleSpecificFile
 
@@ -51,9 +52,23 @@ public class Main {
         double simga = 1d;
         double mu = 0.0d;
         int seed = 13;
-        int numberOfRepeats = Integer.valueOf(arg[1]);
+        int numberOfRepeats = 0;
+        try{
+            numberOfRepeats = Integer.valueOf(arg[1]);
+        }catch (Exception ex){
+            System.out.println("The second argument (number of repeats) must be integer.");
+            System.exit(0);
+        }
         File datasetFile = new File(arg[2]);
+        if(!datasetFile.exists()){
+            System.out.println("The third argument (datasetFile) does not exist.");
+            System.exit(0);
+        }
         File wlsFile = new File(arg[3]);
+        if(!wlsFile.exists()){
+            System.out.println("The fourth argument (weightLearningSettingFile) does not exist.");
+            System.exit(0);
+        }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
         Dataset dataset = DatasetImpl.createDataset(datasetFile);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);

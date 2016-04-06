@@ -3,8 +3,10 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.regent;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.*;
+import java.util.List;
 
 /**
  * Created by EL on 23.3.2016.
@@ -18,7 +20,10 @@ public class RegentSetting {
     public static final String FITNESS_LIMIT_TOKEN = "maxAllowedFitness";
     public static final String CROSSOVER_CHILDREN_TOKEN = "percentageOfCrossoverChildrenPairs";
     public static final String ELITES_TOKEN = "numberOfElites";
-    public static final String EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN = "edgeWieghtCrossoverLimit";
+    public static final String EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN = "edgeWeightCrossoverLimit";
+    public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
+    public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
+    public static final String EPSILON_LIMIT_TOKEN = "epsilonConvergent";
 
     private final long tournamentSize;
     private final long populationSize;
@@ -32,8 +37,11 @@ public class RegentSetting {
     private final Integer numberOfElites;
     private Long computedFitness = 0l;
     private final Double edgeWeightLimitAfterCrossover;
+    private final Double epsilonConvergent;
+    private final Integer shortTimeWindow;
+    private final Integer longTimeWindow;
 
-    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites, Double edgeWeightLimitAfterCrossover) {
+    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites, Double edgeWeightLimitAfterCrossover, Integer shortTimewindow, Integer longTimewindow, Double epsilonConvergent) {
         this.tournamentSize = tournamentSize;
         this.populationSize = populationSize;
         this.topGenSettings = topGenSettings;
@@ -45,6 +53,9 @@ public class RegentSetting {
         this.percentageOfCrossoverChildrenPairs = numberOfCrossoverChildren;
         this.numberOfElites = numberOfElites;
         this.edgeWeightLimitAfterCrossover = edgeWeightLimitAfterCrossover;
+        this.longTimeWindow = longTimewindow;
+        this.shortTimeWindow = shortTimewindow;
+        this.epsilonConvergent = epsilonConvergent;
     }
 
     public long getTournamentSize() {
@@ -108,7 +119,23 @@ public class RegentSetting {
         return probabilityOfNodeDeletion;
     }
 
-    public static RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
+    public Integer getLongTimeWindow() {
+        return longTimeWindow;
+    }
+
+    public Integer getShortTimeWindow() {
+        return shortTimeWindow;
+    }
+
+    public Double getEpsilonConvergent() {
+        return epsilonConvergent;
+    }
+
+    public Long getComputedFitness() {
+        return computedFitness;
+    }
+
+    public RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
         TopGenSettings tgSetting = TopGenSettings.create(file);
         Long tournamentSize = null;
         Long populationSize = null;
@@ -119,6 +146,9 @@ public class RegentSetting {
         Integer numberOfElites = null;
         Double probabilityOfNodeDeletion = null;
         Double edgeLimitCrossOver = null;
+        Double epsilonConvergent = null;
+        Integer shortTimeWindow = null;
+        Integer longTimeWindow = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -164,6 +194,15 @@ public class RegentSetting {
                     case EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN:
                         edgeLimitCrossOver = Double.valueOf(value);
                         break;
+                    case EPSILON_LIMIT_TOKEN:
+                        epsilonConvergent = Double.valueOf(value);
+                        break;
+                    case SHORT_TIME_WINDOW_TOKEN:
+                        shortTimeWindow = Integer.valueOf(value);
+                        break;
+                    case LONG_TIME_WINDOW_TOKEN:
+                        longTimeWindow = Integer.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -175,10 +214,14 @@ public class RegentSetting {
             e.printStackTrace();
         }
 
-        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites,edgeLimitCrossOver);
+        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites, edgeLimitCrossOver, shortTimeWindow, longTimeWindow, epsilonConvergent);
     }
 
     public Double getEdgeWeightLimitAfterCrossover() {
         return edgeWeightLimitAfterCrossover;
+    }
+
+    public boolean canContinue(Long usedFitness, List<Double> errors) {
+        return !(usedFitness > getMaxAllowedFitness() || Tools.hasConverged(errors, getLongTimeWindow(), getShortTimeWindow(), getEpsilonConvergent()));
     }
 }

@@ -71,8 +71,8 @@ public class Regent implements NeuralNetworkOwner {
             }
             return Double.compare(p1.getFitness(), p2.getFitness());
         };
-
-        while (regentSetting.getMaxAllowedFitness() > regentSetting.computedFitness()) {
+        List<Double> errors = new ArrayList<>();
+        while (regentSetting.canContinue(regentSetting.computedFitness(),errors)) {
             System.out.println(population.size());
             List<Pair<NeuralNetwork, NeuralNetwork>> selectedForCrossover = tournamentSelectionForCrossover(population, regentSetting);
             List<NeuralNetwork> crossovered = crossover(selectedForCrossover, dataset, regentSetting);
@@ -89,6 +89,7 @@ public class Regent implements NeuralNetworkOwner {
 
             Collections.sort(population, comparator);
             updateBestSoFar(population.get(0));
+            errors.add(bestSoFarScore);
         }
 
         bestSoFarNetwork.setClassifierStateful(ThresholdClassificator.create(bestSoFarNetwork, dataset));
