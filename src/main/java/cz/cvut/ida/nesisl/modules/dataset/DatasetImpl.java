@@ -10,11 +10,12 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
 
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by EL on 13.2.2016.
@@ -28,6 +29,7 @@ public class DatasetImpl implements Dataset {
 
     private final File originalFile;
     private final List<Map<Fact, Value>> samples;
+    private final List<Map<Fact, Value>> nodeTrainSamples;
     private final List<Fact> inputFacts;
     private final List<Fact> outputFacts;
 
@@ -36,11 +38,25 @@ public class DatasetImpl implements Dataset {
     private List<Sample> cachedSamples;
     private List<Double> cachedOutputAverage;
 
-    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples, File file) {
-        this.inputFacts = inputFacts;
-        this.outputFacts = outputFacts;
-        this.samples = samples;
-        this.originalFile = file;
+    private List<Fact> cachedTrainNodeInputOrder;
+    private List<Fact> cachedTrainNodeOutputOrder;
+    private List<Sample> cachedTrainNode;
+    private List<Double> cachedTrainNodeOutputAverage;
+
+    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples, File originalFile) {
+        this.inputFacts = new ArrayList<>(inputFacts);
+        this.outputFacts = new ArrayList<>(outputFacts);
+        this.samples = new ArrayList<>(samples);
+        this.originalFile = originalFile;
+        this.nodeTrainSamples = new ArrayList<>(samples);
+    }
+
+    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData,File originalFile) {
+        this.inputFacts = new ArrayList<>(inputFactOrder);
+        this.outputFacts = new ArrayList<>(outputFactOrder);
+        this.samples = new ArrayList<>(trainData);
+        this.originalFile = originalFile;
+        this.nodeTrainSamples = new ArrayList<>(nodeTrainData);
     }
 
     @Override
@@ -48,24 +64,47 @@ public class DatasetImpl implements Dataset {
         return getTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
 
+
+    @Override
+    public List<Sample> getNodeTrainData(NeuralNetwork network) {
+        return getNodeTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
+    }
+
+
     @Override
     public List<Fact> getInputFactOrder() {
-        return inputFacts;
+        return Collections.unmodifiableList(inputFacts);
     }
 
     @Override
     public List<Fact> getOutputFactOrder() {
-        return outputFacts;
+        return Collections.unmodifiableList(outputFacts);
     }
 
     @Override
     public List<Double> getAverageOutputs(NeuralNetwork network) {
         synchronized (this) {
-            if (null == cachedOutputAverage || !areDataCached(network)) {
-                List<List<Value>> outputs = getTrainData(network).parallelStream().map(sample -> sample.getOutput()).collect(Collectors.toCollection(ArrayList::new));
-                cachedOutputAverage = Tools.computeAverages(outputs);
-            }
+            cachedOutputAverage = getAverageOutputs(network, cachedOutputAverage, getTrainData(network), cachedInputOrder, cachedOutputOrder);
             return cachedOutputAverage;
+        }
+    }
+
+    @Override
+    public List<Double> getTrainNodeAverageOutputs(NeuralNetwork network) {
+        synchronized (this) {
+            cachedTrainNodeOutputAverage = getAverageOutputs(network, cachedTrainNodeOutputAverage, getNodeTrainData(network), cachedTrainNodeInputOrder, cachedTrainNodeOutputOrder);
+            return  cachedTrainNodeOutputAverage;
+        }
+    }
+
+    public List<Double> getAverageOutputs(NeuralNetwork network,List<Double> cachedAverage,List<Sample> data,List<Fact> cachedInput, List<Fact> cachedOutput) {
+        synchronized (this) {
+            List<Double> result = cachedAverage;
+            if (null == cachedOutput || !areDataCached(network,cachedInput,cachedOutput)) {
+                List<List<Value>> outputs = data.parallelStream().map(sample -> sample.getOutput()).collect(Collectors.toCollection(ArrayList::new));
+                result = Tools.computeAverages(outputs);
+            }
+            return result;
         }
     }
 
@@ -75,48 +114,72 @@ public class DatasetImpl implements Dataset {
     }
 
     @Override
-    public List<Sample> getNodeTrainData(NeuralNetwork network) {
-        return getTrainData(network); // TODO  v pripade ze pustim topGen s dvema rozdelenyma trainSetama, tak normalne se train data jako jedna cast at to nemusim predelatvat :)
+    public List<Map<Fact, Value>> getRawData() {
+        return new ArrayList<>(samples);
+    }
+
+    @Override
+    public String cannonicalOutput(Map<Fact, Value> sample) {
+        synchronized (outputFacts){
+            return IntStream.range(0,outputFacts.size())
+                    .mapToObj(idx -> sample.get(outputFacts.get(idx)))
+                    .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+                    .toString();
+        }
     }
 
     @Override
     public List<Sample> getTestData(NeuralNetwork network) {
-        // tohle jeste predelat ;)
-        return getTrainData(network);
+        return getNodeTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
 
-    private boolean areDataCached(NeuralNetwork network) {
-        return areDataCached(network.getInputFactOrder(), getInputFactOrder());
+    private boolean areDataCached(NeuralNetwork network,List<Fact> cachedInputFactOrder,List<Fact> cachedOutputFactOrder) {
+        return areDataCached(network.getInputFactOrder(), getInputFactOrder(), cachedInputFactOrder, cachedOutputFactOrder);
     }
 
     private List<Sample> getTrainData(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, NeuralNetwork network) {
         synchronized (this) {
-            if (areDataCached(inputFactPermutation, outputFactPermutation)) {
+            if (areDataCached(inputFactPermutation, outputFactPermutation, cachedInputOrder,cachedOutputOrder)) {
                 return this.cachedSamples;
             }
-            this.cachedSamples = permuteSamples(inputFactPermutation, outputFactPermutation, samples, network);
+            Triple<List<Sample>,List<Fact>,List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, samples, network);
+            this.cachedSamples = permuted.getK();
+            this.cachedInputOrder = permuted.getT();
+            this.cachedOutputOrder = permuted.getW();
             return this.cachedSamples;
         }
     }
 
-    private List<Sample> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
+    private List<Sample> getNodeTrainData(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, NeuralNetwork network) {
+        synchronized (this){
+            if (areDataCached(inputFactPermutation, outputFactPermutation,cachedTrainNodeInputOrder,cachedTrainNodeOutputOrder)) {
+                return this.cachedTrainNode;
+            }
+            Triple<List<Sample>,List<Fact>,List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, nodeTrainSamples, network);
+            this.cachedTrainNode = permuted.getK();
+            this.cachedTrainNodeInputOrder = permuted.getT();
+            this.cachedTrainNodeOutputOrder = permuted.getW();
+            return this.cachedTrainNode;
+        }
+    }
+
+
+    private Triple<List<Sample>,List<Fact>,List<Fact>> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
         List<Sample> samples = cachedSamples.parallelStream().map(map -> permuteSample(map, inputFactPermutation, outputFactPermutation, network.getMissingValuesProcessor())).collect(Collectors.toCollection(ArrayList::new));
-        this.cachedInputOrder = Collections.unmodifiableList(inputFactPermutation);
-        this.cachedOutputOrder = Collections.unmodifiableList(outputFactPermutation);
-        return samples;
+        return new Triple<>(samples,Collections.unmodifiableList(inputFactPermutation),Collections.unmodifiableList(outputFactPermutation));
     }
 
     private static Sample permuteSample(Map<Fact, Value> sample, List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, MissingValues missingValuesProcessor) {
-        List<Value> inputList = permutateSamplePart(sample, inputFactPermutation, missingValuesProcessor);
-        List<Value> outputList = permutateSamplePart(sample, outputFactPermutation, missingValuesProcessor);
+        List<Value> inputList = permuteSamplePart(sample, inputFactPermutation, missingValuesProcessor);
+        List<Value> outputList = permuteSamplePart(sample, outputFactPermutation, missingValuesProcessor);
         return new SampleImpl(inputList, outputList);
     }
 
-    private static List<Value> permutateSamplePart(Map<Fact, Value> sample, List<Fact> inputFactPermutation, MissingValues missingValuesProcessor) {
+    private static List<Value> permuteSamplePart(Map<Fact, Value> sample, List<Fact> inputFactPermutation, MissingValues missingValuesProcessor) {
         return inputFactPermutation.stream().map(fact -> missingValuesProcessor.processMissingValueToValue(sample.get(fact))).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private boolean areDataCached(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation) {
+    private boolean areDataCached(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation,List<Fact> cachedInputOrder,List<Fact> cachedOutputOrder) {
         synchronized (this) {
             if (null == cachedInputOrder || null == cachedOutputOrder || !inputFactPermutation.equals(cachedInputOrder) || !outputFactPermutation.equals(cachedOutputOrder)) {
                 return false;
@@ -125,6 +188,40 @@ public class DatasetImpl implements Dataset {
         }
     }
 
+    public static Dataset stratifiedSplit(Dataset dataset) {
+        synchronized (dataset) {
+            Random random = new Random();
+            List<Map<Fact, Value>> trainData = new ArrayList<>();
+            List<Map<Fact, Value>> nodeTrainData = new ArrayList<>();
+            List<List<Map<Fact, Value>>> splitted = splitAccordingToResults(dataset);
+            splitted.forEach(group -> {
+                if(!group.isEmpty()) {
+                    Collections.shuffle(group, random);
+                    int half = group.size() / 2;
+                    if(2*half != group.size()
+                            && group.size() > 2
+                            && random.nextDouble() < 0.5){
+                        half++;
+                    }
+                    trainData.addAll(group.subList(0, half));
+                    nodeTrainData.addAll(group.subList(half,group.size()));
+                }
+            });
+            return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile());
+        }
+    }
+
+    private static List<List<Map<Fact, Value>>> splitAccordingToResults(Dataset dataset) {
+        synchronized (dataset) {
+            return dataset
+                    .getRawData()
+                    .stream()
+                    .collect(Collectors.groupingBy(e -> dataset.cannonicalOutput(e), Collectors.toCollection(ArrayList::new)))
+                    .values()
+                    .stream()
+                    .collect(Collectors.toCollection(ArrayList::new));
+        }
+    }
 
     enum State {
         TRAIN_SET,
@@ -132,11 +229,6 @@ public class DatasetImpl implements Dataset {
         EXAMPLES
     }
 
-
-    public static Dataset createDataset(File file) {
-        // naparsovat a rozradit dataset
-        throw new NotImplementedException();
-    }
 
     public static Dataset parseDataset(String pathToFile) {
         return parseDataset(new File(pathToFile));

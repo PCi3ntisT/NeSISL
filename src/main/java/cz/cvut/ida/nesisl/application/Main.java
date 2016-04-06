@@ -67,7 +67,7 @@ public class Main {
             System.exit(0);
         }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-        Dataset dataset = DatasetImpl.createDataset(datasetFile);
+        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         Main main = new Main();
@@ -207,10 +207,11 @@ public class Main {
         File settingFile = new File(arg[5]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
+        Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
-        Learnable learn = (topGen) -> ((TopGen) topGen).learn(dataset, wls, tgSetting);
+        Learnable learn = (topGen) -> ((TopGen) topGen).learn(crossVal, wls, tgSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, wls);
     }
 
 
@@ -235,11 +236,12 @@ public class Main {
 
         File settingFile = new File(arg[5]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
+        Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
 
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
-        Learnable learn = (regent) -> ((Regent) regent).learn(dataset, wls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
+        Learnable learn = (regent) -> ((Regent) regent).learn(crossVal , wls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, wls);
     }
 
     /*private void runMAC() {

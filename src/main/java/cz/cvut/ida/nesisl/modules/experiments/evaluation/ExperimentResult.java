@@ -33,7 +33,7 @@ public class ExperimentResult {
     private NeuralNetwork finalNetwork;
     private Long runningTime;
     private Double averageSquaredError;
-    private Double AUC;
+    private Double RocAuc;
     private Double threshold;
     private Double accuracy;
 
@@ -106,12 +106,12 @@ public class ExperimentResult {
         return averageSquaredError;
     }
 
-    public void setAUC(Double AUC) {
-        this.AUC = AUC;
+    public void setRocAuc(Double rocAuc) {
+        this.RocAuc = rocAuc;
     }
 
-    public Double getAUC() {
-        return AUC;
+    public Double getRocAuc() {
+        return RocAuc;
     }
 
     public void setThreshold(Double threshold) {
@@ -135,7 +135,7 @@ public class ExperimentResult {
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
         this.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(evaluation));
-        this.setAUC(AUCCalculation.create(network, evaluation).computeAUC());
+        this.setRocAuc(AUCCalculation.create(network, evaluation).computeAUC());
         this.setThreshold(network.getClassifier().getTreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
     }
@@ -164,7 +164,7 @@ public class ExperimentResult {
         List<Pair<String, StoreableResults>> process = new ArrayList<>();
         process.add(new Pair<>("error", () -> results.stream().mapToDouble(e -> e.getAverageSquaredError())));
         process.add(new Pair<>("accuracy", () -> results.stream().mapToDouble(e -> e.getAccuracy())));
-        process.add(new Pair<>("auc", () -> results.stream().mapToDouble(e -> e.getAUC())));
+        process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
         process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
 
