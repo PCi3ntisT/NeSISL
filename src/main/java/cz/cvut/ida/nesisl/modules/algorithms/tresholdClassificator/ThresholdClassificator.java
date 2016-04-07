@@ -56,7 +56,7 @@ public class ThresholdClassificator implements Classifier {
     }
 
     public static ThresholdClassificator create(NeuralNetwork network, Dataset dataset) {
-        return create(Tools.evaluateOnTestAllAndGetResults(dataset, network));
+        return create(Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
     }
 
     public static ThresholdClassificator create(Map<Sample, Results> results) {

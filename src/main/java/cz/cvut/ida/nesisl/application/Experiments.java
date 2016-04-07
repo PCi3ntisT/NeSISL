@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class Experiments {
 
     public static void main(String arg[]) {
-        String numberOfRepeats = "1";
+        String numberOfRepeats = "5";
         String[] domains = new String[]{
                 //"logic" + File.separator + "and2",
                 //"logic" + File.separator + "and2Reversed",
@@ -36,7 +36,11 @@ public class Experiments {
                 //"logic" + File.separator + "xor3"
                 //"iris" + File.separator
 
-                "artificialLogic" + File.separator + "200",
+                "artificialLogic" + File.separator + "2502",
+                /*"artificialLogic" + File.separator + "467",
+                "artificialLogic" + File.separator + "830",
+                "artificialLogic" + File.separator + "853",
+                "artificialLogic" + File.separator + "2277",*/
         };
         String experimentFolder = "." + File.separator + "experiments" + File.separator;
 
@@ -44,21 +48,27 @@ public class Experiments {
             String folder = experimentFolder + domain + File.separator;
             String data = folder + "data.txt";
             //String wls = folder + "wlsSettings.txt";
-            String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + "_0_0_0_0_0_0_0_0" + File.separator + "wlsSetting.txt";
+            String wlsFolder = "-1-2-1-2-1-3-1-0";
+            String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + wlsFolder + File.separator + "wlsSetting.txt";
             //String slfInput = folder + "SLFinput.txt";
             //String KBANNinput = folder + "KBANNinput.txt";
+            String expSettings = "." + File.separator + "experiments" + File.separator + "settings" + File.separator;
             String KBANNinput = folder + "KBANNinput.txt";
-            String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "_0" + File.separator + "kbannSetting.txt";
+            String slfInput = folder + File.separator + "SLFinput.txt";
+            String KBANNsetting = expSettings + "KBANN" + File.separator + "-1" + File.separator + "kbannSetting.txt";
+            String cascorSetting = expSettings + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
+            String dncSetting = expSettings + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
+            String tgSetting = expSettings + "TopGen" + File.separator + "-1-1-2-2-2-2-3-2" + File.separator + "TopGenSetting.txt";
+            String regentSetting = expSettings + "REGENT" + File.separator + "doplnit" + File.separator + "REGENTSetting.txt";
+
             try {
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput,KBANNsetting});
-                /*Main.main(new String[]{"CasCor", numberOfRepeats, data, wls});
-                Main.main(new String[]{"DNC", numberOfRepeats, data, wls});
+                /*Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
+                Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
+                Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
                 Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});
                 */
-
-                //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput});
-
-                //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput});
+                Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput, tgSetting});
+                //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }

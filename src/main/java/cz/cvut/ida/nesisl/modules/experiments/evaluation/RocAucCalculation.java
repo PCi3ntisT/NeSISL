@@ -31,7 +31,7 @@ public class RocAucCalculation {
     }
 
     public static RocAucCalculation create(NeuralNetwork network, Dataset dataset) {
-        return RocAucCalculation.create(network, Tools.evaluateOnTestAllAndGetResults(dataset, network));
+        return RocAucCalculation.create(network, Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
     }
 
     public static RocAucCalculation create(NeuralNetwork network, Map<Sample,Results> evaluation) {
@@ -65,7 +65,8 @@ public class RocAucCalculation {
     }
 
     private Double runAndRetrieveAUC(File file) throws IOException, InterruptedException {
-        File aucJarFile = new File("." + File.separator + "auc.jar");
+        File folder = new File("");
+        File aucJarFile = new File(folder.getAbsolutePath() + File.separator + "auc.jar");
         ProcessBuilder builder = new ProcessBuilder("java","-jar", aucJarFile.getAbsolutePath(), file.getAbsolutePath(), "list");
         Process process = null;
         try {

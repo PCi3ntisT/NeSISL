@@ -1,6 +1,5 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation;
 
-import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
@@ -41,7 +40,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
 
         inputs.add(network.getBias());
-        Tools.makeFullInterLayerForwardConnections(inputs,output,network,randomGenerator);
+        Tools.makeFullInterLayerForwardConnections(inputs, output, network, randomGenerator);
 
         return network;
     }
@@ -64,34 +63,45 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
             double currentError = Tools.computeSquaredTrainTotalError(network, dataset);
             errors.add(currentError);
 
-            if (cascadeCorrelationSetting.stopCascadeCorrelation(numberOfAddedNodes,errors)) {
+            if (cascadeCorrelationSetting.stopCascadeCorrelation(numberOfAddedNodes, errors)) {
                 break;
             }
 
-            CandidateWrapper bestCandidate = LongStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel().mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls, cascadeCorrelationSetting)).max(CandidateWrapper::compare).get();
+            CandidateWrapper bestCandidate = LongStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel()
+                    .mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls, cascadeCorrelationSetting))
+                    .max(CandidateWrapper::compare).get();
 
-            this.network.addNodeAtLayerStateful(bestCandidate.getNode(), this.network.getMaximalNumberOfHiddenLayer() + 1);
-            bestCandidate.getEdgeWeightPairs().forEach(pair -> this.network.addEdgeStateful(pair.getLeft(), pair.getRight()));
-            this.network.getOutputNodes().forEach(node -> this.network.addEdgeStateful(bestCandidate.getNode(), node, randomGenerator.nextDouble(), Edge.Type.FORWARD));
+            addCandidateToNetwork(bestCandidate, network);
 
             numberOfAddedNodes++;
         }
-        this.network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return this.network;
+    }
+
+    private void addCandidateToNetwork(CandidateWrapper bestCandidate, NeuralNetwork network) {
+        network.addNodeAtLayerStateful(bestCandidate.getNode(), network.getMaximalNumberOfHiddenLayer() + 1);
+        bestCandidate.getEdgeWeightPairs().forEach(pair -> network.addEdgeStateful(pair.getLeft(), pair.getRight()));
+        network.getOutputNodes().forEach(node -> network.addEdgeStateful(bestCandidate.getNode(), node, randomGenerator.nextDouble(), Edge.Type.FORWARD));
     }
 
     private static CandidateWrapper makeAndLearnCandidate(NeuralNetwork network, Dataset dataset, RandomGenerator randomGenerator, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
         Node node = NodeFactory.create(Sigmoid.getFunction());
-        Set<Pair<Edge, Double>> edges = new HashSet<>();
+        Set<Pair<Edge, Double>> edges = makeConnectionsNonOutputNodesToCandidate(network, randomGenerator, node);
 
-        network.getHiddenNodes().forEach(source -> generateAndAddEdge(edges, source, node, randomGenerator));
-        network.getInputNodes().forEach(source -> generateAndAddEdge(edges, source, node, randomGenerator));
-        edges.add(generateRandomEdgeWeight(network.getBias(), node, randomGenerator));
+        Map<Sample, Results> cache = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
 
-        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network);
         Pair<Set<Pair<Edge, Double>>, Double> result = learnCandidatesConnections(dataset, node, edges, network, cache, wls, cascadeCorrelationSetting);
 
         return new CandidateWrapper(result.getRight(), result.getLeft(), node);
+    }
+
+    private static Set<Pair<Edge, Double>> makeConnectionsNonOutputNodesToCandidate(NeuralNetwork network, RandomGenerator randomGenerator, Node node) {
+        Set<Pair<Edge, Double>> edges = new HashSet<>();
+        network.getHiddenNodes().forEach(source -> generateAndAddEdge(edges, source, node, randomGenerator));
+        network.getInputNodes().forEach(source -> generateAndAddEdge(edges, source, node, randomGenerator));
+        edges.add(generateRandomEdgeWeight(network.getBias(), node, randomGenerator));
+        return edges;
     }
 
     private static Pair<Set<Pair<Edge, Double>>, Double> learnCandidatesConnections(Dataset dataset, Node node, Set<Pair<Edge, Double>> edges, NeuralNetwork network, Map<Sample, Results> cache, WeightLearningSetting wls, CascadeCorrelationSetting cascadeCorrelationSetting) {
@@ -105,7 +115,6 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
             correlation = current.getLeft();
             correlations.add(correlation);
-
             currentEdges = current.getRight();
 
             if (cascadeCorrelationSetting.canStopLearningCandidatConnection(correlations, iteration)) {
@@ -159,7 +168,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                 }));
         double correlation = outputs.entrySet().parallelStream().mapToDouble(entry -> Math.abs(entry.getValue())).sum();
 
-        Map<Sample, Results> cache = Tools.evaluateOnTestAllAndGetResults(dataset, network);
+        Map<Sample, Results> cache = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
 
         originalEdges.forEach(pair -> {
             Double derivative = dataset.getTrainData(network).parallelStream().mapToDouble(sample -> {
@@ -178,7 +187,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         return new Pair<>(correlation, edges);
     }
 
-    // vraci list hodnot outputu
+    // returns list of values of outputs
     private static List<Double> computeCascadeError(Double averageCandidateOutput, Map<Sample, Double> sampleCandidateOutput, List<Double> outputAverages, Sample sample) {
         Double deltaCandidate = sampleCandidateOutput.get(sample) - averageCandidateOutput;
         List<Double> list = new ArrayList<>();
@@ -191,6 +200,6 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
     public static CascadeCorrelation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValues missingValuesProcessor) {
         NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValuesProcessor, randomGenerator);
-        return new CascadeCorrelation(network,randomGenerator);
+        return new CascadeCorrelation(network, randomGenerator);
     }
 }

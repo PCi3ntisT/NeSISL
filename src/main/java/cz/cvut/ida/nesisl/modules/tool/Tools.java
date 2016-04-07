@@ -256,8 +256,8 @@ public class Tools {
         return computeSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
 
-    public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> nodeTrainData, NeuralNetwork network) {
-        return evaluateAllAndGetResults(nodeTrainData, network);
+    public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> evaluationSamples, NeuralNetwork network) {
+        return evaluateAllAndGetResults(evaluationSamples, network);
     }
 
     public static String retrieveParentFolderName(File file) {

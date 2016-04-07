@@ -54,16 +54,19 @@ public class Main {
             numberOfRepeats = Integer.valueOf(arg[1]);
         }catch (Exception ex){
             System.out.println("The second argument (number of repeats) must be integer.");
+            System.out.println("Argument input instead '" + arg[1]+ "'.");
             System.exit(0);
         }
         File datasetFile = new File(arg[2]);
         if(!datasetFile.exists()){
             System.out.println("The third argument (datasetFile) does not exist.");
+            System.out.println("Argument input instead '" + arg[2]+ "'.");
             System.exit(0);
         }
         File wlsFile = new File(arg[3]);
         if(!wlsFile.exists()){
             System.out.println("The fourth argument (weightLearningSettingFile) does not exist.");
+            System.out.println("Argument input instead '" + arg[3]+ "'.");
             System.exit(0);
         }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
@@ -180,7 +183,7 @@ public class Main {
     }
 
     private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        if (arg.length < 6) {
+        if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure'");
         }
         String algName = "SLF";

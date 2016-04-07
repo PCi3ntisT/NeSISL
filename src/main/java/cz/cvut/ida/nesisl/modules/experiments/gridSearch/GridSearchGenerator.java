@@ -38,8 +38,8 @@ public class GridSearchGenerator {
         grid.add(generateKBANNSearch(root + "KBANN", "kbannSetting.txt"));
         grid.add(generateDNCSearch(root + "DNC", "DNCSetting.txt"));
         grid.add(generateCascadeCorrelationSearch(root + "CasCor", "cascorSetting.txt"));
-        //grid.add(generateTopGenSearch(root + "TopGen", "TopGenSetting.txt"));
-        //grid.add(generateREGENTSearch(root + "REGENT", "REGENTSetting.txt"));
+        grid.add(generateTopGenSearch(root + "TopGen", "TopGenSetting.txt"));
+        grid.add(generateREGENTSearch(root + "REGENT", "REGENTSetting.txt"));
 
         grid.forEach(search -> search.generateAndStore());
     }
@@ -122,8 +122,8 @@ public class GridSearchGenerator {
         map.put(WeightLearningSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("10", "20"));
         map.put(WeightLearningSetting.LONG_TIME_WINDOW_TOKEN, orderedList("30", "60"));
 
-        map.put(WeightLearningSetting.PENALTY_EPSILON_TOKEN, orderedList("0")); //"0.1", "1", "10"));
-        map.put(WeightLearningSetting.SLF_THRESHOLD_TOKEN, orderedList("0")); //0.01", "0.1", "0.3"));
+        map.put(WeightLearningSetting.PENALTY_EPSILON_TOKEN, orderedList("0.1", "1", "10"));
+        map.put(WeightLearningSetting.SLF_THRESHOLD_TOKEN, orderedList("0.01", "0.1", "0.3"));
 
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
@@ -151,7 +151,7 @@ public class GridSearchGenerator {
             Pair<String, List<String>> possibilities = list.get(propertyIdx);
             IntStream.range(0, possibilities.getRight().size()).forEach(possibilityIdx -> {
                         String value = possibilities.getLeft() + " " + delimiter + " " + possibilities.getRight().get(possibilityIdx) + "\n" + contentSoFar;
-                        generateAndStore(list, propertyIdx + 1, mark + "_" + possibilityIdx, value, folderName);
+                        generateAndStore(list, propertyIdx + 1, mark + "-" + possibilityIdx, value, folderName);
                     }
             );
         }

@@ -176,7 +176,7 @@ public class Regent implements NeuralNetworkOwner {
 
     private NeuralNetwork correctBias(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork, Dataset dataset) {
         Map<NeuralNetwork, Map<Sample, Results>> computedValues = new HashMap<>();
-        nodeOriginalNetwork.values().forEach(net -> computedValues.put(net, Tools.evaluateOnTestAllAndGetResults(dataset, net)));
+        nodeOriginalNetwork.values().forEach(net -> computedValues.put(net, Tools.evaluateOnTrainDataAllAndGetResults(dataset, net)));
 
         Set<Node> nodes = new HashSet<>();
         nodeOriginalNetwork.values().forEach(net -> {

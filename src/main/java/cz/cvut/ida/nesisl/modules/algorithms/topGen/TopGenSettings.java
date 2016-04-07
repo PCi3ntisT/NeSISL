@@ -21,7 +21,7 @@ public class TopGenSettings {
 
     private final Double epsilonLimit;
     private final Double omega;
-    private final Double epsilon;
+    private final Double epsilonConvergent;
     private final Long numberOfSuccessors;
     private final Long lengthOfOpenList;
     private final Integer shortTimeWindow;
@@ -35,7 +35,7 @@ public class TopGenSettings {
         this.omega = omega;
         this.shortTimeWindow = shortTimeWindow;
         this.longTimeWindow = longTimeWindow;
-        this.epsilon = epsilon;
+        this.epsilonConvergent = epsilon;
         this.learningRateDecay = learningRateDecay;
     }
 
@@ -56,7 +56,7 @@ public class TopGenSettings {
     }
 
     public static TopGenSettings create(File file) {
-        Double threshold = null;
+        Double thresholdErrorToStop = null;
         Double omega = null;
         Double epsilon = null;
         Double learningRateDecay = null;
@@ -83,7 +83,7 @@ public class TopGenSettings {
 
                 switch (token) {
                     case EPSILON_LIMIT_TOKEN:
-                        threshold = Double.valueOf(value);
+                        thresholdErrorToStop = Double.valueOf(value);
                         break;
                     case OMEGA_TOKEN:
                         omega = Double.valueOf(value);
@@ -116,11 +116,11 @@ public class TopGenSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new TopGenSettings(threshold, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay);
+        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay);
     }
 
     public boolean canContinue(long iteration, List<Double> errors) {
-        return (errors.size() > longTimeWindow) ? Tools.hasConverged(errors,longTimeWindow,shortTimeWindow, epsilon) : true;
+        return (errors.size() > longTimeWindow) ? !Tools.hasConverged(errors,longTimeWindow,shortTimeWindow, epsilonConvergent) : true;
     }
 
     public Double getLearningRateDecay() {

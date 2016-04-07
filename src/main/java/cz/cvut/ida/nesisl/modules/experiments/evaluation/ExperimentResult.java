@@ -36,6 +36,7 @@ public class ExperimentResult {
     private Double RocAuc;
     private Double threshold;
     private Double accuracy;
+    private long numberOfHiddenNodes;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -130,6 +131,14 @@ public class ExperimentResult {
         return accuracy;
     }
 
+    public void setNumberOfHiddenNodes(long numberOfHiddenNodes) {
+        this.numberOfHiddenNodes = numberOfHiddenNodes;
+    }
+
+    public long getNumberOfHiddenNodes() {
+        return numberOfHiddenNodes;
+    }
+
     public void addExperiment(NeuralNetwork network, long start, long end, Dataset dataset) {
         this.setRunningTime(end - start);
         this.setFinalNetwork(network.getCopy());
@@ -138,6 +147,7 @@ public class ExperimentResult {
         this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
         this.setThreshold(network.getClassifier().getTreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
+        this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
     }
 
     public static void storeResults(List<ExperimentResult> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -167,6 +177,7 @@ public class ExperimentResult {
         process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
         process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
+        process.add(new Pair<>("numberOfHiddenNodes", () -> results.stream().mapToDouble(e -> e.getNumberOfHiddenNodes())));
 
         process.forEach(pair -> appendContent(pair.getLeft(), pair.getRight(), writer));
     }
