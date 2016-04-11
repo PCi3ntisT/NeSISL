@@ -69,7 +69,7 @@ public class Tools {
     }
 
     // tady napsat metody genericke a na jakych mnozine dat se to trenuje
-    public static double computeAverageSquaredTotalError(NeuralNetwork network, Dataset dataset) {
+    public static double computeAverageSquaredTrainTotalError(NeuralNetwork network, Dataset dataset) {
         return computeAverageSquaredTotalError(processTrainErrorStream(network, dataset));
     }
 
@@ -171,7 +171,7 @@ public class Tools {
         return penaltyEpsilon * network.getNodes().stream().mapToDouble(node ->
                         network.getIncomingForwardEdges(node).stream().filter(edge ->
                                         edge.isModifiable() && Math.abs(network.getWeight(edge)) < treshold
-                        ).mapToDouble(edge -> network.getWeight(edge)).sum()
+                        ).mapToDouble(edge -> Math.abs(network.getWeight(edge))).sum()
         ).sum();
     }
 
