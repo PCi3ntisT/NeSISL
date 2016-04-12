@@ -40,7 +40,7 @@ public class TopGen implements NeuralNetworkOwner {
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings) {
         KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, tgSettings.getOmega());
         Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
-        Double error = Tools.computeSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
+        Double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
 
         Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
             if (Tools.isZero(t1.getT() - t2.getT()) && Tools.isZero(t1.getW() - t2.getW())) {
@@ -137,7 +137,7 @@ public class TopGen implements NeuralNetworkOwner {
         WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(),wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(),wls.getLongTimeWindow(),wls.getPenaltyEpsilon(), wls.getSLFThreshold());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
-        double error = Tools.computeAverageSquaredTotalError(network, dataset);
+        double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
         network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
         return new Triple<>(network, error, learningRate);
     }

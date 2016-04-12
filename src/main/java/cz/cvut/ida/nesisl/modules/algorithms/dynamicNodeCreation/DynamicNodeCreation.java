@@ -48,7 +48,7 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Backpropagation.updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, 2, previousDeltas.get(sample));
             }
-            double currentError = Tools.computeAverageSquaredTotalError(network, dataset);
+            double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
 
             averagesErrors.put(iteration, currentError);
 

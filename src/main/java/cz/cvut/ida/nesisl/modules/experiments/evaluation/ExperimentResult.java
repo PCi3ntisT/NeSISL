@@ -68,7 +68,6 @@ public class ExperimentResult {
 
     public void setInitNetwork(NeuralNetwork initNetwork) {
         this.initNetwork = initNetwork;
-        networkToLatexAndBuild(initNetwork, "origin");
     }
 
     private void networkToLatexAndBuild(NeuralNetwork network, String name) {
@@ -88,7 +87,6 @@ public class ExperimentResult {
 
     public void setFinalNetwork(NeuralNetwork finalNetwork) {
         this.finalNetwork = finalNetwork;
-        networkToLatexAndBuild(finalNetwork, "final");
     }
 
     public void setRunningTime(long time) {
@@ -150,13 +148,23 @@ public class ExperimentResult {
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
     }
 
+    public void exportSavedNetworksToTex() {
+        networkToLatexAndBuild(initNetwork, "origin");
+        networkToLatexAndBuild(finalNetwork, "final");
+    }
+
     public static void storeResults(List<ExperimentResult> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
+        results.forEach(ExperimentResult::exportSavedNetworksToTex);
+
         String experimentsFile = datasetFile.getAbsoluteFile().getParent() + File.separator +
                 learningAlg + File.separator +
                 Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
                 Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
                 "results.txt";
         File expFile = new File(experimentsFile);
+        if(!expFile.getParentFile().exists()){
+            expFile.getParentFile().mkdirs();
+        }
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(expFile);

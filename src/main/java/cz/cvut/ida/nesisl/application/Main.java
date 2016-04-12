@@ -140,9 +140,10 @@ public class Main {
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
         Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
-        Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, wls);
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
+        Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, finalWls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -151,13 +152,14 @@ public class Main {
         }
         String algName = "CasCor";
 
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         File settingFile = new File(arg[4]);
         CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(settingFile);
 
         Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
-        Learnable learn = (cascadeCorrelation) -> ((CascadeCorrelation) cascadeCorrelation).learn(dataset, wls, ccSetting);
+        Learnable learn = (cascadeCorrelation) -> ((CascadeCorrelation) cascadeCorrelation).learn(dataset, finalWls, ccSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
     }
 
     private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -165,6 +167,7 @@ public class Main {
             throw new IllegalStateException("Need more arguments. To run Dynamic Node Creation use 'DNC   #ofRepeats  datasetFile  weightLearningSettingsFile  DNCSetting'");
         }
         String algName = "DNC";
+
 
         /*
         double deltaT = 0.05;
@@ -175,11 +178,13 @@ public class Main {
          */
         File settingFile = new File(arg[4]);
         DNCSetting dncSetting = DNCSetting.create(settingFile);
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
+
 
         Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
-        Learnable learn = (dnc) -> ((DynamicNodeCreation) dnc).learn(dataset, wls, dncSetting);
+        Learnable learn = (dnc) -> ((DynamicNodeCreation) dnc).learn(dataset, finalWls, dncSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
     }
 
     private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -208,6 +213,7 @@ public class Main {
         }
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         /*Double treshold = 0.0001;
         Long lengthOfOpenList = 100l;
         Long numberOfSuccessors = 10l;*/
@@ -216,9 +222,9 @@ public class Main {
 
         Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
-        Learnable learn = (topGen) -> ((TopGen) topGen).learn(crossVal, wls, tgSetting);
+        Learnable learn = (topGen) -> ((TopGen) topGen).learn(crossVal, finalWls, tgSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, finalWls);
     }
 
 
@@ -232,6 +238,7 @@ public class Main {
         }
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         /*long populationSize = 4;
         long tournamentSize = 1;
         Integer numberOfMutationOfPopulation = 1;
@@ -246,9 +253,9 @@ public class Main {
         Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
 
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
-        Learnable learn = (regent) -> ((Regent) regent).learn(crossVal , wls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
+        Learnable learn = (regent) -> ((Regent) regent).learn(crossVal , finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, finalWls);
     }
 
     /*private void runMAC() {

@@ -9,7 +9,7 @@ import java.util.List;
  * Created by EL on 13.2.2016.
  */
 public class WeightLearningSetting {
-    public static final String EPSILON_TOKEN = "epsilonConvergent";
+    public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
     public static final String EPOCH_TOKEN = "epochLimit";
     public static final String LEARNING_RATE_TOKEN = "learningRate";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
@@ -40,7 +40,6 @@ public class WeightLearningSetting {
         this.file = file;
     }
 
-
     public static WeightLearningSetting parse(File file) {
         Double learningRate = null;
         Double epsilonDifference = null;
@@ -68,7 +67,7 @@ public class WeightLearningSetting {
                 }
 
                 switch (token) {
-                    case EPSILON_TOKEN:
+                    case EPSILON_CONVERGENT_TOKEN:
                         epsilonDifference = Double.valueOf(value);
                         break;
                     case EPOCH_TOKEN:
@@ -155,5 +154,9 @@ public class WeightLearningSetting {
 
     public File getFile() {
         return file;
+    }
+
+    public static WeightLearningSetting turnOffRegularization(WeightLearningSetting wls) {
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(),wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d,0.0d);
     }
 }

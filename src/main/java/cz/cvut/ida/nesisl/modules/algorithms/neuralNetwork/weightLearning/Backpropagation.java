@@ -42,7 +42,7 @@ public class Backpropagation {
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
-            double currentError = Tools.computeSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
+            double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
             errors.add(currentError);
             iteration++;
         }
@@ -104,7 +104,27 @@ public class Backpropagation {
             );
 
             network.getHiddenNodesInLayer(layer - 1).forEach(node -> {
-                Double sigmaSum = network.getOutgoingForwardEdges(node).stream().filter(Edge::isModifiable).mapToDouble(edge -> network.getWeight(edge) * sigma.get(edge.getTarget())).sum();
+                Double sigmaSum = network.getOutgoingForwardEdges(node).stream()
+                        .filter(Edge::isModifiable)
+                        .mapToDouble(edge -> {
+                            /*if (null == edge || null == network.getWeight(edge) || null == sigma.get(edge.getTarget())) {
+                                String a = edge.toString();
+                                String b = "" + network.getWeight(edge);
+                                String c = "" + sigma.get(edge.getTarget());
+                                System.out.println(a + "\ta\n"
+                                        + b + "\tb\n"
+                                        + c + "\tc\n"
+                                        + edge.getTarget() + "\td\n"
+                                        + network.getHiddenNodes().contains(edge.getTarget()) + "\te\n"
+                                        + network.getLayerNumber(edge.getTarget()) + "\tf\n"
+                                        + TikzExporter.exportToString(network) + "\n"
+                                        + TikzExporter.exportToString(network.getCopy()));
+
+                                // jeste presneji najit puvod te chyby, nekde to je skryto ale nevim kde, nejspis v crossoveru nebo v pouziti topgenu
+                            }*/
+                            return network.getWeight(edge) * sigma.get(edge.getTarget());
+                        })
+                        .sum();
                 sigma.put(node, sigmaSum * node.getFirstDerivationAtFunctionValue(results.getComputedValues().get(node)));
             });
             layersComputed++;

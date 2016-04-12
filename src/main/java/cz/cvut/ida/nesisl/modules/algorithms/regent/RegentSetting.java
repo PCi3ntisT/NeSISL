@@ -23,7 +23,7 @@ public class RegentSetting {
     public static final String EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN = "edgeWeightCrossoverLimit";
     public static final String SHORT_TIME_WINDOW_TOKEN = "shortTimeWindow";
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
-    public static final String EPSILON_LIMIT_TOKEN = "epsilonConvergent";
+    public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
 
     private final long tournamentSize;
     private final long populationSize;
@@ -131,10 +131,6 @@ public class RegentSetting {
         return epsilonConvergent;
     }
 
-    public Long getComputedFitness() {
-        return computedFitness;
-    }
-
     public static RegentSetting create(File file, RandomGeneratorImpl randomGenerator) {
         TopGenSettings tgSetting = TopGenSettings.create(file);
         Long tournamentSize = null;
@@ -194,7 +190,7 @@ public class RegentSetting {
                     case EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN:
                         edgeLimitCrossOver = Double.valueOf(value);
                         break;
-                    case EPSILON_LIMIT_TOKEN:
+                    case EPSILON_CONVERGENT_TOKEN:
                         epsilonConvergent = Double.valueOf(value);
                         break;
                     case SHORT_TIME_WINDOW_TOKEN:

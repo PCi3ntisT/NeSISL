@@ -24,7 +24,8 @@ import java.util.stream.LongStream;
 /**
  * Created by EL on 8.3.2016.
  */
-public class CascadeCorrelation implements NeuralNetworkOwner {
+public class
+        CascadeCorrelation implements NeuralNetworkOwner {
 
     private NeuralNetwork network;
     private RandomGenerator randomGenerator;
@@ -60,7 +61,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
         while (true) {
             Backpropagation.learnEdgesToOutputLayerOnlyStateful(network, dataset, wls);
-            double currentError = Tools.computeSquaredTrainTotalError(network, dataset);
+            double currentError = Tools.computeAverageSquaredTrainTotalError(network, dataset);
             errors.add(currentError);
 
             if (cascadeCorrelationSetting.stopCascadeCorrelation(numberOfAddedNodes, errors)) {
@@ -74,6 +75,8 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
             addCandidateToNetwork(bestCandidate, network);
 
             numberOfAddedNodes++;
+
+            System.out.println(numberOfAddedNodes + "\t" + currentError);
         }
         this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return this.network;

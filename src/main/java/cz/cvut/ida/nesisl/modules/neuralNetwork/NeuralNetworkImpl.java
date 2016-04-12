@@ -27,7 +27,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private List<Node> inputNodes = new LinkedList<Node>();
     private List<Node> outputNodes = new LinkedList<Node>();
 
-    private Map<Long, List<Node>> network = new HashMap<Long, List<Node>>();
+    private Map<Long, List<Node>> network = new HashMap<>();
 
     private Map<Node, Set<Edge>> forwardIncomingEdges = new HashMap<>();
     private Map<Node, Set<Edge>> forwardOutgoingEdges = new HashMap<>();
@@ -50,7 +50,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     }
 
     public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor) {
-        this(inputNodes,  outputNodes, missingValuesProcessor, null);
+        this(inputNodes, outputNodes, missingValuesProcessor, null);
     }
 
     public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
@@ -583,6 +583,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             for (long idx = getMaximalNumberOfHiddenLayer(); idx >= layerNumber; idx--) {
                 network.put(idx + 1, network.get(idx));
             }
+            numberOfHiddenLayers++;
             actualizeNodeLayerIndexes();
             network.put(layerNumber, new ArrayList<>());
         }
@@ -628,9 +629,20 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
             sum = forwardIncomingEdges.get(node).stream().filter(edge -> edge.getSource() != edge.getTarget())
                     .mapToDouble(edge -> {
-                                if (null == outputValues.get(edge.getSource())) {
-                                    evaluateFeedforwardNode(edge.getSource(), outputValues);
-                                }
+                                /*if (null == outputValues.get(edge.getSource())) {
+                                    throw new IllegalStateException("some wierdness here\n\t" +
+                                            edge.getSource().getIndex() + "(l: " + getInputNodes().contains(edge.getSource())
+                                            + "\n\t\t "+ getHiddenNodes().contains(edge.getSource())
+                                            + "\n\t\t "+ getOutputNodes().contains(edge.getSource())
+                                            + "\n\t\t " + (getBias() == edge.getSource())
+                                            + "\n\t\t "+ getLayerNumber(edge.getSource()) + ")\n\t" +
+                                            edge.getTarget() + "(l: " + getInputNodes().contains(edge.getTarget())
+                                            + "\n\t\t "+ getHiddenNodes().contains(edge.getTarget())
+                                            + "\n\t\t "+ getOutputNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + (getBias() == edge.getTarget())
+                                            + "\n\t "+ getLayerNumber(edge.getTarget()) + ")\n");
+                                    //evaluateFeedforwardNode(edge.getSource(), outputValues);
+                                }*/
                                 return outputValues.get(edge.getSource()) * this.getWeight(edge);
                             }
                     ).sum();

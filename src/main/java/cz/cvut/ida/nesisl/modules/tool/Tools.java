@@ -252,9 +252,14 @@ public class Tools {
         return list.subList(list.size() - timeWindow,list.size()).stream().mapToDouble(d -> d).average().orElse(0);
     }
 
+    public static double computeAverageSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
+        return computeAverageSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+    }
+
     public static double computeSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
         return computeSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
+
 
     public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> evaluationSamples, NeuralNetwork network) {
         return evaluateAllAndGetResults(evaluationSamples, network);
