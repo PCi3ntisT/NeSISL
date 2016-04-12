@@ -1,6 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
-import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 
 import java.io.*;

@@ -12,7 +12,6 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
-import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGenerator;
 
 import java.io.File;
 import java.util.*;

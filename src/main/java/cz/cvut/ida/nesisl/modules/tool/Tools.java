@@ -6,6 +6,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
@@ -14,7 +15,6 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Id
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 

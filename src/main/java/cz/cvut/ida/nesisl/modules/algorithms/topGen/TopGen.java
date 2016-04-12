@@ -3,6 +3,7 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
@@ -56,7 +57,7 @@ public class TopGen implements NeuralNetworkOwner {
 
         List<Double> errors = new ArrayList<>();
         long iteration = 0;
-        while (!queue.isEmpty() && tgSettings.canContinue(iteration,errors)) {
+        while (!queue.isEmpty() && tgSettings.canContinue(iteration, errors)) {
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
             updateNetwork(current);
 
@@ -99,12 +100,12 @@ public class TopGen implements NeuralNetworkOwner {
     }
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> generateSorted(NeuralNetwork network, Dataset dataset) {
-        if(null == network.getClassifier()){
-            network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        if (null == network.getClassifier()) {
+            network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         }
 
-        Map<Sample, Results> results = Tools.evaluateOnAndGetResults(dataset.getNodeTrainData(network),network);
-        Map<Sample, Boolean> correctlyClassified = Tools.classify(network.getClassifier(),results);
+        Map<Sample, Results> results = Tools.evaluateOnAndGetResults(dataset.getNodeTrainData(network), network);
+        Map<Sample, Boolean> correctlyClassified = Tools.classify(network.getClassifier(), results);
 
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = computeValues(network, results, correctlyClassified);
 
@@ -120,7 +121,10 @@ public class TopGen implements NeuralNetworkOwner {
     }
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> computeValues(NeuralNetwork network, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
-        return network.getHiddenNodes().parallelStream().map(node -> computeFPandFN(network, node, results, correctlyClassified)).flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
+        return network.getHiddenNodes()
+                .parallelStream()
+                .map(node -> computeFPandFN(network, node, results, correctlyClassified))
+                .flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static NeuralNetwork generateSuccessor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
@@ -134,11 +138,11 @@ public class TopGen implements NeuralNetworkOwner {
         network = addNode(node, isFalsePositive, network, kbannSetting, randomGenerator);
 
         double learningRate = previousLearningRate * tgSettings.getLearningRateDecay();
-        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(),wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(),wls.getLongTimeWindow(),wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
         double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
-        network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return new Triple<>(network, error, learningRate);
     }
 
@@ -210,13 +214,17 @@ public class TopGen implements NeuralNetworkOwner {
     }
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> computeFPandFN(NeuralNetwork network, Node node, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified) {
-        long falsePositive = results.keySet().stream().filter(sample -> !correctlyClassified.get(sample)).filter(sample ->
-                        results.get(sample).getComputedValues().get(node) > 0
-        ).count();
+        long falsePositive = results.keySet()
+                .stream().filter(sample -> !correctlyClassified.get(sample))
+                .filter(sample ->
+                                results.get(sample).getComputedValues().get(node) > network.getClassifier().getTreshold()
+                ).count();
 
-        long falseNegative = results.keySet().stream().filter(sample -> correctlyClassified.get(sample)).filter(sample ->
-                        results.get(sample).getComputedValues().get(node) <= 0
-        ).count();
+        long falseNegative = results.keySet()
+                .stream().filter(sample -> correctlyClassified.get(sample))
+                .filter(sample ->
+                                results.get(sample).getComputedValues().get(node) <= network.getClassifier().getTreshold()
+                ).count();
 
         long layerIdx = network.getLayerNumber(node);
 
@@ -228,7 +236,7 @@ public class TopGen implements NeuralNetworkOwner {
 
 
     public static TopGen create(File ruleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, TopGenSettings topGenSettings) {
-        KBANN kbann = KBANN.create(ruleFile, specific, new KBANNSettings(randomGenerator,topGenSettings.getOmega()));
+        KBANN kbann = KBANN.create(ruleFile, specific, new KBANNSettings(randomGenerator, topGenSettings.getOmega()));
         return new TopGen(kbann, randomGenerator);
     }
 

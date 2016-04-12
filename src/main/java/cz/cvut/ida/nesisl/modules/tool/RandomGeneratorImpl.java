@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.tool;
 
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Random;

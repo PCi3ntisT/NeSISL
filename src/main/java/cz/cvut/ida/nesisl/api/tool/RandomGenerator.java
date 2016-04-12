@@ -1,4 +1,4 @@
-package main.java.cz.cvut.ida.nesisl.modules.tool;
+package main.java.cz.cvut.ida.nesisl.api.tool;
 
 /**
  * Created by EL on 6.3.2016.

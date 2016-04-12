@@ -448,7 +448,7 @@ public class Regent implements NeuralNetworkOwner {
         if (isPopulationInitialization) {
             which = randomGenerator.nextIntegerTo((int) network.getNumberOfHiddenNodes());
         }
-        randomGenerator.nextIntegerTo((int) network.getNumberOfHiddenNodes());
+        //randomGenerator.nextIntegerTo((int) network.getNumberOfHiddenNodes());
         return TopGen.generateSuccessor(network, dataset, which, regentSetting.getKBANNSetting(), randomGenerator);
     }
 
