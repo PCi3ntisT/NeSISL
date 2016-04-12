@@ -9,6 +9,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearn
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
@@ -62,8 +63,9 @@ public class Regent implements NeuralNetworkOwner {
         this.neuralNetwork = kbann.getNeuralNetwork();
         this.bestSoFarScore = Tools.computeAverageSquaredTrainTotalError(neuralNetwork, dataset);
 
-        List<NeuralNetwork> children = mutateInitialNetworkToMakeChildrens(this.neuralNetwork, dataset, regentSetting);
-        List<Individual> population = computeFitness(children, dataset);
+        Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset);
+        List<NeuralNetwork> children = mutateInitialNetworkToMakeChildren(this.neuralNetwork, crossValDataset, regentSetting);
+        List<Individual> population = computeFitness(children, crossValDataset);
 
         Comparator<Individual> comparator = (p1, p2) -> {
             if (Tools.isZero(Math.abs(p1.getFitness() - p2.getFitness()))) {
@@ -74,24 +76,25 @@ public class Regent implements NeuralNetworkOwner {
         List<Double> errors = new ArrayList<>();
         while (regentSetting.canContinue(regentSetting.computedFitness(),errors)) {
             List<Pair<NeuralNetwork, NeuralNetwork>> selectedForCrossover = tournamentSelectionForCrossover(population, regentSetting);
-            List<NeuralNetwork> crossovered = crossover(selectedForCrossover, dataset, regentSetting);
+            List<NeuralNetwork> crossovered = crossover(selectedForCrossover, crossValDataset, regentSetting);
 
             List<NeuralNetwork> mutation = new ArrayList<>();
             addToMutationFromCrossovers(mutation, crossovered, regentSetting);
             addToMutationFromPopulation(mutation, population, regentSetting);
-            List<NeuralNetwork> mutated = mutateNetwork(mutation, dataset, regentSetting);
+            List<NeuralNetwork> mutated = mutateNetwork(mutation, crossValDataset, regentSetting);
 
             List<Individual> successors = new ArrayList<>();
             addEvaluatedElites(population, successors, regentSetting, dataset, wls);
             addEvaluatedSuccessors(mutated, successors, regentSetting, dataset, wls);
             addEvaluatedSuccessors(crossovered, successors, regentSetting, dataset, wls);
 
+            population = successors;
             Collections.sort(population, comparator);
             updateBestSoFar(population.get(0));
             errors.add(bestSoFarScore);
         }
 
-        bestSoFarNetwork.setClassifierStateful(ThresholdClassificator.create(bestSoFarNetwork, dataset));
+        bestSoFarNetwork.setClassifierStateful(ThresholdClassificator.create(bestSoFarNetwork, crossValDataset));
         return bestSoFarNetwork;
     }
 
@@ -428,11 +431,13 @@ public class Regent implements NeuralNetworkOwner {
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private List<NeuralNetwork> mutateInitialNetworkToMakeChildrens(NeuralNetwork network, Dataset dataset, RegentSetting regentSetting) {
-        return LongStream.range(0, regentSetting.getPopulationSize())
+    private List<NeuralNetwork> mutateInitialNetworkToMakeChildren(NeuralNetwork network, Dataset dataset, RegentSetting regentSetting) {
+        List<NeuralNetwork> population = LongStream.range(0, regentSetting.getPopulationSize() - 1)
                 .parallel()
                 .mapToObj(i -> mutate(network, dataset, regentSetting, true))
                 .collect(Collectors.toCollection(ArrayList::new));
+        population.add(network);
+        return population;
     }
 
     private NeuralNetwork mutate(NeuralNetwork network, Dataset dataset, RegentSetting regentSetting, boolean canDeleteNode) {

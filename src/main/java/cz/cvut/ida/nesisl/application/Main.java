@@ -220,11 +220,10 @@ public class Main {
         File settingFile = new File(arg[5]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
-        Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
-        Learnable learn = (topGen) -> ((TopGen) topGen).learn(crossVal, finalWls, tgSetting);
+        Learnable learn = (topGen) -> ((TopGen) topGen).learn(dataset, finalWls, tgSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
     }
 
 
@@ -250,12 +249,11 @@ public class Main {
 
         File settingFile = new File(arg[5]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
-        Dataset crossVal = DatasetImpl.stratifiedSplit(dataset);
 
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
-        Learnable learn = (regent) -> ((Regent) regent).learn(crossVal , finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
+        Learnable learn = (regent) -> ((Regent) regent).learn(dataset , finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossVal, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
     }
 
     /*private void runMAC() {

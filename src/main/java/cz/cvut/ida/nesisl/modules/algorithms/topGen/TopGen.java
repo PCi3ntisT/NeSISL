@@ -9,6 +9,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
@@ -43,6 +44,7 @@ public class TopGen implements NeuralNetworkOwner {
         Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
         Double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
 
+        Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset);
         Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
             if (Tools.isZero(t1.getT() - t2.getT()) && Tools.isZero(t1.getW() - t2.getW())) {
                 return 0;
@@ -65,7 +67,7 @@ public class TopGen implements NeuralNetworkOwner {
                 break;
             }
 
-            List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(current.getK(), dataset, tgSettings, wls, current.getW(), kbannSetting);
+            List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(current.getK(), crossValDataset, tgSettings, wls, current.getW(), kbannSetting);
             queue.addAll(successors);
 
             Collections.sort(successors, comparator);
@@ -82,7 +84,7 @@ public class TopGen implements NeuralNetworkOwner {
             iteration++;
             errors.add(networkError);
         }
-        network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
+        network.setClassifierStateful(ThresholdClassificator.create(network, crossValDataset));
         return network;
     }
 
@@ -129,9 +131,22 @@ public class TopGen implements NeuralNetworkOwner {
 
     public static NeuralNetwork generateSuccessor(NeuralNetwork network, Dataset dataset, int which, KBANNSettings kbannSettings, RandomGenerator randomGenerator) {
         NeuralNetwork currentNetwork = network.getCopy();
-        List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(currentNetwork, dataset);
-        Triple<Pair<Node, Boolean>, Long, Long> picked = generated.get(which);
-        return addNode(picked.getK().getLeft(), picked.getK().getRight(), currentNetwork, kbannSettings, randomGenerator);
+        if (0 < network.getNumberOfHiddenNodes()) {
+            List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(currentNetwork, dataset);
+            Triple<Pair<Node, Boolean>, Long, Long> picked = generated.get(which);
+            return addNode(picked.getK().getLeft(), picked.getK().getRight(), currentNetwork, kbannSettings, randomGenerator);
+        } else {
+            Node node = NodeFactory.create(Sigmoid.getFunction());
+            currentNetwork.addNodeAtLayerStateful(node, 0);
+            List<Node> inputsAndBias = new ArrayList<>();
+            inputsAndBias.add(currentNetwork.getBias());
+            inputsAndBias.addAll(currentNetwork.getInputNodes());
+            Tools.makeFullInterLayerForwardConnections(inputsAndBias, node, currentNetwork, kbannSettings.getRandomGenerator());
+            List<Node> from = new ArrayList<>();
+            from.add(node);
+            Tools.makeFullInterLayerForwardConnections(from, currentNetwork.getOutputNodes(), currentNetwork, kbannSettings.getRandomGenerator());
+            return currentNetwork;
+        }
     }
 
     private Triple<NeuralNetwork, Double, Double> addNodeAndLearnNetwork(Node node, Boolean isFalsePositive, NeuralNetwork network, Dataset dataset, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting, TopGenSettings tgSettings) {
