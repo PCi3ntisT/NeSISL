@@ -25,7 +25,7 @@ public class ThresholdClassificator implements Classifier {
         this.treshold = treshold;
     }
 
-    public Double getTreshold() {
+    public Double getThreshold() {
         return treshold;
     }
 

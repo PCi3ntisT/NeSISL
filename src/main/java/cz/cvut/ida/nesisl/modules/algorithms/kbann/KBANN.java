@@ -140,6 +140,7 @@ public class KBANN implements NeuralNetworkOwner {
 
     /**
      * Returns neural network; (statefull).
+     *
      * @return
      */
     public NeuralNetwork getNeuralNetwork() {
@@ -191,12 +192,15 @@ public class KBANN implements NeuralNetworkOwner {
             }
 
             final List<Node> finalPreviousLayer = previousLayer;
-            currentLayer.stream().filter(Node::isModifiable).forEach(currentNode ->
-                            finalPreviousLayer.stream().filter(source -> !edges.contains(new Pair<>(source,currentNode)))
-                                    .forEach(previousNode ->
-                                                    network.addEdgeStateful(previousNode, currentNode, edgeInitValue, Edge.Type.FORWARD)
-                                    )
-            );
+            currentLayer.stream()
+                    .filter(Node::isModifiable)
+                    .forEach(currentNode ->
+                                    finalPreviousLayer.stream()
+                                            .filter(source -> !edges.contains(new Pair<>(source, currentNode)))
+                                            .forEach(previousNode ->
+                                                            network.addEdgeStateful(previousNode, currentNode, edgeInitValue, Edge.Type.FORWARD)
+                                            )
+                    );
 
             previousLayer = currentLayer;
             previousLayer.add(network.getBias());
@@ -212,7 +216,7 @@ public class KBANN implements NeuralNetworkOwner {
      */
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting weightLearningSetting) {
         this.network = Backpropagation.feedforwardBackpropagation(this.network, dataset, weightLearningSetting);
-        this.network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return this.network;
     }
 }

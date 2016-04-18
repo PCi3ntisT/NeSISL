@@ -18,6 +18,7 @@ public class TopGenSettings {
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
     public static final String LEARNING_RATE_DECAY_TOKEN = "learningRateDecay";
+    public static final String NODE_ACTIVATION_THRESHOLD_TOKEN = "nodeActivationThreshold";
 
     private final Double epsilonLimit;
     private final Double omega;
@@ -27,8 +28,9 @@ public class TopGenSettings {
     private final Integer shortTimeWindow;
     private final Integer longTimeWindow;
     private final Double learningRateDecay;
+    private final Double nodeActivationThreshold;
 
-    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega,Integer  longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay) {
+    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega, Integer longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay, Double nodeActivationThreshold) {
         this.epsilonLimit = epsilonLimit;
         this.numberOfSuccessors = numberOfSuccessors;
         this.lengthOfOpenList = lengthOfOpenList;
@@ -37,6 +39,7 @@ public class TopGenSettings {
         this.longTimeWindow = longTimeWindow;
         this.epsilonConvergent = epsilon;
         this.learningRateDecay = learningRateDecay;
+        this.nodeActivationThreshold = nodeActivationThreshold;
     }
 
     public Double getEpsilonLimit() {
@@ -55,6 +58,14 @@ public class TopGenSettings {
         return omega;
     }
 
+    public Double getLearningRateDecay() {
+        return learningRateDecay;
+    }
+
+    public Double getNodeActivationThreshold() {
+        return nodeActivationThreshold;
+    }
+
     public static TopGenSettings create(File file) {
         Double thresholdErrorToStop = null;
         Double omega = null;
@@ -64,6 +75,7 @@ public class TopGenSettings {
         Long lengthOfOpenList = null;
         Integer shortTimeWindow = null;
         Integer longTimeWindow = null;
+        Double nodeActivationThreshold = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -106,6 +118,9 @@ public class TopGenSettings {
                     case LEARNING_RATE_DECAY_TOKEN:
                         learningRateDecay = Double.valueOf(value);
                         break;
+                    case NODE_ACTIVATION_THRESHOLD_TOKEN:
+                        nodeActivationThreshold = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -116,15 +131,14 @@ public class TopGenSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay);
+        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay, nodeActivationThreshold);
     }
 
     public boolean canContinue(long iteration, List<Double> errors) {
-        return (errors.size() > longTimeWindow) ? !Tools.hasConverged(errors,longTimeWindow,shortTimeWindow, epsilonConvergent) : true;
-    }
-
-    public Double getLearningRateDecay() {
-        return learningRateDecay;
+        if (errors.size() > 0 && errors.get(errors.size() - 1) < Tools.convergedError()) {
+            return false;
+        }
+        return (errors.size() > longTimeWindow) ? !Tools.hasConverged(errors, longTimeWindow, shortTimeWindow, epsilonConvergent) : true;
     }
 
 }

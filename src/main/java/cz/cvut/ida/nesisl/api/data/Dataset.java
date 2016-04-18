@@ -26,6 +26,10 @@ public interface Dataset {
 
     public List<Sample> getNodeTrainData(NeuralNetwork network);
 
+    /**
+     * Returns train data only.
+     * @return
+     */
     public List<Map<Fact,Value>> getRawData();
 
     public String cannonicalOutput(Map<Fact, Value> sample);

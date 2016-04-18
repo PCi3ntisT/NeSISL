@@ -23,7 +23,6 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
-import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,6 +35,8 @@ import java.util.stream.IntStream;
  * Created by EL on 9.2.2016.
  */
 public class Main {
+
+    private Integer numberOfFolds = 5;
 
     public static void main(String arg[]) throws FileNotFoundException {
         //arg = new String[]{"DNC", "1", "./ruleExamples/sampleInput/sampleOne.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/KBANN/sampleOne.txt"};
@@ -50,23 +51,23 @@ public class Main {
         double mu = 0.0d;
         int seed = 13;
         int numberOfRepeats = 0;
-        try{
+        try {
             numberOfRepeats = Integer.valueOf(arg[1]);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             System.out.println("The second argument (number of repeats) must be integer.");
-            System.out.println("Argument input instead '" + arg[1]+ "'.");
+            System.out.println("Argument input instead '" + arg[1] + "'.");
             System.exit(0);
         }
         File datasetFile = new File(arg[2]);
-        if(!datasetFile.exists()){
+        if (!datasetFile.exists()) {
             System.out.println("The third argument (datasetFile) does not exist.");
-            System.out.println("Argument input instead '" + arg[2]+ "'.");
+            System.out.println("Argument input instead '" + arg[2] + "'.");
             System.exit(0);
         }
         File wlsFile = new File(arg[3]);
-        if(!wlsFile.exists()){
+        if (!wlsFile.exists()) {
             System.out.println("The fourth argument (weightLearningSettingFile) does not exist.");
-            System.out.println("Argument input instead '" + arg[3]+ "'.");
+            System.out.println("Argument input instead '" + arg[3] + "'.");
             System.exit(0);
         }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
@@ -105,23 +106,25 @@ public class Main {
     }
 
     private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
-        return IntStream.range(0, numberOfRepeats).parallel().mapToObj(idx -> {
-            ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile(), settingFile, wls);
-            NeuralNetworkOwner alg = initialize.initialize();
-            currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
+        return IntStream.range(0, numberOfRepeats)
+                .parallel()
+                .mapToObj(idx -> {
+                    ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile(), settingFile, wls);
+                    NeuralNetworkOwner alg = initialize.initialize();
+                    currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
-            long start = System.currentTimeMillis();
-            NeuralNetwork learnedNetwork = learn.learn(alg);
-            long end = System.currentTimeMillis();
+                    long start = System.currentTimeMillis();
+                    NeuralNetwork learnedNetwork = learn.learn(alg, dataset);
+                    long end = System.currentTimeMillis();
 
-            /*
-            Tools.printEvaluation(learnedNetwork, dataset);
-            System.out.println("\t" + learnedNetwork.getClassifier().getTreshold());
-            */
+                    /*
+                    Tools.printEvaluation(learnedNetwork, dataset);
+                    System.out.println("\t" + learnedNetwork.getClassifier().getThreshold());
+                    */
 
-            currentResult.addExperiment(learnedNetwork, start, end, dataset);
-            return currentResult;
-        }).collect(Collectors.toCollection(ArrayList::new));
+                    currentResult.addExperiment(learnedNetwork, start, end, dataset);
+                    return currentResult;
+                }).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private void runKBANN(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -141,9 +144,11 @@ public class Main {
 
         Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        Learnable learn = (kbann) -> ((KBANN) kbann).learn(dataset, finalWls);
+        Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -157,9 +162,10 @@ public class Main {
         CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(settingFile);
 
         Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
-        Learnable learn = (cascadeCorrelation) -> ((CascadeCorrelation) cascadeCorrelation).learn(dataset, finalWls, ccSetting);
+        Learnable learn = (cascadeCorrelation, learningDataset) -> ((CascadeCorrelation) cascadeCorrelation).learn(learningDataset, finalWls, ccSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
     private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -180,11 +186,11 @@ public class Main {
         DNCSetting dncSetting = DNCSetting.create(settingFile);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
 
-
         Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
-        Learnable learn = (dnc) -> ((DynamicNodeCreation) dnc).learn(dataset, finalWls, dncSetting);
+        Learnable learn = (dnc, learningDataset) -> ((DynamicNodeCreation) dnc).learn(learningDataset, finalWls, dncSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
     private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -198,9 +204,10 @@ public class Main {
 
         File settingFile = new File(arg[4]);
         Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(settingFile, dataset, randomGenerator);
-        Learnable learn = (slf) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(dataset, wls);
+        Learnable learn = (slf, learningDataset) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(learningDataset, wls);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, wls.getFile(), wls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), wls);
     }
 
     private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -221,9 +228,10 @@ public class Main {
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
-        Learnable learn = (topGen) -> ((TopGen) topGen).learn(dataset, finalWls, tgSetting);
+        Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, tgSetting);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
 
@@ -251,9 +259,10 @@ public class Main {
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
-        Learnable learn = (regent) -> ((Regent) regent).learn(dataset , finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
+        Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, finalWls);
+        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
     /*private void runMAC() {
@@ -344,6 +353,5 @@ public class Main {
         System.out.println("////\n");
         return network;
     }*/
-
 
 }

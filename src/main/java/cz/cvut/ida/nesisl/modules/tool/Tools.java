@@ -268,4 +268,8 @@ public class Tools {
     public static String retrieveParentFolderName(File file) {
         return file.getParentFile().getName();
     }
+
+    public static Double convergedError() {
+        return 0.0001;
+    }
 }

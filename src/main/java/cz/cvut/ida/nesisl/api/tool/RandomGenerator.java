@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.api.tool;
 
+import java.util.Random;
+
 /**
  * Created by EL on 6.3.2016.
  */
@@ -18,4 +20,6 @@ public interface RandomGenerator {
     public Long nextLongTo(long end);
 
     public Boolean isProbable(Double psi);
+
+    public Random getRandom();
 }

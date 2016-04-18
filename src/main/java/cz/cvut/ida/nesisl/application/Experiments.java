@@ -36,7 +36,7 @@ public class Experiments {
                 //"logic" + File.separator + "xor3"
                 //"iris" + File.separator
 
-                "artificialLogic" + File.separator + "1007",
+                "artificialLogic" + File.separator + "3282",
 
                 /*"artificialLogic" + File.separator + "467",
                 "artificialLogic" + File.separator + "830",
@@ -59,17 +59,17 @@ public class Experiments {
             String KBANNsetting = expSettings + "KBANN" + File.separator + "-1" + File.separator + "kbannSetting.txt";
             String cascorSetting = expSettings + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
             String dncSetting = expSettings + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
-            String tgSetting = expSettings + "TopGen" + File.separator + "-1-1-2-2-2-2-3-2" + File.separator + "TopGenSetting.txt";
-            String regentSetting = expSettings + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
+            String tgSetting = expSettings + "TopGen" + File.separator + "-0-0-0-0-0-0-0-0-0" + File.separator + "TopGenSetting.txt";
+            String regentSetting = expSettings + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
             try {
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
-                /*Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
+                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
 
-                Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
-                Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});
-                Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput, tgSetting});
-                */
+                //Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
+                //Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});
+                //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput, tgSetting});
+
                 Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

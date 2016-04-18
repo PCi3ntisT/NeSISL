@@ -5,6 +5,7 @@ import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge.Type;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
+import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.ConstantOne;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
@@ -40,6 +41,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private final List<Fact> outputFactOrder;
     private final List<Fact> inputFactOrder;
     private Classifier classifier;
+    private String msg = "";
 
     public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor) {
         this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, null);
@@ -292,6 +294,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             copy.addEdgeStateful(mapping.get(oldEdge.getSource()), mapping.get(oldEdge.getTarget()), this.getWeight(oldEdge), oldEdge.getType());
         });
 
+        ((NeuralNetworkImpl) copy).setMsg("copied from\n" + TikzExporter.exportToString(this));
         return new Pair<>(copy, mapping);
     }
 
@@ -381,6 +384,24 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
     @Override
     public void addEdgeStateful(Edge edge, Double weight) {
+        if (edge.getSource() == edge.getTarget()) {
+            // just now for debug, should not be in the final version
+            throw new IllegalStateException();
+        }
+
+        if (getLayerNumber(edge.getSource()) == getLayerNumber(edge.getTarget())
+                && edge.getSource() != getBias()
+                && !inputNodes.contains(edge.getSource())
+                && !outputNodes.contains(edge.getTarget())){
+            // just for debug
+            System.out.println("uzly jen pres vrstvy ;)\n"
+                    + edge.getSource() + "\n"
+                    + edge.getTarget() + "\n"
+                    + TikzExporter.exportToString(this));
+
+            throw new IllegalStateException("tady to pridavas spatne");
+        }
+
         setEdgeWeight(edge, weight);
         switch (edge.getType()) {
             case FORWARD:
@@ -604,7 +625,6 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
         Set<Edge> edges = new HashSet<>(getOutgoingEdges(node));
         removeEdgesStateful(edges);
-
     }
 
     @Override
@@ -629,20 +649,20 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
             sum = forwardIncomingEdges.get(node).stream().filter(edge -> edge.getSource() != edge.getTarget())
                     .mapToDouble(edge -> {
-                                /*if (null == outputValues.get(edge.getSource())) {
+                                if (null == outputValues.get(edge.getSource())) {
                                     throw new IllegalStateException("some wierdness here\n\t" +
                                             edge.getSource().getIndex() + "(l: " + getInputNodes().contains(edge.getSource())
-                                            + "\n\t\t "+ getHiddenNodes().contains(edge.getSource())
-                                            + "\n\t\t "+ getOutputNodes().contains(edge.getSource())
+                                            + "\n\t\t " + getHiddenNodes().contains(edge.getSource())
+                                            + "\n\t\t " + getOutputNodes().contains(edge.getSource())
                                             + "\n\t\t " + (getBias() == edge.getSource())
-                                            + "\n\t\t "+ getLayerNumber(edge.getSource()) + ")\n\t" +
+                                            + "\n\t\t " + getLayerNumber(edge.getSource()) + ")\n\t" +
                                             edge.getTarget() + "(l: " + getInputNodes().contains(edge.getTarget())
-                                            + "\n\t\t "+ getHiddenNodes().contains(edge.getTarget())
-                                            + "\n\t\t "+ getOutputNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + getHiddenNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + getOutputNodes().contains(edge.getTarget())
                                             + "\n\t\t " + (getBias() == edge.getTarget())
-                                            + "\n\t "+ getLayerNumber(edge.getTarget()) + ")\n");
+                                            + "\n\t " + getLayerNumber(edge.getTarget()) + ")\n");
                                     //evaluateFeedforwardNode(edge.getSource(), outputValues);
-                                }*/
+                                }
                                 return outputValues.get(edge.getSource()) * this.getWeight(edge);
                             }
                     ).sum();
@@ -671,5 +691,13 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private void updateHiddenNodeLayerIndex(Node node, Long layerNumber) {
         hiddenNodeLayer.put(node, layerNumber);
         this.numberOfHiddenLayers = Math.max(layerNumber, this.numberOfHiddenLayers);
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    public String getMsg() {
+        return msg;
     }
 }

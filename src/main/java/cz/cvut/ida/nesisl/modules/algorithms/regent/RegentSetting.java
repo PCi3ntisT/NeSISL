@@ -218,6 +218,9 @@ public class RegentSetting {
     }
 
     public boolean canContinue(Long usedFitness, List<Double> errors) {
-        return !(usedFitness > getMaxAllowedFitness() || Tools.hasConverged(errors, getLongTimeWindow(), getShortTimeWindow(), getEpsilonConvergent()));
+        return !(usedFitness > getMaxAllowedFitness()
+                || Tools.hasConverged(errors, getLongTimeWindow(), getShortTimeWindow(), getEpsilonConvergent())
+                || (errors.size() > 0 && errors.get(errors.size()-1) < Tools.convergedError())
+        );
     }
 }

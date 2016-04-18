@@ -42,7 +42,7 @@ public class StructuralLearningWithSelectiveForgetting implements NeuralNetworkO
     }
 
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls) {
-        Backpropagation.feedforwardBackpropagationStateful(network,dataset,wls);
+        Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
         return network;
     }
 
@@ -86,7 +86,7 @@ public class StructuralLearningWithSelectiveForgetting implements NeuralNetworkO
             current.add(network.getBias());
             previous = current;
         }
-        network.setClassifierStateful(ThresholdClassificator.create(network,dataset));
+        network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return network;
     }
 

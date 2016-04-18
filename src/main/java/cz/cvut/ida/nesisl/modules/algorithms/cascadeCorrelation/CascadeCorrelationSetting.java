@@ -66,7 +66,9 @@ public class CascadeCorrelationSetting {
     }
 
     public boolean stopCascadeCorrelation(long numberOfAddedNodes, List<Double> errors) {
-        return numberOfAddedNodes > getMaximumNumberOfHiddenNodes() || Tools.hasConverged(errors,getLongTimeWindow(),getShortTimeWindow(), getEpsilonConvergent());
+        return numberOfAddedNodes > getMaximumNumberOfHiddenNodes()
+                || Tools.hasConverged(errors,getLongTimeWindow(),getShortTimeWindow(), getEpsilonConvergent())
+                || (errors.size() > 0 && errors.get(errors.size()-1) < Tools.convergedError());
     }
 
     public static CascadeCorrelationSetting create(File file) {

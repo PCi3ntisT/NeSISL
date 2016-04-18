@@ -8,7 +8,9 @@ import main.java.cz.cvut.ida.nesisl.api.logic.Literal;
 import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
+import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
 
@@ -163,7 +165,6 @@ public class DatasetImpl implements Dataset {
         }
     }
 
-
     private Triple<List<Sample>,List<Fact>,List<Fact>> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
         List<Sample> samples = cachedSamples.parallelStream().map(map -> permuteSample(map, inputFactPermutation, outputFactPermutation, network.getMissingValuesProcessor())).collect(Collectors.toCollection(ArrayList::new));
         return new Triple<>(samples,Collections.unmodifiableList(inputFactPermutation),Collections.unmodifiableList(outputFactPermutation));
@@ -188,27 +189,33 @@ public class DatasetImpl implements Dataset {
         }
     }
 
-    public static Dataset stratifiedSplit(Dataset dataset) {
+    public static Dataset stratifiedSplit(Dataset dataset, RandomGenerator randomGenerator, int numberOfFolds) {
         synchronized (dataset) {
-            Random random = new Random();
             List<Map<Fact, Value>> trainData = new ArrayList<>();
             List<Map<Fact, Value>> nodeTrainData = new ArrayList<>();
             List<List<Map<Fact, Value>>> splitted = splitAccordingToResults(dataset);
             splitted.forEach(group -> {
                 if(!group.isEmpty()) {
-                    Collections.shuffle(group, random);
-                    int half = group.size() / 2;
-                    if(2*half != group.size()
+                    Collections.shuffle(group, randomGenerator.getRandom());
+                    int border = group.size() / numberOfFolds;
+                    if(2*border != group.size()
                             && group.size() > 2
-                            && random.nextDouble() < 0.5){
-                        half++;
+                            && randomGenerator.nextDouble() < 0.5){
+                        border++;
                     }
-                    trainData.addAll(group.subList(0, half));
-                    nodeTrainData.addAll(group.subList(half,group.size()));
+                    border = Math.min(border,group.size());
+                    border = Math.max(border,0);
+                    trainData.addAll(group.subList(0, border));
+                    nodeTrainData.addAll(group.subList(border,group.size()));
                 }
             });
             return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile());
         }
+    }
+
+
+    public static Dataset stratifiedSplitHalfToHalf(Dataset dataset, RandomGenerator randomGenerator) {
+        return stratifiedSplit(dataset,randomGenerator,2);
     }
 
     private static List<List<Map<Fact, Value>>> splitAccordingToResults(Dataset dataset) {

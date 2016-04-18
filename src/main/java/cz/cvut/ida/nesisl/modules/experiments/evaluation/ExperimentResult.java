@@ -143,7 +143,7 @@ public class ExperimentResult {
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
         this.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(evaluation));
         this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
-        this.setThreshold(network.getClassifier().getTreshold());
+        this.setThreshold(network.getClassifier().getThreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
     }

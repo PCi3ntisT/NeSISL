@@ -7,7 +7,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Value;
  */
 public interface Classifier {
 
-    public Double getTreshold();
+    public Double getThreshold();
 
     public Boolean classify(Value value);
 

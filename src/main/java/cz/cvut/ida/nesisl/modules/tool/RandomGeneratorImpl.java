@@ -56,5 +56,10 @@ public class RandomGeneratorImpl implements RandomGenerator {
         return psi > generator.nextDouble();
     }
 
+    @Override
+    public Random getRandom() {
+        return generator;
+    }
+
 
 }

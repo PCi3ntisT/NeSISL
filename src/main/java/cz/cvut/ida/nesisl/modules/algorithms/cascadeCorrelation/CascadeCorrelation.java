@@ -24,8 +24,7 @@ import java.util.stream.LongStream;
 /**
  * Created by EL on 8.3.2016.
  */
-public class
-        CascadeCorrelation implements NeuralNetworkOwner {
+public class CascadeCorrelation implements NeuralNetworkOwner {
 
     private NeuralNetwork network;
     private RandomGenerator randomGenerator;
