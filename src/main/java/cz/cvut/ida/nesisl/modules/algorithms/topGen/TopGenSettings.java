@@ -19,7 +19,10 @@ public class TopGenSettings {
     public static final String EPSILON_CONVERGENT_TOKEN = "epsilonConvergent";
     public static final String LEARNING_RATE_DECAY_TOKEN = "learningRateDecay";
     public static final String NODE_ACTIVATION_THRESHOLD_TOKEN = "nodeActivationThreshold";
+    public static final String PERTURBATION_TOKEN = "perturbation";
 
+
+    private final Double perturbationMagnitude;
     private final Double epsilonLimit;
     private final Double omega;
     private final Double epsilonConvergent;
@@ -30,7 +33,7 @@ public class TopGenSettings {
     private final Double learningRateDecay;
     private final Double nodeActivationThreshold;
 
-    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega, Integer longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay, Double nodeActivationThreshold) {
+    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega, Integer longTimeWindow, Integer shortTimeWindow, Double epsilon, Double learningRateDecay, Double nodeActivationThreshold, Double perturbationMagnitude) {
         this.epsilonLimit = epsilonLimit;
         this.numberOfSuccessors = numberOfSuccessors;
         this.lengthOfOpenList = lengthOfOpenList;
@@ -40,6 +43,7 @@ public class TopGenSettings {
         this.epsilonConvergent = epsilon;
         this.learningRateDecay = learningRateDecay;
         this.nodeActivationThreshold = nodeActivationThreshold;
+        this.perturbationMagnitude = perturbationMagnitude;
     }
 
     public Double getEpsilonLimit() {
@@ -76,6 +80,7 @@ public class TopGenSettings {
         Integer shortTimeWindow = null;
         Integer longTimeWindow = null;
         Double nodeActivationThreshold = null;
+        Double perturbation = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -121,6 +126,9 @@ public class TopGenSettings {
                     case NODE_ACTIVATION_THRESHOLD_TOKEN:
                         nodeActivationThreshold = Double.valueOf(value);
                         break;
+                    case PERTURBATION_TOKEN:
+                        perturbation = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -131,7 +139,7 @@ public class TopGenSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay, nodeActivationThreshold);
+        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay, nodeActivationThreshold, perturbation);
     }
 
     public boolean canContinue(long iteration, List<Double> errors) {
@@ -141,4 +149,7 @@ public class TopGenSettings {
         return (errors.size() > longTimeWindow) ? !Tools.hasConverged(errors, longTimeWindow, shortTimeWindow, epsilonConvergent) : true;
     }
 
+    public Double perturbationMagnitude() {
+        return perturbationMagnitude;
+    }
 }

@@ -32,11 +32,12 @@ public class ExperimentResult {
     private NeuralNetwork initNetwork;
     private NeuralNetwork finalNetwork;
     private Long runningTime;
-    private Double averageSquaredError;
+    private Double averageSquaredTestError;
     private Double RocAuc;
     private Double threshold;
     private Double accuracy;
     private long numberOfHiddenNodes;
+    private double averageSquaredTotalTrainError;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -97,12 +98,12 @@ public class ExperimentResult {
         return runningTime;
     }
 
-    public void setAverageSquaredTotalError(double averageSquaredError) {
-        this.averageSquaredError = averageSquaredError;
+    public void setAverageSquaredTotalTestError(double averageSquaredTestError) {
+        this.averageSquaredTestError = averageSquaredTestError;
     }
 
-    public double getAverageSquaredError() {
-        return averageSquaredError;
+    public double getAverageSquaredTestError() {
+        return averageSquaredTestError;
     }
 
     public void setRocAuc(Double rocAuc) {
@@ -141,7 +142,11 @@ public class ExperimentResult {
         this.setRunningTime(end - start);
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
-        this.setAverageSquaredTotalError(Tools.computeAverageSquaredTotalError(evaluation));
+        this.setAverageSquaredTotalTestError(Tools.computeAverageSquaredTotalError(evaluation));
+
+        Map<Sample, Results> train = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
+        this.setAverageSquaredTotalTrainError(Tools.computeAverageSquaredTotalError(train));
+
         this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
         this.setThreshold(network.getClassifier().getThreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
@@ -161,6 +166,7 @@ public class ExperimentResult {
                 Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
                 Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
                 "results.txt";
+
         File expFile = new File(experimentsFile);
         if(!expFile.getParentFile().exists()){
             expFile.getParentFile().mkdirs();
@@ -180,7 +186,8 @@ public class ExperimentResult {
         writeName(learningAlg, writer);
 
         List<Pair<String, StoreableResults>> process = new ArrayList<>();
-        process.add(new Pair<>("error", () -> results.stream().mapToDouble(e -> e.getAverageSquaredError())));
+        process.add(new Pair<>("error", () -> results.stream().mapToDouble(e -> e.getAverageSquaredTestError())));
+        process.add(new Pair<>("trainError", () -> results.stream().mapToDouble(e -> e.getAverageSquaredTotalTrainError())));
         process.add(new Pair<>("accuracy", () -> results.stream().mapToDouble(e -> e.getAccuracy())));
         process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
@@ -208,6 +215,14 @@ public class ExperimentResult {
         writer.print("\n");
     }
 
+    public void setAverageSquaredTotalTrainError(double averageSquaredTotalTrainError) {
+        this.averageSquaredTotalTrainError = averageSquaredTotalTrainError;
+    }
+
+    public double getAverageSquaredTotalTrainError() {
+        return averageSquaredTotalTrainError;
+    }
+
     /*private static void writeTime(List<ExperimentResult> results, PrintWriter writer) {
         DoubleSummaryStatistics statistics = results.stream().mapToDouble(ExperimentResult::getRunningTime).summaryStatistics();
         Long median = Tools.medianLong(results.stream().map(e -> e.getRunningTime()).collect(Collectors.toCollection(ArrayList::new)));
@@ -219,12 +234,12 @@ public class ExperimentResult {
     }
 
     private static void writeError(List<ExperimentResult> results, PrintWriter writer) {
-        DoubleSummaryStatistics statistics = results.stream().mapToDouble(ExperimentResult::getAverageSquaredError).summaryStatistics();
-        Double median = Tools.medianDouble(results.stream().map(e -> e.getAverageSquaredError()).collect(Collectors.toCollection(ArrayList::new)));
+        DoubleSummaryStatistics statistics = results.stream().mapToDouble(ExperimentResult::getAverageSquaredTestError).summaryStatistics();
+        Double median = Tools.medianDouble(results.stream().map(e -> e.getAverageSquaredTestError()).collect(Collectors.toCollection(ArrayList::new)));
 
         writer.println("errors");
         writer.println(statistics.getMin() + "\t" + statistics.getAverage() + "\t" + statistics.getMax() + "\t" + median);
-        results.forEach(r -> writer.print(r.getAverageSquaredError() + "\t"));
+        results.forEach(r -> writer.print(r.getAverageSquaredTestError() + "\t"));
         writer.print("\n");
     }*/
 }

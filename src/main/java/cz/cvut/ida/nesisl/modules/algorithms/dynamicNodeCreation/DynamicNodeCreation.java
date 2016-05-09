@@ -54,11 +54,11 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
             double maxError = Tools.maxSquaredError(network, dataset);
 
-            if (canStopNodeGrowth(iteration, averagesErrors, maxError, dncSetting) || dncSetting.getHiddenNodesLimit() < network.getNumberOfHiddenNodes()) {
+            if (canStopNodeGrowth(iteration, averagesErrors, maxError, dncSetting)){
                 break;
             }
 
-            if (addNewNode(averagesErrors, iteration, timeOfAddingLastNode, dncSetting)) {
+            if (canAddNewNode(averagesErrors, iteration, timeOfAddingLastNode, dncSetting, network.getNumberOfHiddenNodes())) {
                 addAnotherNode(network);
                 timeOfAddingLastNode = iteration;
             }
@@ -74,8 +74,9 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
         return aT < dncSetting.getCa() && maxError < dncSetting.getCm();
     }
 
-    private boolean addNewNode(Map<Long, Double> averagesErrors, long time, long timeOfAddingLastNode, DNCSetting dncSetting) {
-        if (timeOfAddingLastNode > time - dncSetting.getTimeWindow()) {
+    private boolean canAddNewNode(Map<Long, Double> averagesErrors, long time, long timeOfAddingLastNode, DNCSetting dncSetting, long numberOfHiddenNodes) {
+        if (timeOfAddingLastNode > time - dncSetting.getTimeWindow()
+                || network.getNumberOfHiddenNodes() >= dncSetting.getHiddenNodesLimit()) {
             return false;
         }
 
@@ -127,6 +128,6 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
     public static DynamicNodeCreation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValueKBANN missingValue) {
         NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValue, randomGenerator);
-        return new DynamicNodeCreation(network,randomGenerator);
+        return new DynamicNodeCreation(network, randomGenerator);
     }
 }

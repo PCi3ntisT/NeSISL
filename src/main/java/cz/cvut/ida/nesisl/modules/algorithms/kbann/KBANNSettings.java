@@ -11,13 +11,16 @@ import java.io.*;
 public class KBANNSettings {
 
     public static final String OMEGA_TOKEN = "omega";
+    public static final String PERTURBATION_TOKEN = "perturbation";
 
     private final RandomGenerator randomGenerator;
     private final Double omega;
+    private final Double perturbationMagnitude;
 
-    public KBANNSettings(RandomGenerator randomGenerator, Double omega) {
+    public KBANNSettings(RandomGenerator randomGenerator, Double omega, Double perturbationMagnitude) {
         this.randomGenerator = randomGenerator;
         this.omega = omega;
+        this.perturbationMagnitude = perturbationMagnitude;
     }
 
     public RandomGenerator getRandomGenerator() {
@@ -38,6 +41,7 @@ public class KBANNSettings {
 
     public static KBANNSettings create(RandomGeneratorImpl randomGenerator, File file) {
         Double omega = null;
+        Double perturbation = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -59,6 +63,9 @@ public class KBANNSettings {
                     case OMEGA_TOKEN:
                         omega = Double.valueOf(value);
                         break;
+                    case PERTURBATION_TOKEN:
+                        perturbation = Double.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -69,7 +76,10 @@ public class KBANNSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new KBANNSettings(randomGenerator, omega);
+        return new KBANNSettings(randomGenerator, omega, perturbation);
     }
 
+    public Double getPerturbationMagnitude() {
+        return perturbationMagnitude;
+    }
 }

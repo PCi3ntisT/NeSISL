@@ -29,6 +29,7 @@ import java.util.stream.Stream;
  * Created by EL on 23.3.2016.
  */
 public class Regent implements NeuralNetworkOwner {
+
     private final KBANN kbann;
     private final RandomGeneratorImpl randomGenerator;
     private NeuralNetwork neuralNetwork;
@@ -54,17 +55,20 @@ public class Regent implements NeuralNetworkOwner {
         }
     }
 
-    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega) {
-        KBANN kbann = KBANN.create(file, specific, new KBANNSettings(randomGenerator, omega));
+    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega, RegentSetting regentSetting) {
+        KBANN kbann = KBANN.create(file, specific, new KBANNSettings(randomGenerator, omega, regentSetting.getTopGenSettings().perturbationMagnitude()));
         return new Regent(kbann, randomGenerator);
     }
 
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, RegentSetting regentSetting, KBANNSettings kbannSetting) {
         this.kbann.learn(dataset, wls);
         this.neuralNetwork = kbann.getNeuralNetwork();
-        this.bestSoFarScore = Tools.computeAverageSquaredTrainTotalError(neuralNetwork, dataset);
 
-        Dataset crossValDataset = DatasetImpl.stratifiedSplitHalfToHalf(dataset,randomGenerator);
+        int innerFolds = 5;
+        Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset, randomGenerator, innerFolds);
+
+        this.bestSoFarScore = Tools.computeAverageSquaredTrainTotalError(neuralNetwork, crossValDataset);
+
         List<NeuralNetwork> children = mutateInitialNetworkToMakeChildrenAndAddOriginalNetwork(this.neuralNetwork, crossValDataset, regentSetting);
         List<Individual> population = computeFitness(children, crossValDataset);
 
@@ -463,9 +467,19 @@ public class Regent implements NeuralNetworkOwner {
         return tournamentSelection(population, regentSetting, regentSetting.getNumberOfCrossoverChildrenPairs());
     }
 
+    /**
+     * aka evaluate successors and then add to selected
+     *
+     * @param parents
+     * @param successors
+     * @param regentSetting
+     * @param dataset
+     * @param wls
+     */
     private void addEvaluatedSuccessors(List<NeuralNetwork> parents, List<Individual> successors, RegentSetting regentSetting, Dataset dataset, WeightLearningSetting wls) {
         List<Individual> evaluated = parents
-                .parallelStream().map(network -> evaluate(network, regentSetting, dataset, wls))
+                .parallelStream()
+                .map(network -> evaluate(network, regentSetting, dataset, wls))
                 .collect(Collectors.toList());
         successors.addAll(evaluated);
     }

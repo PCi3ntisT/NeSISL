@@ -75,12 +75,13 @@ public class GridSearchGenerator {
         // TopGen part
         map.put(TopGenSettings.EPSILON_LIMIT_TOKEN, orderedList("0.1")); //"0.01", "0.1", "0.3"));
         map.put(TopGenSettings.OMEGA_TOKEN, orderedList("4.0")); //"2.0", "4.0", "6.0"));
+        map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
         map.put(TopGenSettings.SUCCESSORS_GENERATED_LIMIT_TOKEN, orderedList("10")); //"5", "10", "25"));
         map.put(TopGenSettings.OPEN_LIST_LIMIT_TOKEN, orderedList("60")); //"30", "65", "100"));
         map.put(TopGenSettings.SHORT_TIME_WINDOW_TOKEN, orderedList("10")); //"10", "20"));
         map.put(TopGenSettings.LONG_TIME_WINDOW_TOKEN, orderedList("30")); //"30", "60"));
         map.put(TopGenSettings.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.001", "0.01", "0.1", "0.3"));
-        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.5")); //"0.1", "0.5", "0.8"));
+        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.9")); //"0.1", "0.5", "0.8"));
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
@@ -96,13 +97,14 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.001", "0.01", "0.1", "0.3"));
         map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.5")); //"0.1", "0.5", "0.8"));
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));
+        map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
     private static GridSearchGenerator generateDNCSearch(String folder, String settingName) {
         Map<String, List<String>> map = new HashMap<>();
         map.put(DNCSetting.DELTA_T_TOKEN, orderedList("0.05"));
-        map.put(DNCSetting.TIME_WINDOW_TOKEN, orderedList("10"));
+        map.put(DNCSetting.TIME_WINDOW_TOKEN, orderedList("100"));
         map.put(DNCSetting.CA_TOKEN, orderedList("0.001"));
         map.put(DNCSetting.CM_TOKEN, orderedList("0.01"));
         map.put(DNCSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("200"));
@@ -112,6 +114,7 @@ public class GridSearchGenerator {
     private static GridSearchGenerator generateKBANNSearch(String folder, String settingName) {
         Map<String, List<String>> map = new HashMap<>();
         map.put(KBANNSettings.OMEGA_TOKEN, orderedList("4.0")); //"2.0", "4.0", "6.0"));
+        map.put(KBANNSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -124,8 +127,8 @@ public class GridSearchGenerator {
         map.put(WeightLearningSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("10")); //"10", "20"));
         map.put(WeightLearningSetting.LONG_TIME_WINDOW_TOKEN, orderedList("30")); //"30", "60"));
 
-        map.put(WeightLearningSetting.PENALTY_EPSILON_TOKEN, orderedList("50")); //"0.1", "1", "10"));
-        map.put(WeightLearningSetting.SLF_THRESHOLD_TOKEN, orderedList("0.2")); //"0.01", "0.1", "0.3"));
+        map.put(WeightLearningSetting.PENALTY_EPSILON_TOKEN, orderedList("0.0001")); //"0.1", "1", "10"));
+        map.put(WeightLearningSetting.SLSF_THRESHOLD_TOKEN, orderedList("0.1")); //"0.01", "0.1", "0.3"));
 
         return new GridSearchGenerator(map, new File(folder),settingName);
     }

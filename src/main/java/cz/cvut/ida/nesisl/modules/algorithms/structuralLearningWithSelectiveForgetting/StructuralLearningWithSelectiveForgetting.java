@@ -90,7 +90,7 @@ public class StructuralLearningWithSelectiveForgetting implements NeuralNetworkO
         return network;
     }
 
-    public static StructuralLearningWithSelectiveForgetting create(File initialStruture, Dataset dataset, RandomGeneratorImpl randomGenerator) {
-        return new StructuralLearningWithSelectiveForgetting(StructuralLearningWithSelectiveForgetting.createInitNetwork(initialStruture, dataset, randomGenerator));
+    public static StructuralLearningWithSelectiveForgetting create(File initialStructure, Dataset dataset, RandomGeneratorImpl randomGenerator) {
+        return new StructuralLearningWithSelectiveForgetting(StructuralLearningWithSelectiveForgetting.createInitNetwork(initialStructure, dataset, randomGenerator));
     }
 }

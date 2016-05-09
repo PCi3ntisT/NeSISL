@@ -116,10 +116,12 @@ public class Tools {
         IntStream.range(0, size).forEach(idx -> cache.put(idx, 0.0d));
 
         list.forEach(sample ->
-                        IntStream.range(0, size).parallel().forEach(idx -> {
-                            Double newValue = cache.get(idx) + sample.get(idx).getValue();
-                            cache.put(idx, newValue);
-                        })
+                        IntStream.range(0, size)
+                                .parallel()
+                                .forEach(idx -> {
+                                    Double newValue = cache.get(idx) + sample.get(idx).getValue();
+                                    cache.put(idx, newValue);
+                                })
         );
 
         return IntStream.range(0, size).mapToObj(idx -> cache.get(idx) / size).collect(Collectors.toCollection(ArrayList::new));
@@ -168,11 +170,13 @@ public class Tools {
     }
 
     public static double computePenalty(NeuralNetwork network, double penaltyEpsilon, double treshold) {
-        return penaltyEpsilon * network.getNodes().stream().mapToDouble(node ->
-                        network.getIncomingForwardEdges(node).stream().filter(edge ->
-                                        edge.isModifiable() && Math.abs(network.getWeight(edge)) < treshold
-                        ).mapToDouble(edge -> Math.abs(network.getWeight(edge))).sum()
-        ).sum();
+        return penaltyEpsilon * network.getNodes().stream()
+                .mapToDouble(node ->
+                                network.getIncomingForwardEdges(node).stream()
+                                        .filter(edge ->
+                                                        edge.isModifiable() && Math.abs(network.getWeight(edge)) < treshold
+                                        ).mapToDouble(edge -> Math.abs(network.getWeight(edge))).sum()
+                ).sum();
     }
 
     public static void printEvaluation(NeuralNetwork network, Dataset dataset) {
@@ -181,7 +185,7 @@ public class Tools {
 
             sample.getInput().forEach(val -> System.out.print(val.getValue() + "\t"));
             System.out.print("|");
-            IntStream.range(0,output.size()).forEach(idx -> {
+            IntStream.range(0, output.size()).forEach(idx -> {
                 Double val = output.get(idx);
                 String classified = (Tools.isZero(Math.abs(sample.getOutput().get(idx).getValue() - network.getClassifier().classifyToDouble(val)))) ? "T" : "F";
                 System.out.print("\t" + val + " (" + classified + ")");
@@ -198,7 +202,7 @@ public class Tools {
         ).collect(Collectors.toCollection(HashMap::new));*/
         HashMap<Sample, Boolean> map = new HashMap<>();
         results.entrySet().forEach(entry -> {
-                    Boolean classification = isClassifiedCorrectly(classifier,entry.getKey(), results.get(entry.getKey()));
+                    Boolean classification = isClassifiedCorrectly(classifier, entry.getKey(), results.get(entry.getKey()));
                     map.put(entry.getKey(), classification);
                 }
         );
@@ -207,7 +211,7 @@ public class Tools {
 
     private static Boolean isClassifiedCorrectly(Classifier classifier, Sample sample, Results result) {
         for (int idx = 0; idx < result.getComputedOutputs().size(); idx++) {
-            if(!isZero(Math.abs(sample.getOutput().get(idx).getValue() - classifier.classifyToDouble(result.getComputedOutputs().get(idx))))){
+            if (!isZero(Math.abs(sample.getOutput().get(idx).getValue() - classifier.classifyToDouble(result.getComputedOutputs().get(idx))))) {
                 return false;
             }
         }
@@ -239,17 +243,17 @@ public class Tools {
     }
 
     public static boolean hasConverged(List<Double> errors, Integer longTimeWindow, Integer shortTimeWindow, Double epsilonDifference) {
-        if (longTimeWindow > errors.size()){
+        if (longTimeWindow > errors.size()) {
             return false;
         }
-        return Math.abs(average(errors,longTimeWindow) - average(errors,shortTimeWindow)) < epsilonDifference;
+        return Math.abs(average(errors, longTimeWindow) - average(errors, shortTimeWindow)) < epsilonDifference;
     }
 
     public static double average(List<Double> list, Integer timeWindow) {
-        if (timeWindow > list.size()){
+        if (timeWindow > list.size()) {
             timeWindow = list.size();
         }
-        return list.subList(list.size() - timeWindow,list.size()).stream().mapToDouble(d -> d).average().orElse(0);
+        return list.subList(list.size() - timeWindow, list.size()).stream().mapToDouble(d -> d).average().orElse(0);
     }
 
     public static double computeAverageSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
@@ -260,6 +264,9 @@ public class Tools {
         return computeSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
 
+    public static Double computeAverageSquaredTestTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
+        return computeAverageSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
+    }
 
     public static Map<Sample, Results> evaluateOnAndGetResults(List<Sample> evaluationSamples, NeuralNetwork network) {
         return evaluateAllAndGetResults(evaluationSamples, network);
@@ -272,4 +279,5 @@ public class Tools {
     public static Double convergedError() {
         return 0.0001;
     }
+
 }

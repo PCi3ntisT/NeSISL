@@ -43,11 +43,13 @@ public class TopGen implements NeuralNetworkOwner {
     }
 
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings) {
-        KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, tgSettings.getOmega());
-        Backpropagation.feedforwardBackpropagationStateful(network, dataset, wls);
-        Double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
+        int innerFolds = 5;
+        Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset, randomGenerator, innerFolds);
 
-        Dataset crossValDataset = DatasetImpl.stratifiedSplitHalfToHalf(dataset, randomGenerator);
+        KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, tgSettings.getOmega(), tgSettings.perturbationMagnitude());
+        Backpropagation.feedforwardBackpropagationStateful(network, crossValDataset, wls);
+        Double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, crossValDataset, wls);
+
         Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
             if (Tools.isZero(t1.getT() - t2.getT()) && Tools.isZero(t1.getW() - t2.getW())) {
                 return 0;
@@ -73,7 +75,7 @@ public class TopGen implements NeuralNetworkOwner {
             List<Triple<NeuralNetwork, Double, Double>> successors = generateAndLearnSuccessors(current.getK(), crossValDataset, tgSettings, wls, current.getW(), kbannSetting);
             queue.addAll(successors);
 
-            Collections.sort(successors, comparator);
+            //Collections.sort(successors, comparator);
 
             if (queue.size() > tgSettings.getLengthOfOpenList()) {
                 PriorityQueue<Triple<NeuralNetwork, Double, Double>> nextRound = new PriorityQueue<>(comparator);
@@ -195,7 +197,9 @@ public class TopGen implements NeuralNetworkOwner {
         Double negativeWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
         Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
 
-        return Math.abs(positiveWeightSum - biasWeight) < Math.abs(negativeWeightSum - biasWeight);
+        // cause in AND case biasWeight is to be negative
+        // and in OR case biasWeight is to be positive
+        return Math.abs(positiveWeightSum + biasWeight) < Math.abs(-negativeWeightSum + biasWeight);
     }
 
     private static NeuralNetwork addOrNode(Node node, NeuralNetwork network, RandomGenerator randomGenerator) {
@@ -286,11 +290,9 @@ public class TopGen implements NeuralNetworkOwner {
         return list;
     }
 
-
     public static TopGen create(File ruleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, TopGenSettings topGenSettings) {
-        KBANN kbann = KBANN.create(ruleFile, specific, new KBANNSettings(randomGenerator, topGenSettings.getOmega()));
+        KBANN kbann = KBANN.create(ruleFile, specific, new KBANNSettings(randomGenerator, topGenSettings.getOmega(), topGenSettings.perturbationMagnitude()));
         return new TopGen(kbann, randomGenerator);
     }
-
 
 }

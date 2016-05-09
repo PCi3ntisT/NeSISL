@@ -210,7 +210,7 @@ public class RegentSetting {
             e.printStackTrace();
         }
 
-        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites, edgeLimitCrossOver, shortTimeWindow, longTimeWindow, epsilonConvergent);
+        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega(), tgSetting.perturbationMagnitude()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites, edgeLimitCrossOver, shortTimeWindow, longTimeWindow, epsilonConvergent);
     }
 
     public Double getEdgeWeightLimitAfterCrossover() {

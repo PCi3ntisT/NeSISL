@@ -53,7 +53,7 @@ public class DatasetImpl implements Dataset {
         this.nodeTrainSamples = new ArrayList<>(samples);
     }
 
-    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData,File originalFile) {
+    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData, File originalFile) {
         this.inputFacts = new ArrayList<>(inputFactOrder);
         this.outputFacts = new ArrayList<>(outputFactOrder);
         this.samples = new ArrayList<>(trainData);
@@ -66,12 +66,10 @@ public class DatasetImpl implements Dataset {
         return getTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
 
-
     @Override
     public List<Sample> getNodeTrainData(NeuralNetwork network) {
         return getNodeTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
-
 
     @Override
     public List<Fact> getInputFactOrder() {
@@ -95,15 +93,18 @@ public class DatasetImpl implements Dataset {
     public List<Double> getTrainNodeAverageOutputs(NeuralNetwork network) {
         synchronized (this) {
             cachedTrainNodeOutputAverage = getAverageOutputs(network, cachedTrainNodeOutputAverage, getNodeTrainData(network), cachedTrainNodeInputOrder, cachedTrainNodeOutputOrder);
-            return  cachedTrainNodeOutputAverage;
+            return cachedTrainNodeOutputAverage;
         }
     }
 
-    public List<Double> getAverageOutputs(NeuralNetwork network,List<Double> cachedAverage,List<Sample> data,List<Fact> cachedInput, List<Fact> cachedOutput) {
+    public List<Double> getAverageOutputs(NeuralNetwork network, List<Double> cachedAverage, List<Sample> data, List<Fact> cachedInput, List<Fact> cachedOutput) {
         synchronized (this) {
             List<Double> result = cachedAverage;
-            if (null == cachedOutput || !areDataCached(network,cachedInput,cachedOutput)) {
-                List<List<Value>> outputs = data.parallelStream().map(sample -> sample.getOutput()).collect(Collectors.toCollection(ArrayList::new));
+            if (null == cachedOutput || !areDataCached(network, cachedInput, cachedOutput)) {
+                List<List<Value>> outputs = data
+                        .parallelStream()
+                        .map(sample -> sample.getOutput())
+                        .collect(Collectors.toCollection(ArrayList::new));
                 result = Tools.computeAverages(outputs);
             }
             return result;
@@ -122,8 +123,8 @@ public class DatasetImpl implements Dataset {
 
     @Override
     public String cannonicalOutput(Map<Fact, Value> sample) {
-        synchronized (outputFacts){
-            return IntStream.range(0,outputFacts.size())
+        synchronized (outputFacts) {
+            return IntStream.range(0, outputFacts.size())
                     .mapToObj(idx -> sample.get(outputFacts.get(idx)))
                     .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                     .toString();
@@ -135,16 +136,16 @@ public class DatasetImpl implements Dataset {
         return getNodeTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
 
-    private boolean areDataCached(NeuralNetwork network,List<Fact> cachedInputFactOrder,List<Fact> cachedOutputFactOrder) {
+    private boolean areDataCached(NeuralNetwork network, List<Fact> cachedInputFactOrder, List<Fact> cachedOutputFactOrder) {
         return areDataCached(network.getInputFactOrder(), getInputFactOrder(), cachedInputFactOrder, cachedOutputFactOrder);
     }
 
     private List<Sample> getTrainData(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, NeuralNetwork network) {
         synchronized (this) {
-            if (areDataCached(inputFactPermutation, outputFactPermutation, cachedInputOrder,cachedOutputOrder)) {
+            if (areDataCached(inputFactPermutation, outputFactPermutation, cachedInputOrder, cachedOutputOrder)) {
                 return this.cachedSamples;
             }
-            Triple<List<Sample>,List<Fact>,List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, samples, network);
+            Triple<List<Sample>, List<Fact>, List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, samples, network);
             this.cachedSamples = permuted.getK();
             this.cachedInputOrder = permuted.getT();
             this.cachedOutputOrder = permuted.getW();
@@ -153,11 +154,11 @@ public class DatasetImpl implements Dataset {
     }
 
     private List<Sample> getNodeTrainData(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, NeuralNetwork network) {
-        synchronized (this){
-            if (areDataCached(inputFactPermutation, outputFactPermutation,cachedTrainNodeInputOrder,cachedTrainNodeOutputOrder)) {
+        synchronized (this) {
+            if (areDataCached(inputFactPermutation, outputFactPermutation, cachedTrainNodeInputOrder, cachedTrainNodeOutputOrder)) {
                 return this.cachedTrainNode;
             }
-            Triple<List<Sample>,List<Fact>,List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, nodeTrainSamples, network);
+            Triple<List<Sample>, List<Fact>, List<Fact>> permuted = permuteSamples(inputFactPermutation, outputFactPermutation, nodeTrainSamples, network);
             this.cachedTrainNode = permuted.getK();
             this.cachedTrainNodeInputOrder = permuted.getT();
             this.cachedTrainNodeOutputOrder = permuted.getW();
@@ -165,9 +166,9 @@ public class DatasetImpl implements Dataset {
         }
     }
 
-    private Triple<List<Sample>,List<Fact>,List<Fact>> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
+    private Triple<List<Sample>, List<Fact>, List<Fact>> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
         List<Sample> samples = cachedSamples.parallelStream().map(map -> permuteSample(map, inputFactPermutation, outputFactPermutation, network.getMissingValuesProcessor())).collect(Collectors.toCollection(ArrayList::new));
-        return new Triple<>(samples,Collections.unmodifiableList(inputFactPermutation),Collections.unmodifiableList(outputFactPermutation));
+        return new Triple<>(samples, Collections.unmodifiableList(inputFactPermutation), Collections.unmodifiableList(outputFactPermutation));
     }
 
     private static Sample permuteSample(Map<Fact, Value> sample, List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, MissingValues missingValuesProcessor) {
@@ -180,7 +181,7 @@ public class DatasetImpl implements Dataset {
         return inputFactPermutation.stream().map(fact -> missingValuesProcessor.processMissingValueToValue(sample.get(fact))).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private boolean areDataCached(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation,List<Fact> cachedInputOrder,List<Fact> cachedOutputOrder) {
+    private boolean areDataCached(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Fact> cachedInputOrder, List<Fact> cachedOutputOrder) {
         synchronized (this) {
             if (null == cachedInputOrder || null == cachedOutputOrder || !inputFactPermutation.equals(cachedInputOrder) || !outputFactPermutation.equals(cachedOutputOrder)) {
                 return false;
@@ -195,18 +196,18 @@ public class DatasetImpl implements Dataset {
             List<Map<Fact, Value>> nodeTrainData = new ArrayList<>();
             List<List<Map<Fact, Value>>> splitted = splitAccordingToResults(dataset);
             splitted.forEach(group -> {
-                if(!group.isEmpty()) {
+                if (!group.isEmpty()) {
                     Collections.shuffle(group, randomGenerator.getRandom());
                     int border = group.size() / numberOfFolds;
-                    if(2*border != group.size()
+                    if (2 * border != group.size()
                             && group.size() > 2
-                            && randomGenerator.nextDouble() < 0.5){
+                            && randomGenerator.nextDouble() < 0.5) {
                         border++;
                     }
-                    border = Math.min(border,group.size());
-                    border = Math.max(border,0);
+                    border = Math.min(border, group.size());
+                    border = Math.max(border, 0);
                     trainData.addAll(group.subList(0, border));
-                    nodeTrainData.addAll(group.subList(border,group.size()));
+                    nodeTrainData.addAll(group.subList(border, group.size()));
                 }
             });
             return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile());
@@ -215,7 +216,7 @@ public class DatasetImpl implements Dataset {
 
 
     public static Dataset stratifiedSplitHalfToHalf(Dataset dataset, RandomGenerator randomGenerator) {
-        return stratifiedSplit(dataset,randomGenerator,2);
+        return stratifiedSplit(dataset, randomGenerator, 2);
     }
 
     private static List<List<Map<Fact, Value>>> splitAccordingToResults(Dataset dataset) {

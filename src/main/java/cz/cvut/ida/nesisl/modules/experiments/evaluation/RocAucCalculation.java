@@ -22,7 +22,7 @@ public class RocAucCalculation {
     private static final String AUC_VALUE_LINE_START = "Area Under the Curve for ROC is";
 
     private final NeuralNetwork network;
-    private final HashMap<Sample,Results> evaluation;
+    private final HashMap<Sample, Results> evaluation;
     private Double aucValue;
 
     public RocAucCalculation(NeuralNetwork network, Map<Sample, Results> evaluation) {
@@ -34,7 +34,7 @@ public class RocAucCalculation {
         return RocAucCalculation.create(network, Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
     }
 
-    public static RocAucCalculation create(NeuralNetwork network, Map<Sample,Results> evaluation) {
+    public static RocAucCalculation create(NeuralNetwork network, Map<Sample, Results> evaluation) {
         return new RocAucCalculation(network, evaluation);
     }
 
@@ -67,7 +67,7 @@ public class RocAucCalculation {
     private Double runAndRetrieveAUC(File file) throws IOException, InterruptedException {
         File folder = new File("");
         File aucJarFile = new File(folder.getAbsolutePath() + File.separator + "auc.jar");
-        ProcessBuilder builder = new ProcessBuilder("java","-jar", aucJarFile.getAbsolutePath(), file.getAbsolutePath(), "list");
+        ProcessBuilder builder = new ProcessBuilder("java", "-jar", aucJarFile.getAbsolutePath(), file.getAbsolutePath(), "list");
         Process process = null;
         try {
             process = builder.start();

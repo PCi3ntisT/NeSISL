@@ -16,6 +16,7 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -72,6 +73,10 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                     .max(CandidateWrapper::compare).get();
 
             addCandidateToNetwork(bestCandidate, network);
+
+            // TODO
+            //zkontrolovat jestli se propaguje spravny error (residual nikoliv squared residual)
+            //zkontrolvat jestli to signum tam je dobre
 
             numberOfAddedNodes++;
 
@@ -137,7 +142,11 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
             map.put(sample, currentValue);
         });
 
-        Double average = map.entrySet().parallelStream().mapToDouble(entry -> entry.getValue()).average().orElse(0);
+        Double average = map.entrySet()
+                .parallelStream()
+                .mapToDouble(entry -> entry.getValue())
+                .average()
+                .orElse(0);
         return new Pair<>(average, map);
     }
 
@@ -161,42 +170,80 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         List<Double> outputAverages = dataset.getAverageOutputs(network);
         Map<Integer, Double> outputs = new HashMap<>();
         Set<Pair<Edge, Double>> edges = new HashSet<>();
+
         IntStream.range(0, outputAverages.size()).forEach(idx -> outputs.put(idx, 0.0d));
-        dataset.getTrainData(network).parallelStream()
+
+        // computation of correlation error - TODO nemela by se ta korelace pocitat po update vah?
+        dataset.getTrainData(network)
+                .stream()
                 .map(sample -> computeCascadeError(averageCandidateOutput, sampleCandidateOutput, outputAverages, sample))
-                .forEachOrdered(multiples -> IntStream.range(0, multiples.size()).forEach(idx -> {
-                    Double newValue = multiples.get(idx) + outputs.get(idx);
-                    outputs.put(idx, newValue);
-                }));
-        double correlation = outputs.entrySet().parallelStream().mapToDouble(entry -> Math.abs(entry.getValue())).sum();
+                .forEachOrdered(multiples ->
+                        IntStream.range(0, multiples.size())
+                                .forEach(idx -> {
+                                    Double newValue = multiples.get(idx) + outputs.get(idx);
+                                    outputs.put(idx, newValue);
+                                }));
+        double correlation = outputs.entrySet()
+                .parallelStream()
+                .mapToDouble(entry -> Math.abs(entry.getValue()))
+                .sum();
 
         Map<Sample, Results> cache = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
 
+        Map<Integer,Double> outputNodeCorrelation = computeCorrelationsAccordingToOutput(averageCandidateOutput, sampleCandidateOutput, outputAverages, cache);
+
+        // adjusting weights (probably)
         originalEdges.forEach(pair -> {
             Double derivative = dataset.getTrainData(network).parallelStream().mapToDouble(sample -> {
-                double nodeInput = originalEdges.parallelStream().mapToDouble(entry ->
-                                cache.get(sample).getComputedValues().get(entry.getLeft().getSource()) * entry.getRight()
-                ).sum();
+                double nodeInput = originalEdges.parallelStream()
+                        .mapToDouble(entry ->
+                                        cache.get(sample).getComputedValues().get(entry.getLeft().getSource())
+                                                * entry.getRight()
+                        ).sum();
 
-                return IntStream.range(0, sample.getOutput().size()).mapToDouble(idx ->
-                                Math.signum(sample.getOutput().get(idx).getValue() - outputAverages.get(idx)) * node.getFirstDerivationAtX(nodeInput) * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
-                ).sum();
+                return IntStream.range(0, sample.getOutput().size())
+                        .mapToDouble(idx ->
+                                        outputNodeCorrelation.get(idx)
+                                                * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx))
+                                                * sample.getOutput().get(idx).getValue() - outputAverages.get(idx)
+                                                * node.getFirstDerivationAtX(nodeInput)
+                                                * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
+                        ).sum();
             }).sum();
             Double value = pair.getRight() + wls.getLearningRate() * derivative;
             edges.add(new Pair<>(pair.getLeft(), value));
         });
-
         return new Pair<>(correlation, edges);
+    }
+
+    // awful
+    private static Map<Integer, Double> computeCorrelationsAccordingToOutput(Double averageCandidateOutput, Map<Sample, Double> sampleCandidateOutput, List<Double> outputAverages, Map<Sample, Results> cache) {
+        Map<Integer,Double> map = new HashMap<>();
+        IntStream.range(0,outputAverages.size())
+                .forEach(outputNodeIdx -> {
+                    double correlation =  sampleCandidateOutput.entrySet().stream()
+                            .mapToDouble(entry -> {
+                                Sample sample = entry.getKey();
+                                double candidateSampleValue = entry.getValue();
+                                double sampleOutputError = cache.get(sample).getComputedOutputs().get(outputNodeIdx);
+                                return (candidateSampleValue - averageCandidateOutput)
+                                        * (sampleOutputError - outputAverages.get(outputNodeIdx));
+                            })
+                            .sum();
+                    map.put(outputNodeIdx,correlation);
+                });
+        return map;
     }
 
     // returns list of values of outputs
     private static List<Double> computeCascadeError(Double averageCandidateOutput, Map<Sample, Double> sampleCandidateOutput, List<Double> outputAverages, Sample sample) {
         Double deltaCandidate = sampleCandidateOutput.get(sample) - averageCandidateOutput;
         List<Double> list = new ArrayList<>();
-        IntStream.range(0, outputAverages.size()).forEachOrdered(idx -> {
-            Double value = deltaCandidate * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx));
-            list.add(value);
-        });
+        IntStream.range(0, outputAverages.size())
+                .forEachOrdered(idx -> {
+                    Double value = deltaCandidate * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx));
+                    list.add(value);
+                });
         return list;
     }
 

@@ -16,7 +16,7 @@ public class WeightLearningSetting {
     public static final String LONG_TIME_WINDOW_TOKEN = "longTimeWindow";
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
     public static final String PENALTY_EPSILON_TOKEN = "SLFPenaltyEpsilon";
-    public static final String SLF_THRESHOLD_TOKEN = "SLFThreshold";
+    public static final String SLSF_THRESHOLD_TOKEN = "SLFThreshold";
 
     private final Double epsilonConvergent;
     private final Double learningRate;
@@ -88,7 +88,7 @@ public class WeightLearningSetting {
                     case PENALTY_EPSILON_TOKEN:
                         penaltyEpsilon = Double.valueOf(value);
                         break;
-                    case SLF_THRESHOLD_TOKEN:
+                    case SLSF_THRESHOLD_TOKEN:
                         slfThreshold = Double.valueOf(value);
                         break;
                     default:
@@ -157,6 +157,7 @@ public class WeightLearningSetting {
     }
 
     public static WeightLearningSetting turnOffRegularization(WeightLearningSetting wls) {
-        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(),wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d,0.0d);
+        System.out.println("Turning off regularization parameters.");
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(),wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d,-1.0d);
     }
 }

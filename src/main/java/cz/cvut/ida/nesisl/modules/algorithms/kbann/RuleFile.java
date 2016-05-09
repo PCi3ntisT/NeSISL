@@ -104,7 +104,6 @@ public class RuleFile {
         return new RuleFile(wrapper.getFacts(), wrapper.getInputFacts(), wrapper.getIntermediateFacts(), wrapper.getConclusionFacts(), wrapper.getRules());
     }
 
-
     private static RuleCreationWrapper processLineAccordingToState(ReadingState state, String line, RuleCreationWrapper wrapper) {
         switch (state) {
             case INPUT_FACTS_HEADER:
@@ -117,11 +116,10 @@ public class RuleFile {
                 wrapper = addRule(line, wrapper);
                 break;
             default:
-                throw new IllegalStateException("Proccesing line within uknown status");
+                throw new IllegalStateException("Proccesing line within uknown status.");
         }
         return wrapper;
     }
-
 
     private static RuleCreationWrapper addInputFact(String line, RuleCreationWrapper wrapper) {
         Literal literal = wrapper.getFactory().getLiteral(line.trim());
@@ -129,7 +127,6 @@ public class RuleFile {
         wrapper.getInputFacts().add(literal.getFact());
         return wrapper;
     }
-
 
     private static RuleCreationWrapper addRule(String line, RuleCreationWrapper wrapper) {
         Fact head = retrieveHeadFromRule(line, wrapper);
@@ -203,14 +200,12 @@ public class RuleFile {
         return literal.getFact();
     }
 
-
     private static RuleCreationWrapper addOutputFact(String line, RuleCreationWrapper wrapper) {
         Literal literal = wrapper.getFactory().getLiteral(line.trim());
         wrapper.getFacts().add(literal.getFact());
         wrapper.getConclusionFacts().add(literal.getFact());
         return wrapper;
     }
-
 
     public boolean isAcyclic() {
         Stack<Fact> stack = new Stack<>();
@@ -255,7 +250,6 @@ public class RuleFile {
         cache.add(origin);
         return false;
     }
-
 
 }
 

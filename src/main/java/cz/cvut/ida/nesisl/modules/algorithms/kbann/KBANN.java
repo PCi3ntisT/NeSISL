@@ -42,7 +42,7 @@ public class KBANN implements NeuralNetworkOwner {
     public static NeuralNetwork perturbeNetworkConnection(NeuralNetwork network, KBANNSettings settings) {
         network.getWeights().entrySet().forEach(entry -> {
             if (entry.getKey().isModifiable()) {
-                double newValue = entry.getValue() + settings.getRandomGenerator().nextDouble();
+                double newValue = entry.getValue() + settings.getRandomGenerator().nextDouble() * settings.getPerturbationMagnitude();
                 network.setEdgeWeight(entry.getKey(), newValue);
             }
         });
@@ -181,7 +181,9 @@ public class KBANN implements NeuralNetworkOwner {
     private static NeuralNetwork addFullyConnectionToAdjacentLayers(double edgeInitValue, NeuralNetwork network) {
         List<Node> previousLayer = network.getInputNodes();
         List<Node> currentLayer = null;
-        HashSet<Pair<Node, Node>> edges = network.getWeights().entrySet().stream().map(entry -> entry.getKey().getAsPair()).collect(Collectors.toCollection(HashSet::new));
+        HashSet<Pair<Node, Node>> edges = network.getWeights().entrySet().stream()
+                .map(entry -> entry.getKey().getAsPair())
+                .collect(Collectors.toCollection(HashSet::new));
         for (int layerIndex = 0; layerIndex <= network.getMaximalNumberOfHiddenLayer() + 1; layerIndex++) {
             if (layerIndex > network.getMaximalNumberOfHiddenLayer()) {
                 currentLayer = new ArrayList<>(network.getOutputNodes());

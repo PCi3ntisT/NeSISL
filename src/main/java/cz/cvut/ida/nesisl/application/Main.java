@@ -43,7 +43,7 @@ public class Main {
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", ""};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/sampleInput/SLFinput.txt"};
         if (arg.length < 4) {
-            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLF, TopGen, REGENT; write as first argument to see more.");
+            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more.");
             System.exit(0);
         }
 
@@ -71,6 +71,10 @@ public class Main {
             System.exit(0);
         }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+        if(!"SLSF".equals(arg[0])){
+            wls = WeightLearningSetting.turnOffRegularization(wls);
+        }
+
         Dataset dataset = DatasetImpl.parseDataset(datasetFile);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
@@ -85,8 +89,8 @@ public class Main {
             case "DNC":
                 main.runDNC(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
-            case "SLF":
-                main.runSLF(arg, numberOfRepeats, dataset, wls, randomGenerator);
+            case "SLSF":
+                main.runSLSF(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "TopGen":
                 main.runTopGen(arg, numberOfRepeats, dataset, wls, randomGenerator);
@@ -174,14 +178,6 @@ public class Main {
         }
         String algName = "DNC";
 
-
-        /*
-        double deltaT = 0.05;
-        long timeWindow = 5l;
-        double cm = 0.01;
-        double ca = 0.001;
-        long hiddenNodesLimit = 70;
-         */
         File settingFile = new File(arg[4]);
         DNCSetting dncSetting = DNCSetting.create(settingFile);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
@@ -193,18 +189,15 @@ public class Main {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    private void runSLF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    private void runSLSF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
-            throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure'");
+            throw new IllegalStateException("Need more arguments. To run Structure Learning with Forgetting use 'SLSF   #ofRepeats  datasetFile  weightLearningSettingsFile  initialNetworkStructure'");
         }
-        String algName = "SLF";
+        String algName = "SLSF";
 
-        /*Double penaltyEpsilon = 0.0001;
-        Double treshold = 0.1;//0.1;*/
-
-        File settingFile = new File(arg[4]);
-        Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(settingFile, dataset, randomGenerator);
-        Learnable learn = (slf, learningDataset) -> ((StructuralLearningWithSelectiveForgetting) slf).learn(learningDataset, wls);
+        File structureFile = new File(arg[4]);
+        Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(structureFile, dataset, randomGenerator);
+        Learnable learn = (slsf, learningDataset) -> ((StructuralLearningWithSelectiveForgetting) slsf).learn(learningDataset, wls);
 
         Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), wls);
@@ -221,9 +214,6 @@ public class Main {
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        /*Double treshold = 0.0001;
-        Long lengthOfOpenList = 100l;
-        Long numberOfSuccessors = 10l;*/
         File settingFile = new File(arg[5]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
@@ -246,20 +236,12 @@ public class Main {
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        /*long populationSize = 4;
-        long tournamentSize = 1;
-        Integer numberOfMutationOfPopulation = 1;
-        Integer numberOfMutationOfCrossovers = 1;
-        Double probabilityOfNodeDeletion = 0.4;
-        Long maxFitness = 1000l;
-        Integer numberOfCrossoverChildren = 1;
-        Integer numberOfElites = 1;*/
 
         File settingFile = new File(arg[5]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
-        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega());
-        Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega()));
+        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting);
+        Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
