@@ -74,10 +74,6 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
             addCandidateToNetwork(bestCandidate, network);
 
-            // TODO
-            //zkontrolovat jestli se propaguje spravny error (residual nikoliv squared residual)
-            //zkontrolvat jestli to signum tam je dobre
-
             numberOfAddedNodes++;
 
             System.out.println(numberOfAddedNodes + "\t" + currentError);

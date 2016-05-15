@@ -38,6 +38,7 @@ public class ExperimentResult {
     private Double accuracy;
     private long numberOfHiddenNodes;
     private double averageSquaredTotalTrainError;
+    private double trainAccuracy;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -146,7 +147,7 @@ public class ExperimentResult {
 
         Map<Sample, Results> train = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
         this.setAverageSquaredTotalTrainError(Tools.computeAverageSquaredTotalError(train));
-
+        this.setTrainAccuracy(AccuracyCalculation.create(network, train).getAccuracy());
         this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
         this.setThreshold(network.getClassifier().getThreshold());
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
@@ -189,6 +190,7 @@ public class ExperimentResult {
         process.add(new Pair<>("error", () -> results.stream().mapToDouble(e -> e.getAverageSquaredTestError())));
         process.add(new Pair<>("trainError", () -> results.stream().mapToDouble(e -> e.getAverageSquaredTotalTrainError())));
         process.add(new Pair<>("accuracy", () -> results.stream().mapToDouble(e -> e.getAccuracy())));
+        process.add(new Pair<>("trainAccuracy", () -> results.stream().mapToDouble(e -> e.getTrainAccuracy())));
         process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
         process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
@@ -221,6 +223,14 @@ public class ExperimentResult {
 
     public double getAverageSquaredTotalTrainError() {
         return averageSquaredTotalTrainError;
+    }
+
+    public void setTrainAccuracy(double trainAccuracy) {
+        this.trainAccuracy = trainAccuracy;
+    }
+
+    public double getTrainAccuracy() {
+        return trainAccuracy;
     }
 
     /*private static void writeTime(List<ExperimentResult> results, PrintWriter writer) {
