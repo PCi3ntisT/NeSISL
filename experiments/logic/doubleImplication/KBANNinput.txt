@@ -1,0 +1,13 @@
+INPUT FACTS
+a
+b
+c
+d
+e
+OUTPUT FACTS
+x
+RULES
+m :- a, not(b).
+v :- d, m.
+w :- a.
+w :- m.

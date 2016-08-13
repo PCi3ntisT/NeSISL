@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2015.3.9)  17 MAR 2016 15:54
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2015.3.9)  23 MAR 2016 23:28
 entering extended mode
 **H:/skola/master/dp/codes/nesisl/./experiments/logic/xor2/KBANN/KBANN_8/final.
 tex
@@ -407,15 +407,15 @@ Missing character: There is no ; in font nullfont!
 (H:\skola\master\dp\codes\nesisl\experiments\logic\xor2\KBANN\KBANN_8\final.aux
 ) ) 
 Here is how much of TeX's memory you used:
- 11399 strings out of 493921
- 232099 string characters out of 3147292
- 260026 words of memory out of 3000000
- 14518 multiletter control sequences out of 15000+200000
+ 11405 strings out of 493921
+ 232159 string characters out of 3147292
+ 261026 words of memory out of 3000000
+ 14524 multiletter control sequences out of 15000+200000
  3640 words of font info for 14 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
  55i,9n,68p,474b,777s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on final.pdf (1 page, 15838 bytes).
+Output written on final.pdf (1 page, 16688 bytes).
 PDF statistics:
  13 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

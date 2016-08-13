@@ -8,11 +8,11 @@
 \tikzstyle{sigmoid}=[neuron, fill=red!50];
 \node [identity] (a) {a};
 \node [identity,below of=a] (b) {b};
-\node [constant,below of=b] (n5697) {n5697};
+\node [constant,below of=b] (n6827) {n6827};
 \node [sigmoid,right of=a] (x) {x};
 \path[every node/.style={sloped,anchor=south,auto=false}]
-(b) edge node {0,24} (x)
-(a) edge node {0,15} (x)
-(n5697) edge node {-0,09} (x)
+(a) edge node {0,5} (x)
+(b) edge node {-0,3} (x)
+(n6827) edge node {0,86} (x)
 ;\end{tikzpicture}
 \end{document}

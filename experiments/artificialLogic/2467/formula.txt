@@ -1,0 +1,5 @@
+( b  |  d ) & (( e  |  g ) & ( f  |  g ) ) 
+order :	2467
+CNF :	3
+weighted :	40
+exp :	4

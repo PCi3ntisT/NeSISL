@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2015.3.9)  16 MAR 2016 13:32
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9 64-bit) (preloaded format=pdflatex 2015.3.9)  23 MAR 2016 23:28
 entering extended mode
 **H:/skola/master/dp/codes/nesisl/./experiments/logic/xor2/CasCor/CasCor_9/fina
 l.tex
@@ -370,8 +370,7 @@ File: pgfmodulematrix.code.tex 2013/09/17  (rcs-revision 1.8)
 librarytopaths.code.tex"
 File: tikzlibrarytopaths.code.tex 2008/06/17 v3.0.0 (rcs-revision 1.2)
 )))
-(H:\skola\master\dp\codes\nesisl\experiments\logic\xor2\CasCor\CasCor_9\final.a
-ux)
+No file final.aux.
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 3.
 LaTeX Font Info:    ... okay on input line 3.
 LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 3.
@@ -384,7 +383,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 3.
 LaTeX Font Info:    ... okay on input line 3.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 3.
 LaTeX Font Info:    ... okay on input line 3.
- ABD: EveryShipout initializing macros
+ABD: EveryShipout initializing macros
 ("C:\Program Files\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count109
@@ -408,15 +407,15 @@ Missing character: There is no ; in font nullfont!
 (H:\skola\master\dp\codes\nesisl\experiments\logic\xor2\CasCor\CasCor_9\final.a
 ux) ) 
 Here is how much of TeX's memory you used:
- 11396 strings out of 493921
- 232244 string characters out of 3147292
- 259026 words of memory out of 3000000
- 14513 multiletter control sequences out of 15000+200000
+ 11488 strings out of 493921
+ 233696 string characters out of 3147292
+ 323998 words of memory out of 3000000
+ 14607 multiletter control sequences out of 15000+200000
  3640 words of font info for 14 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
  55i,9n,68p,476b,777s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on final.pdf (1 page, 15122 bytes).
+Output written on final.pdf (1 page, 20215 bytes).
 PDF statistics:
  13 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

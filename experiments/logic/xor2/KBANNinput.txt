@@ -4,5 +4,6 @@ b
 OUTPUT FACTS
 x
 RULES
-w1 :- a, not(b).
-w2 :- not(a), b.
+w :- a, b.
+p :- not(a).
+q :- not(b).

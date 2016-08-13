@@ -8,19 +8,24 @@
 \tikzstyle{identity}=[neuron, fill=green!50];
 \node [identity] (a) {a};
 \node [identity,below of=a] (b) {b};
-\node [constant,below of=b] (n214) {n214};
-\node [sigmoid,right of=a] (w2) {w2};
-\node [sigmoid,below of=w2] (w1) {w1};
-\node [sigmoid,right of=w2] (x) {x};
+\node [constant,below of=b] (n6557) {n6557};
+\node [sigmoid,right of=a] (p) {p};
+\node [sigmoid,below of=p] (w) {w};
+\node [sigmoid,below of=w] (q) {q};
+\node [sigmoid,right of=p] (x) {x};
 \path[every node/.style={sloped,anchor=south,auto=false}]
-(n214) edge node {-3,09} (w1)
-(n214) edge node {-3,01} (w2)
-(n214) edge node {-0,17} (x)
-(w1) edge node {0,69} (x)
-(w2) edge node {-0,86} (x)
-(a) edge node {-0,96} (w2)
-(a) edge node {1,66} (w1)
-(b) edge node {0,39} (w2)
-(b) edge node {-0,76} (w1)
+(n6557) edge node {-2} (q)
+(n6557) edge node {-3,62} (w)
+(n6557) edge node {-2,48} (p)
+(n6557) edge node {-0,88} (x)
+(p) edge node {0,88} (x)
+(w) edge node {-0,15} (x)
+(q) edge node {0,52} (x)
+(b) edge node {0,29} (w)
+(b) edge node {-0,39} (p)
+(b) edge node {-1,44} (q)
+(a) edge node {-1,57} (p)
+(a) edge node {0,32} (q)
+(a) edge node {1,39} (w)
 ;\end{tikzpicture}
 \end{document}

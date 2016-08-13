@@ -1,0 +1,18 @@
+INPUT FACTS
+a
+b
+c
+d
+e
+f
+g
+OUTPUT FACTS
+x
+RULES
+h1 :- a, b.
+h2 :- not(c), d.
+h3 :- e, not(f).
+i :- h1.
+i :- not(h2).
+i :- h3.
+i :- not(g).

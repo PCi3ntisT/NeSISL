@@ -1,7 +1,0 @@
-epsilon : 0.001
-learningRate : 0.1
-maximumNumberOfHiddenNodes : 10
-cascorPoolNodesLimit : 1
-alpha : 0.1
-quickpropEpsilon : 0.1
-epochLimit : 2000

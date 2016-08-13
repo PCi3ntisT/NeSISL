@@ -1,0 +1,5 @@
+( a  XOR  b ) XOR ( ~ ( ( e  XOR  f ) & ( e  XOR  g )  ) ) 
+order :	5822
+CNF :	72
+weighted :	105
+exp :	10404

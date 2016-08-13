@@ -1,0 +1,5 @@
+( b  XOR  e ) & ( ~ ( ( e  |  f ) XOR ( f  XOR  g )  ) ) 
+order :	8538
+CNF :	14
+weighted :	30
+exp :	10404

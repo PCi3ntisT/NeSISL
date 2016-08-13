@@ -1,0 +1,5 @@
+( c  |  d ) XOR ( e  |  f  |  f  |  g ) 
+order :	3083
+CNF :	15
+weighted :	84
+exp :	9

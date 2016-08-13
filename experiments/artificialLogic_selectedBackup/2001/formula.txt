@@ -1,0 +1,5 @@
+( a  XOR  f ) | (( e  XOR  f ) XOR ( e  &  g ) ) 
+order :	2001
+CNF :	80
+weighted :	280
+exp :	4

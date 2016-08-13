@@ -1,0 +1,17 @@
+INPUT FACTS
+a
+b
+c
+d
+e
+OUTPUT FACTS
+x
+y
+RULES
+m1 :- a, b, c.
+m2 :- not(a),d,e.
+w :- m1.
+w :- m2.
+p :- not(a), not(c).
+q :- not(b), not(e).
+v :- q.

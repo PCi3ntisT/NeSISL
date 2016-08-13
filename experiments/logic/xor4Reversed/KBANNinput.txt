@@ -1,0 +1,15 @@
+INPUT FACTS
+a
+b
+c
+d
+OUTPUT FACTS
+x
+y
+RULES
+w :- not(a), b.
+p :- a, not(c).
+q :- c, not(d).
+z :- w.
+z :- p.
+z :- q.

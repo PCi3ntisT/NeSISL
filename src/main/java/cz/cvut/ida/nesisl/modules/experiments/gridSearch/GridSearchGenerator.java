@@ -67,6 +67,7 @@ public class GridSearchGenerator {
         map.put(RegentSetting.ELITES_TOKEN, orderedList("1")); //"1", "2"));
         map.put(RegentSetting.EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN, orderedList("0.2"));
         map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("40000"));
+
         map.put(RegentSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("10"));
         map.put(RegentSetting.LONG_TIME_WINDOW_TOKEN, orderedList("30"));
         map.put(RegentSetting.EPSILON_CONVERGENT_TOKEN, orderedList("0.1"));
