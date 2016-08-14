@@ -3,6 +3,7 @@ package main.java.cz.cvut.ida.nesisl.application;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
@@ -16,6 +17,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.structuralLearningWithSelectiveForgetting.StructuralLearningWithSelectiveForgetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.Crossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Initable;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
@@ -43,7 +45,7 @@ public class Main {
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", ""};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/sampleInput/SLFinput.txt"};
         if (arg.length < 4) {
-            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more.");
+            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG");
             System.exit(0);
         }
 
@@ -75,13 +77,22 @@ public class Main {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
 
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile);
+
+        // crossvalidaci udělat jinou :)
+
+        // TODO NACITANI NORMALIZACE ZAJISTIT :)
+        // backprop
+        boolean normalize = true;
+        Dataset dataset = DatasetImpl.parseDataset(datasetFile,normalize);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         Main main = new Main();
         switch (arg[0]) {
             case "KBANN":
                 main.runKBANN(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                break;
+            case "backprop":
+                main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "CasCor":
                 main.runCasCor(arg, numberOfRepeats, dataset, wls, randomGenerator);
@@ -104,18 +115,20 @@ public class Main {
         }
     }
 
-    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
-        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, dataset, settingFile, wls);
-        ExperimentResult.storeResults(results, algName, dataset.getOriginalFile(), settingFile, wls);
+    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls);
+        ExperimentResult.storeResults(results, algName, crossval.getOriginalFile(), settingFile, wls);
     }
 
-    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Dataset dataset, File settingFile, WeightLearningSetting wls) {
+    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls) {
         return IntStream.range(0, numberOfRepeats)
-                .parallel()
+                //.parallel()
                 .mapToObj(idx -> {
-                    ExperimentResult currentResult = new ExperimentResult(idx, algName, dataset.getOriginalFile(), settingFile, wls);
+                    ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls);
                     NeuralNetworkOwner alg = initialize.initialize();
                     currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
+
+                    Dataset dataset = crossval.getDataset(idx);
 
                     long start = System.currentTimeMillis();
                     NeuralNetwork learnedNetwork = learn.learn(alg, dataset);
@@ -150,7 +163,30 @@ public class Main {
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+    }
+
+    private void runBackprop(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run backprop only on KBANN use 'backprop   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile   '");
+        }
+        if (arg.length > 6) {
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
+
+        String algName = "Backprop";
+        File ruleFile = new File(arg[4]);
+        File settingFile = new File(arg[5]);
+        KBANNSettings kbannSettings = new KBANNSettings(randomGenerator, 1.0, true);
+
+        List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
+
+        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
+        Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
+
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
 
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
@@ -168,7 +204,7 @@ public class Main {
         Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
         Learnable learn = (cascadeCorrelation, learningDataset) -> ((CascadeCorrelation) cascadeCorrelation).learn(learningDataset, finalWls, ccSetting);
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
@@ -185,7 +221,7 @@ public class Main {
         Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN());
         Learnable learn = (dnc, learningDataset) -> ((DynamicNodeCreation) dnc).learn(learningDataset, finalWls, dncSetting);
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
@@ -199,7 +235,7 @@ public class Main {
         Initable<StructuralLearningWithSelectiveForgetting> initialize = () -> StructuralLearningWithSelectiveForgetting.create(structureFile, dataset, randomGenerator);
         Learnable learn = (slsf, learningDataset) -> ((StructuralLearningWithSelectiveForgetting) slsf).learn(learningDataset, wls);
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), wls);
     }
 
@@ -220,7 +256,7 @@ public class Main {
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, tgSetting);
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
@@ -243,7 +279,7 @@ public class Main {
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting);
         Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
-        Dataset crossval = DatasetImpl.stratifiedSplit(dataset, randomGenerator, numberOfFolds);
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 

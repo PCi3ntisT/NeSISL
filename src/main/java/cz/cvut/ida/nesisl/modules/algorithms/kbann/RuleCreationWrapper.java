@@ -18,7 +18,7 @@ public class RuleCreationWrapper {
     private Set<Fact> inputFacts = new HashSet<>();
     private Set<Fact> intermediateFacts = new HashSet<>();
     private Set<Fact> conclusionFacts = new HashSet<>();
-    private Map<Fact, Set<Pair<Set<Literal>, Boolean>>> rules = new HashMap<>();
+    private Map<Fact, Set<Pair<String, Boolean>>> rules = new HashMap<>();
     private LiteralFactory factory = new LiteralFactory();
 
     public RuleCreationWrapper() {
@@ -56,11 +56,11 @@ public class RuleCreationWrapper {
         this.conclusionFacts = conclusionFacts;
     }
 
-    public Map<Fact, Set<Pair<Set<Literal>, Boolean>>> getRules() {
+    public Map<Fact, Set<Pair<String, Boolean>>> getRules() {
         return rules;
     }
 
-    public void setRules(Map<Fact, Set<Pair<Set<Literal>, Boolean>>> rules) {
+    public void setRules(Map<Fact, Set<Pair<String, Boolean>>> rules) {
         this.rules = rules;
     }
 

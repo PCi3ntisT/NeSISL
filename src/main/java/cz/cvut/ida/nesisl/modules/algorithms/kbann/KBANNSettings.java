@@ -16,10 +16,19 @@ public class KBANNSettings {
     private final RandomGenerator randomGenerator;
     private final Double omega;
     private final Double perturbationMagnitude;
+    private boolean backpropOnly;
 
     public KBANNSettings(RandomGenerator randomGenerator, Double omega, Double perturbationMagnitude) {
         this.randomGenerator = randomGenerator;
         this.omega = omega;
+        this.perturbationMagnitude = perturbationMagnitude;
+        this.backpropOnly = false;
+    }
+
+    public KBANNSettings(RandomGenerator randomGenerator, Double perturbationMagnitude, boolean backpropOnly) {
+        this.randomGenerator = randomGenerator;
+        this.omega = 0.0;
+        this.backpropOnly = true;
         this.perturbationMagnitude = perturbationMagnitude;
     }
 
@@ -81,5 +90,9 @@ public class KBANNSettings {
 
     public Double getPerturbationMagnitude() {
         return perturbationMagnitude;
+    }
+
+    public boolean isBackpropOnly() {
+        return backpropOnly;
     }
 }

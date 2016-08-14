@@ -9,8 +9,8 @@ import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.*;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
-import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
 
@@ -23,10 +23,6 @@ import java.util.stream.IntStream;
  * Created by EL on 13.2.2016.
  */
 public class DatasetImpl implements Dataset {
-
-    public static final String FACT_DELIMITER = "\\s+";
-    public static final String INPUT_OUTPUT_DELIMITER = "|";
-    public static final String TRAIN_TOKEN = "TRAIN SET";
 
 
     private final File originalFile;
@@ -125,7 +121,7 @@ public class DatasetImpl implements Dataset {
     public String cannonicalOutput(Map<Fact, Value> sample) {
         synchronized (outputFacts) {
             return IntStream.range(0, outputFacts.size())
-                    .mapToObj(idx -> sample.get(outputFacts.get(idx)))
+                    .mapToObj(idx -> sample.get(outputFacts.get(idx)) + ",") // delimiter for cannonic form
                     .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                     .toString();
         }
@@ -231,15 +227,43 @@ public class DatasetImpl implements Dataset {
         }
     }
 
+    public static final String FACT_DELIMITER = "\\s+";
+    public static final String INPUT_OUTPUT_DELIMITER = "|";
+    public static final String TRAIN_TOKEN = "TRAIN SET";
+
+    public static final String ATTRIBUTE_TOKEN = "@ATTRIBUTE";
+    public static final String DATA_TOKEN = "@DATA";
+    public static final String AMBIGUOUS_TOKEN = "@AMBIGUOUS";
+    public static final char COMMENTED_LINE_START = '%';
+    public static final String ATTRIBUTE_DELIMITER = "\\s+";
+    public static final String AMBIGUOUS_DELIMITER = "\\s+";
+    public static final String DATA_DELIMITER = ",";
+    public static final String CLASS_VALUES_DELIMITER = ",";
+    public static final String ATTRIBUTE_VALUE_DELIMITER = "==";
+
+    public static final String REAL_ATTRIBUTE_TOKEN = "real";
+    public static final String NOMINAL_ATTRIBUTE_TOKEN = "nominal";
+    public static final String CLASS_TOKEN = "class";
+    public static final String COMMENT_ATTRIBUTE_TOKEN = "comment";
+
     enum State {
         TRAIN_SET,
         FACT_LINE,
-        EXAMPLES
+        EXAMPLES,
+        ATTRIBUTES,
+        DATA,
+        AMBIGUOUS
     }
 
+    enum Attribute {
+        REAL,
+        NOMINAL,
+        CLASS,
+        COMMENT
+    }
 
-    public static Dataset parseDataset(String pathToFile) {
-        return parseDataset(new File(pathToFile));
+    public static Dataset parseDataset(String pathToFile, boolean normalize) {
+        return parseDataset(new File(pathToFile), normalize);
     }
 
 
@@ -249,6 +273,202 @@ public class DatasetImpl implements Dataset {
      * @param file
      * @return
      */
+    public static Dataset parseDataset(File file, boolean normalize) {
+        State state = State.ATTRIBUTES;
+        //List<Fact> factsOrder = null;
+        //List<Map<Fact, Value>> examples = new ArrayList<>();
+        AttributePropertyFactory attributeFactory = new AttributePropertyFactory();
+        List<AttributeProprety> attributes = new ArrayList<>();
+        List<List<String>> examples = new ArrayList<>();
+        List<Pair<String, Set<String>>> ambigious = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.trim().length() < 1
+                        || (line.trim().length() > 0 && line.trim().charAt(0) == COMMENTED_LINE_START)) {
+                    continue;
+                }
+                switch (state) {
+                    //case TRAIN_SET: parsing of train/test set not supported
+                    case ATTRIBUTES:
+                        if (DATA_TOKEN.equals(line.trim())) {
+                            state = State.DATA;
+                            break;
+                        }
+                        attributes = readAttribute(line, attributeFactory, attributes);
+                        break;
+                    case EXAMPLES:
+                        if (AMBIGUOUS_TOKEN.equals(line.trim())) {
+                            state = State.AMBIGUOUS;
+                            break;
+                        }
+                        examples = readExample(line, attributes, examples);
+                        break;
+                    case AMBIGUOUS:
+                        ambigious = readAmbiguous(line, ambigious);
+                        break;
+                    default:
+                        System.out.println("Do not know how to parse '" + line + "'.");
+                        break;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        List<Fact> inputFacts = generateInputFacts(ambigious, attributes);
+        List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only)
+        List<Map<Fact, Value>> reformatedExamples = reformateData(inputFacts, outputFacts, examples, attributes, ambigious, normalize);
+
+        return new DatasetImpl(Collections.unmodifiableList(inputFacts), Collections.unmodifiableList(outputFacts), reformatedExamples, file);
+    }
+
+    private static List<Map<Fact, Value>> reformateData(List<Fact> inputFacts, List<Fact> outputFacts, List<List<String>> examples, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambigious, boolean normalize) {
+        Map<String, Fact> inputs = new HashMap<>();
+        Map<String, Fact> outputs = new HashMap<>();
+        inputFacts.stream().forEach(fact -> inputs.put(fact.getFact(), fact));
+        outputFacts.stream().forEach(fact -> inputs.put(fact.getFact(), fact));
+        return examples.stream().map(example -> reformateExample(inputs, outputs, example, attributes, ambigious, normalize)).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private static Map<Fact, Value> reformateExample(Map<String, Fact> inputs, Map<String, Fact> outputs, List<String> example, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambiguous, boolean normalize) {
+        Map<Fact, Value> sample = new HashMap<>();
+
+        Set<String> ambiguousValues = ambiguous.stream().map(pair -> pair.getLeft()).collect(Collectors.toSet());
+        Map<String,Set<String>> instead = new HashMap<>();
+        ambiguous.stream().map(pair -> instead.put(pair.getLeft(),pair.getRight()));
+
+        for (int idx = 0; idx < example.size(); idx++) {
+            AttributeProprety attribute = attributes.get(idx);
+            String exampleValue = example.get(idx);
+
+            if (attribute instanceof ClassAttribute) {
+                ClassAttribute target = (ClassAttribute) attribute;
+                if (target.isBinary()) {
+                    Fact fact = outputs.get(CLASS_TOKEN);
+                    String value = (exampleValue.equals(target.getPositiveClass())) ? "1" : "0";
+                    sample.put(fact, Value.create(value));
+                } else {
+                    target.getValues().forEach(value -> sample.put(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(exampleValue)) ? "1" : "0")));
+                }
+
+            } else if (attribute instanceof NominalAttribute) {
+                NominalAttribute nominal = (NominalAttribute) attribute;
+                if (ambiguousValues.contains(exampleValue)) {
+                    nominal.getValues().forEach(value -> sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((instead.get(exampleValue).contains(value)) ? Value.NAN_TOKEN : "0")));
+                } else {
+                    nominal.getValues().forEach(value -> sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(exampleValue)) ? "1" : "0")));
+                }
+
+            } else if (attribute instanceof RealAttribute) {
+                RealAttribute real = (RealAttribute) attribute;
+                Double value = Double.valueOf(exampleValue);
+                if (normalize) {
+                    value = (value - real.getMin()) / (real.getMax() - real.getMin());
+                }
+                Fact fact = inputs.get(real.getOrder());
+                sample.put(fact, Value.create(value + ""));
+
+            } else if (attribute instanceof CommentAttribute) {
+            }
+        }
+        return sample;
+    }
+
+    private static List<Fact> generateInputFacts
+            (List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes) {
+        List<Fact> facts = new ArrayList<>();
+        int idx = 0;
+        for (int idxWithComments = 0; idxWithComments < attributes.size(); idxWithComments++) {
+            AttributeProprety attribute = attributes.get(idxWithComments);
+            if (attribute instanceof CommentAttribute) {
+                continue;
+            } else if (attribute instanceof ClassAttribute) {
+                idx++;
+                continue;
+            }
+            if (attribute instanceof RealAttribute) {
+                facts.add(new Fact(idx + ""));
+            } else if (attribute instanceof NominalAttribute) {
+                NominalAttribute nominal = (NominalAttribute) attributes.get(idxWithComments);
+                Set<String> values = new HashSet<>(nominal.getValues());
+                for (Pair<String, Set<String>> pair : ambigious) {
+                    String head = pair.getLeft();
+                    if (values.contains(head)) {
+                        values.remove(head); // inserting missing values is done in reformating dataset
+                    }
+                }
+                final int finalIdx = idx;
+                values.forEach(value -> facts.add(new Fact(finalIdx + ATTRIBUTE_VALUE_DELIMITER + value)));
+            }
+        }
+        return facts;
+    }
+
+
+    private static List<Fact> generateOutputFacts(List<AttributeProprety> attributes) {
+        int idx = 0;
+        for (int idxWithComments = 0; idxWithComments < attributes.size(); idxWithComments++) {
+            AttributeProprety attribute = attributes.get(idxWithComments);
+            if (attribute instanceof ClassAttribute) {
+                break;
+            } else if (attribute instanceof CommentAttribute) {
+
+            } else {
+                idx++;
+            }
+        }
+        if (!(attributes.get(idx) instanceof ClassAttribute)) {
+            throw new IllegalStateException("No class attribute found!");
+        }
+        ClassAttribute target = (ClassAttribute) attributes.get(idx);
+        List<Fact> facts = new ArrayList<>();
+
+        if (target.isBinary()) {
+            facts.add(new Fact(CLASS_TOKEN));
+        } else {
+            target.getValues().forEach(value -> facts.add(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value)));
+        }
+
+        return facts;
+    }
+
+    private static List<Pair<String, Set<String>>> readAmbiguous(String
+                                                                         line, List<Pair<String, Set<String>>> ambigious) {
+        String[] splitted = line.split(AMBIGUOUS_DELIMITER);
+        Set<String> instead = new HashSet<>();
+        String head = splitted[0].trim();
+        for (int idx = 1; idx < splitted.length; idx++) {
+            instead.add(splitted[idx].trim());
+        }
+        Pair<String, Set<String>> pair = new Pair<>(head, instead);
+        ambigious.add(pair);
+        return ambigious;
+    }
+
+    private static List<List<String>> readExample(String
+                                                          line, List<AttributeProprety> attributes, List<List<String>> examples) {
+        String[] splitted = line.split(DATA_DELIMITER);
+        List<String> list = Arrays.stream(splitted).map(value -> value.trim()).collect(Collectors.toCollection(ArrayList::new));
+        IntStream.range(0, list.size()).forEach(idx -> attributes.get(idx).addValue(list.get(idx)));
+        examples.add(list);
+        return examples;
+    }
+
+    private static List<AttributeProprety> readAttribute(String line, AttributePropertyFactory
+            factory, List<AttributeProprety> attributes) {
+        AttributeProprety property = factory.create(line);
+        if (null != property) {
+            attributes.add(factory.create(line));
+        }
+        return attributes;
+    }
+
+
+    /* old version for parsing format of artificial domains
     public static Dataset parseDataset(File file) {
         State state = State.TRAIN_SET;
         List<Fact> factsOrder = null;
@@ -285,6 +505,7 @@ public class DatasetImpl implements Dataset {
         Pair<List<Fact>, List<Fact>> factsOrderWrapper = selectInputAndOutputFacts(factsOrder);
         return new DatasetImpl(Collections.unmodifiableList(factsOrderWrapper.getLeft()), Collections.unmodifiableList(factsOrderWrapper.getRight()), examples, file);
     }
+    */
 
     private static Pair<List<Fact>, List<Fact>> selectInputAndOutputFacts(List<Fact> factsOrder) {
         List<Fact> input = new ArrayList<>();
@@ -302,7 +523,8 @@ public class DatasetImpl implements Dataset {
         return new Pair<>(input, output);
     }
 
-    private static List<Map<Fact, Value>> readAndAddExample(String line, List<Fact> factsOrder, List<Map<Fact, Value>> examples) {
+    private static List<Map<Fact, Value>> readAndAddExample(String
+                                                                    line, List<Fact> factsOrder, List<Map<Fact, Value>> examples) {
         examples.add(readExample(line, factsOrder));
         return examples;
     }

@@ -41,7 +41,10 @@ public class KBANN implements NeuralNetworkOwner {
 
     public static NeuralNetwork perturbeNetworkConnection(NeuralNetwork network, KBANNSettings settings) {
         network.getWeights().entrySet().forEach(entry -> {
-            if (entry.getKey().isModifiable()) {
+            if(settings.isBackpropOnly()){
+                double newValue = settings.getRandomGenerator().nextDouble() * settings.getPerturbationMagnitude();
+                network.setEdgeWeight(entry.getKey(), newValue);
+            }else if (entry.getKey().isModifiable()) {
                 double newValue = entry.getValue() + settings.getRandomGenerator().nextDouble() * settings.getPerturbationMagnitude();
                 network.setEdgeWeight(entry.getKey(), newValue);
             }
@@ -74,11 +77,28 @@ public class KBANN implements NeuralNetworkOwner {
                 case DISJUNCTION:
                     addDisjunctionRuleToNetwork(rule, map, network);
                     break;
+                case N_TRUE:
+                    addNTrueRuleToNetwork(rule, map, network);
+                    break;
                 default:
                     throw new IllegalStateException();
             }
         });
         return network;
+    }
+
+    private void addNTrueRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {
+        Node target = map.get(rule.getHead());
+        target.setModifiability(rule.isModifiable());
+        rule.getBody().forEach(literal -> {
+            Fact fact = literal.getFact();
+            Node source = map.get(fact);
+            Double weight = (literal.isPositive()) ? 1.0 : -1.0;
+            network.addEdgeStateful(new Edge(source, target, Edge.Type.FORWARD, rule.isModifiable()), weight);
+        });
+        Node bias = network.getBias();
+        // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
+        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1  * (rule.getNTrue() * settings.getOmega() - 1) / 2);
     }
 
     private void addDisjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {

@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.Literal;
+import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.util.*;
@@ -91,10 +92,11 @@ public class Rules {
                     } else if (pair.size() > 1) {
                         Boolean isModifiable = true;
                         Set<Literal> orSet = new HashSet<>();
-                        for (Pair<Set<Literal>, Boolean> body : pair) {
+                        for (Pair<String, Boolean> body : pair) {
                             isModifiable = isModifiable && body.getRight();
                             Fact fact = makeNextFact(head, ruleFile);
                             ruleFile.addFact(fact);
+                            // hope that this is everything that hast to be made here to introduce n-true rule
                             addAndRuleToSet(fact, body, set);
                             orSet.add(new Literal(fact,true));
                         }
@@ -109,8 +111,26 @@ public class Rules {
         set.add(new KBANNRule(body.getLeft(), body.getRight(), KBANNRule.Type.DISJUNCTION, head));
     }
 
-    private static void addAndRuleToSet(Fact head, Pair<Set<Literal>, Boolean> body, Set<KBANNRule> set) {
-        set.add(new KBANNRule(body.getLeft(), body.getRight(), KBANNRule.Type.CONJUNCTION, head));
+    private static void addAndRuleToSet(Fact head, Pair<String, Boolean> body, Set<KBANNRule> set) {
+        KBANNRule.Type type = KBANNRule.Type.CONJUNCTION;
+        String processPart = body.getLeft();
+        LiteralFactory factory = new LiteralFactory();
+        if(body.getLeft().contains("n-true ")){ // n-true type rule
+            type = KBANNRule.Type.N_TRUE;
+            int nTrueStart = processPart.indexOf("n-true ");
+            int nStart = nTrueStart + "n-true ".length();
+            int openingBracket = processPart.indexOf("(", nStart);
+            int closing = processPart.indexOf(")", nStart);
+
+            int n = Integer.valueOf(processPart.substring(nStart,openingBracket).trim());
+            String bracket = processPart.substring(openingBracket + 1, closing).trim();
+
+            Set<Literal> literals = factory.getLiterals(bracket);
+            set.add(new KBANNRule(literals, body.getRight(), type, head, n));
+        }else{
+            Set<Literal> literals = factory.getLiterals(body.getLeft());
+            set.add(new KBANNRule(literals, body.getRight(), type, head));
+        }
     }
 
 

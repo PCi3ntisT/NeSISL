@@ -13,19 +13,29 @@ import java.util.Set;
 public class KBANNRule {
 
     public enum Type {
-        CONJUNCTION, DISJUNCTION
+        CONJUNCTION, type, DISJUNCTION, N_TRUE
     }
 
     private final Type type;
     private final Fact head;
     private final Set<Literal> body;
     private Boolean isModifiable;
+    private final int nTrue;
 
     public KBANNRule(Set<Literal> body, Boolean isModifiable, Type type, Fact head) {
         this.body = body;
         this.isModifiable = isModifiable;
         this.type = type;
         this.head = head;
+        this.nTrue = 0;
+    }
+
+    public KBANNRule(Set<Literal> body, Boolean isModifiable, Type type, Fact head, int nTrue) {
+        this.body = body;
+        this.isModifiable = isModifiable;
+        this.type = type;
+        this.head = head;
+        this.nTrue = nTrue;
     }
 
     public Boolean isModifiable() {
@@ -85,5 +95,9 @@ public class KBANNRule {
         body.forEach(literal -> sb.append(literal.getFact().getFact() + ", "));
         sb.append(".");
         return sb.toString();
+    }
+
+    public int getNTrue() {
+        return nTrue;
     }
 }
