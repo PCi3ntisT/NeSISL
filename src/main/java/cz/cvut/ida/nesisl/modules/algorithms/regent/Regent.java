@@ -55,8 +55,8 @@ public class Regent implements NeuralNetworkOwner {
         }
     }
 
-    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega, RegentSetting regentSetting) {
-        KBANN kbann = KBANN.create(file, specific, new KBANNSettings(randomGenerator, omega, regentSetting.getTopGenSettings().perturbationMagnitude()));
+    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega, RegentSetting regentSetting, Dataset dataset) {
+        KBANN kbann = KBANN.create(file, dataset, specific, new KBANNSettings(randomGenerator, omega, regentSetting.getTopGenSettings().perturbationMagnitude()));
         return new Regent(kbann, randomGenerator);
     }
 

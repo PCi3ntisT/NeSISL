@@ -210,7 +210,20 @@ public class RegentSetting {
             e.printStackTrace();
         }
 
-        return new RegentSetting(tournamentSize, populationSize, tgSetting, percentageOfMutationOfPopulation, percentageOfMutationOfCrossovers, new KBANNSettings(randomGenerator, tgSetting.getOmega(), tgSetting.perturbationMagnitude()), probabilityOfNodeDeletion, maxAllowedFitness, percentageOfCrossoverChildren, numberOfElites, edgeLimitCrossOver, shortTimeWindow, longTimeWindow, epsilonConvergent);
+        return new RegentSetting(tournamentSize,
+                populationSize,
+                tgSetting,
+                percentageOfMutationOfPopulation,
+                percentageOfMutationOfCrossovers,
+                new KBANNSettings(randomGenerator, tgSetting.getOmega(), tgSetting.perturbationMagnitude()),
+                probabilityOfNodeDeletion,
+                maxAllowedFitness,
+                percentageOfCrossoverChildren,
+                numberOfElites,
+                edgeLimitCrossOver,
+                shortTimeWindow,
+                longTimeWindow,
+                epsilonConvergent);
     }
 
     public Double getEdgeWeightLimitAfterCrossover() {
@@ -220,7 +233,7 @@ public class RegentSetting {
     public boolean canContinue(Long usedFitness, List<Double> errors) {
         return !(usedFitness > getMaxAllowedFitness()
                 || Tools.hasConverged(errors, getLongTimeWindow(), getShortTimeWindow(), getEpsilonConvergent())
-                || (errors.size() > 0 && errors.get(errors.size()-1) < Tools.convergedError())
+                || (errors.size() > 0 && errors.get(errors.size() - 1) < Tools.convergedError())
         );
     }
 }

@@ -33,7 +33,7 @@ public class MissingValueGeneralProcessor implements MissingValues {
     @Override
     public Value processMissingValueToValue(Value input) {
         //System.out.println(":"+input.getValue());
-        if (input.isNaN()) {
+        if (null == input || input.isNaN()) {
             //System.out.println(nanValueReplacement.getValue());
             //System.exit(-10);
             return nanValueReplacement;

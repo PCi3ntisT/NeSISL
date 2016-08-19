@@ -13,6 +13,7 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
@@ -43,6 +44,8 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
         Map<Sample, Map<Edge, Double>> previousDeltas = Backpropagation.initPreviousDeltas(dataset, network);
 
+        List<Double> errors = new ArrayList<>();
+
         while (true) {
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
@@ -50,20 +53,32 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
             }
             double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
 
+            //System.out.println(iteration  + "\t" + currentError);
+
             averagesErrors.put(iteration, currentError);
+            errors.add(currentError);
 
             double maxError = Tools.maxSquaredError(network, dataset);
 
-            if (canStopNodeGrowth(iteration, averagesErrors, maxError, dncSetting)){
+            if (canStopNodeGrowth(iteration, averagesErrors, maxError, dncSetting)
+                    || (errors.size() > 0 && errors.get(errors.size()-1) < Tools.convergedError())){
                 break;
             }
 
             if (canAddNewNode(averagesErrors, iteration, timeOfAddingLastNode, dncSetting, network.getNumberOfHiddenNodes())) {
                 addAnotherNode(network);
                 timeOfAddingLastNode = iteration;
+                System.out.println("adding node\t" + iteration + "\t" + network.getNumberOfHiddenNodes());
             }
 
             iteration++;
+
+            if(network.getNumberOfHiddenNodes() == dncSetting.getHiddenNodesLimit()){
+                if(!wls.canContinueBackpropagation(iteration, errors)){
+                    break;
+                }
+            }
+
         }
         this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return network;
@@ -106,7 +121,10 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
     public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
-        List<Node> output = NodeFactory.generateNodes(outputFactOrder, Sigmoid.getFunction());
+        // automatci creation of softmax when multiclass classification
+        //ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        ActivationFunction outputFce = Sigmoid.getFunction();
+        List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
         NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
 
         Node hiddenNode = NodeFactory.create(Sigmoid.getFunction());

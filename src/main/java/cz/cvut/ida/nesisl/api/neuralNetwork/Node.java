@@ -3,18 +3,20 @@ package main.java.cz.cvut.ida.nesisl.api.neuralNetwork;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 
+import java.util.List;
+
 /**
  * Created by EL on 9.2.2016.
  */
 public interface Node {
 
-    public Double getValue(Value value);
+    public Double getValue(Value value, List<Double> othersInGroup);
 
-    public Double getValue(double x);
+    public Double getValue(double x, List<Double> othersInGroup);
 
-    public double getFirstDerivationAtX(double x);
+    public double getFirstDerivationAtX(double x, List<Double> othersInGroup);
 
-    public double getFirstDerivationAtFunctionValue(double x);
+    public double getFirstDerivationAtFunctionValue(double x, List<Double> othersInGroup);
 
     public Parameters getParameters();
 

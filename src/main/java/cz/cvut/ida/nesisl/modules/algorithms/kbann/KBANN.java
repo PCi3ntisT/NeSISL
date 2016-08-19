@@ -11,6 +11,7 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.io.File;
@@ -26,8 +27,8 @@ public class KBANN implements NeuralNetworkOwner {
     private final KBANNSettings settings;
 
 
-    public static KBANN create(File rawRuleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings) {
-        return new KBANN(RuleFile.create(rawRuleFile), specific, kbannSettings);
+    public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings) {
+        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings);
     }
 
     public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings) {
@@ -41,10 +42,10 @@ public class KBANN implements NeuralNetworkOwner {
 
     public static NeuralNetwork perturbeNetworkConnection(NeuralNetwork network, KBANNSettings settings) {
         network.getWeights().entrySet().forEach(entry -> {
-            if(settings.isBackpropOnly()){
+            if (settings.isBackpropOnly()) {
                 double newValue = settings.getRandomGenerator().nextDouble() * settings.getPerturbationMagnitude();
                 network.setEdgeWeight(entry.getKey(), newValue);
-            }else if (entry.getKey().isModifiable()) {
+            } else if (entry.getKey().isModifiable()) {
                 double newValue = entry.getValue() + settings.getRandomGenerator().nextDouble() * settings.getPerturbationMagnitude();
                 network.setEdgeWeight(entry.getKey(), newValue);
             }
@@ -98,7 +99,7 @@ public class KBANN implements NeuralNetworkOwner {
         });
         Node bias = network.getBias();
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
-        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1  * (rule.getNTrue() * settings.getOmega() - 1) / 2);
+        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * (rule.getNTrue() * settings.getOmega() - 1) / 2);
     }
 
     private void addDisjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {
@@ -140,8 +141,11 @@ public class KBANN implements NeuralNetworkOwner {
 
     private List<Node> createOutputNodes(Rules rules, Map<Fact, Node> map) {
         List<Node> list = new ArrayList<>();
+        // automatci creation of softmax when multiclass classification
+        //ActivationFunction fce = (rules.getConclusionFacts().size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        ActivationFunction fce = Sigmoid.getFunction();
         rules.getConclusionFacts().forEach(fact -> {
-            Node node = NodeFactory.create(Sigmoid.getFunction(), fact.getFact());
+            Node node = NodeFactory.create(fce, fact.getFact());
             list.add(node);
             map.put(fact, node);
         });

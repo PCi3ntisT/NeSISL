@@ -1,6 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
+import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
@@ -25,6 +26,8 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
+import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
+import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -38,7 +41,12 @@ import java.util.stream.IntStream;
  */
 public class Main {
 
-    private Integer numberOfFolds = 5;
+    // note that, by default, if there are multiple (more than two class) to predict, softmax with crossentropy is used (better to modularize this ;) ); otherwise one output is used for prediciting the first class in data file
+    // numeric attributes are not possible to predict in this version
+
+    public static final boolean TREPAN_RUN = true;
+
+    private Integer numberOfFolds = 10;
 
     public static void main(String arg[]) throws FileNotFoundException {
         //arg = new String[]{"DNC", "1", "./ruleExamples/sampleInput/sampleOne.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/KBANN/sampleOne.txt"};
@@ -73,17 +81,15 @@ public class Main {
             System.exit(0);
         }
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
-        if(!"SLSF".equals(arg[0])){
+        if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
 
 
-        // crossvalidaci udělat jinou :)
+        // TODO NACITANI NORMALIZACE ZAJISTIT :) & zkontrolovat
 
-        // TODO NACITANI NORMALIZACE ZAJISTIT :)
-        // backprop
         boolean normalize = true;
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile,normalize);
+        Dataset dataset = DatasetImpl.parseDataset(datasetFile, normalize);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         Main main = new Main();
@@ -139,7 +145,12 @@ public class Main {
                     System.out.println("\t" + learnedNetwork.getClassifier().getThreshold());
                     */
 
-                    currentResult.addExperiment(learnedNetwork, start, end, dataset);
+                    if (TREPAN_RUN) {
+                        TrepanResults trepan = Trepan.create(learnedNetwork, dataset, algName, idx, currentResult.getMyAdress()).run();
+                        currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan);
+                    } else {
+                        currentResult.addExperiment(learnedNetwork, start, end, dataset);
+                    }
                     return currentResult;
                 }).collect(Collectors.toCollection(ArrayList::new));
     }
@@ -159,7 +170,7 @@ public class Main {
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
+        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
@@ -175,14 +186,14 @@ public class Main {
             throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
         }
 
-        String algName = "Backprop";
+        String algName = "backprop";
         File ruleFile = new File(arg[4]);
         File settingFile = new File(arg[5]);
         KBANNSettings kbannSettings = new KBANNSettings(randomGenerator, 1.0, true);
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, specificRules, kbannSettings);
+        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
@@ -253,7 +264,7 @@ public class Main {
         File settingFile = new File(arg[5]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
-        Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting);
+        Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting, dataset);
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, tgSetting);
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
@@ -276,7 +287,7 @@ public class Main {
         File settingFile = new File(arg[5]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
-        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting);
+        Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting, dataset);
         Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);

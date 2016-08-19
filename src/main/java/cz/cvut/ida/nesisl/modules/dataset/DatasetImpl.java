@@ -9,7 +9,9 @@ import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.*;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.MissingValueGeneralProcessor;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
@@ -297,7 +299,7 @@ public class DatasetImpl implements Dataset {
                         }
                         attributes = readAttribute(line, attributeFactory, attributes);
                         break;
-                    case EXAMPLES:
+                    case DATA:
                         if (AMBIGUOUS_TOKEN.equals(line.trim())) {
                             state = State.AMBIGUOUS;
                             break;
@@ -330,7 +332,7 @@ public class DatasetImpl implements Dataset {
         Map<String, Fact> inputs = new HashMap<>();
         Map<String, Fact> outputs = new HashMap<>();
         inputFacts.stream().forEach(fact -> inputs.put(fact.getFact(), fact));
-        outputFacts.stream().forEach(fact -> inputs.put(fact.getFact(), fact));
+        outputFacts.stream().forEach(fact -> outputs.put(fact.getFact(), fact));
         return examples.stream().map(example -> reformateExample(inputs, outputs, example, attributes, ambigious, normalize)).collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -338,8 +340,8 @@ public class DatasetImpl implements Dataset {
         Map<Fact, Value> sample = new HashMap<>();
 
         Set<String> ambiguousValues = ambiguous.stream().map(pair -> pair.getLeft()).collect(Collectors.toSet());
-        Map<String,Set<String>> instead = new HashMap<>();
-        ambiguous.stream().map(pair -> instead.put(pair.getLeft(),pair.getRight()));
+        Map<String, Set<String>> instead = new HashMap<>();
+        ambiguous.stream().forEach(pair -> instead.put(pair.getLeft(), pair.getRight()));
 
         for (int idx = 0; idx < example.size(); idx++) {
             AttributeProprety attribute = attributes.get(idx);
@@ -352,19 +354,35 @@ public class DatasetImpl implements Dataset {
                     String value = (exampleValue.equals(target.getPositiveClass())) ? "1" : "0";
                     sample.put(fact, Value.create(value));
                 } else {
-                    target.getValues().forEach(value -> sample.put(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(exampleValue)) ? "1" : "0")));
+                    final String finalExampleValue1 = exampleValue;
+                    target.getValues().forEach(value -> {
+                        sample.put(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(finalExampleValue1)) ? "1" : "0"));
+                    });
                 }
 
             } else if (attribute instanceof NominalAttribute) {
                 NominalAttribute nominal = (NominalAttribute) attribute;
                 if (ambiguousValues.contains(exampleValue)) {
-                    nominal.getValues().forEach(value -> sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((instead.get(exampleValue).contains(value)) ? Value.NAN_TOKEN : "0")));
+                    final String finalExampleValue = exampleValue;
+                    nominal.getValues()
+                            .forEach(value ->
+                                    sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value),
+                                            Value.create((instead.get(finalExampleValue).contains(value)) ? Value.NAN_TOKEN : "0")));
                 } else {
-                    nominal.getValues().forEach(value -> sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(exampleValue)) ? "1" : "0")));
+                    final String finalExampleValue2 = exampleValue;
+                    nominal.getValues().forEach(value -> {
+                        sample.put(new Fact(nominal.getOrder() + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(finalExampleValue2)) ? "1" : "0"));
+                    });
                 }
 
             } else if (attribute instanceof RealAttribute) {
                 RealAttribute real = (RealAttribute) attribute;
+
+                if("?".equals(exampleValue)){
+                    // should not be hardcoded, but based on MissingValueProcesor, and so on
+                    exampleValue = "0.5";//MissingValueKBANN.
+                }
+
                 Double value = Double.valueOf(exampleValue);
                 if (normalize) {
                     value = (value - real.getMin()) / (real.getMax() - real.getMin());
@@ -378,8 +396,7 @@ public class DatasetImpl implements Dataset {
         return sample;
     }
 
-    private static List<Fact> generateInputFacts
-            (List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes) {
+    private static List<Fact> generateInputFacts(List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes) {
         List<Fact> facts = new ArrayList<>();
         int idx = 0;
         for (int idxWithComments = 0; idxWithComments < attributes.size(); idxWithComments++) {
@@ -390,8 +407,10 @@ public class DatasetImpl implements Dataset {
                 idx++;
                 continue;
             }
+
             if (attribute instanceof RealAttribute) {
                 facts.add(new Fact(idx + ""));
+                idx++;
             } else if (attribute instanceof NominalAttribute) {
                 NominalAttribute nominal = (NominalAttribute) attributes.get(idxWithComments);
                 Set<String> values = new HashSet<>(nominal.getValues());
@@ -403,6 +422,7 @@ public class DatasetImpl implements Dataset {
                 }
                 final int finalIdx = idx;
                 values.forEach(value -> facts.add(new Fact(finalIdx + ATTRIBUTE_VALUE_DELIMITER + value)));
+                idx++;
             }
         }
         return facts;
@@ -414,11 +434,12 @@ public class DatasetImpl implements Dataset {
         for (int idxWithComments = 0; idxWithComments < attributes.size(); idxWithComments++) {
             AttributeProprety attribute = attributes.get(idxWithComments);
             if (attribute instanceof ClassAttribute) {
+                idx = idxWithComments;
                 break;
             } else if (attribute instanceof CommentAttribute) {
 
             } else {
-                idx++;
+                //idx++;
             }
         }
         if (!(attributes.get(idx) instanceof ClassAttribute)) {
@@ -449,20 +470,32 @@ public class DatasetImpl implements Dataset {
         return ambigious;
     }
 
-    private static List<List<String>> readExample(String
-                                                          line, List<AttributeProprety> attributes, List<List<String>> examples) {
+    private static List<List<String>> readExample(String line, List<AttributeProprety> attributes, List<List<String>> examples) {
         String[] splitted = line.split(DATA_DELIMITER);
         List<String> list = Arrays.stream(splitted).map(value -> value.trim()).collect(Collectors.toCollection(ArrayList::new));
-        IntStream.range(0, list.size()).forEach(idx -> attributes.get(idx).addValue(list.get(idx)));
-        examples.add(list);
+
+        boolean missingClass = false;
+        for (int idx = 0; idx < list.size(); idx++) {
+            if(attributes.get(idx) instanceof ClassAttribute){
+              if(list.get(idx).equals("?")){
+                  missingClass=true;
+              }
+                break;
+            }
+        }
+        // do not import samples with missing class
+        if (!missingClass) {
+            IntStream.range(0, list.size()).forEach(idx -> attributes.get(idx).addValue(list.get(idx)));
+            examples.add(list);
+        }
+
         return examples;
     }
 
-    private static List<AttributeProprety> readAttribute(String line, AttributePropertyFactory
-            factory, List<AttributeProprety> attributes) {
+    private static List<AttributeProprety> readAttribute(String line, AttributePropertyFactory factory, List<AttributeProprety> attributes) {
         AttributeProprety property = factory.create(line);
         if (null != property) {
-            attributes.add(factory.create(line));
+            attributes.add(property);
         }
         return attributes;
     }

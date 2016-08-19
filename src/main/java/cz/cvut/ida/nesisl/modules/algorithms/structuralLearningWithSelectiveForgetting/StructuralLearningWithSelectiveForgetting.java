@@ -1,11 +1,8 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.structuralLearningWithSelectiveForgetting;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
-import main.java.cz.cvut.ida.nesisl.api.data.Sample;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
@@ -15,7 +12,6 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
-import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
@@ -23,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.IntStream;
 
 /**
  * Created by EL on 14.3.2016.

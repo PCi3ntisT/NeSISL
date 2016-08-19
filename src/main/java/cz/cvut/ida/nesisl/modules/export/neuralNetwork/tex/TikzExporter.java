@@ -38,11 +38,13 @@ public class TikzExporter {
         mainSB.append(documentTexHead());
         mainSB.append(convertToTikz(network));
         mainSB.append(documentTexTail());
-        return mainSB.toString();
+        //return mainSB.toString();
+        return mainSB.toString().replaceAll("==","--");
     }
 
     private static void initDescriptions() {
         synchronized (nodesDescriptions) {
+            nodesDescriptions.put(Identity.getFunction().getName(), "\\tikzstyle{" + Identity.getFunction().getName() + "}=[neuron, fill=yellow!50];");
             nodesDescriptions.put(Identity.getFunction().getName(), "\\tikzstyle{" + Identity.getFunction().getName() + "}=[neuron, fill=green!50];");
             nodesDescriptions.put(Sigmoid.getFunction().getName(), "\\tikzstyle{" + Sigmoid.getFunction().getName() + "}=[neuron, fill=red!50];");
             nodesDescriptions.put(ConstantOne.getFunction().getName(), "\\tikzstyle{" + ConstantOne.getFunction().getName() + "}=[neuron, fill=white!50];");
@@ -137,7 +139,6 @@ public class TikzExporter {
         sb.append(";");
         return sb.toString();
     }
-
 
     private static String edgeToTikz(Edge edge, Double weight) {
         return "(" + nodeMark(edge.getSource()) + ") edge node {" + new DecimalFormat("#.##").format(weight) + "} (" + nodeMark(edge.getTarget()) + ")\n";

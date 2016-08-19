@@ -6,9 +6,12 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
+import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
+import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,15 +39,25 @@ public class Backpropagation {
         Map<Sample, Map<Edge, Double>> previousDeltas = initPreviousDeltas(dataset, network);
         List<Double> errors = new ArrayList<>();
 
+        // TODO vypocet propagace upravit
+        // todo vypocet derivace asi trochu upravit
+
         while (wls.canContinueBackpropagation(iteration, errors)) {
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
+            //double currentError = network.getNumberOfOutputNodes() > 1
+            //        ?
+            //        Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls)
+            //        :
+            //        Tools.computeCrossEntropyTrainTotalError(network, dataset, wls);
             double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
             errors.add(currentError);
             iteration++;
+            //System.out.println("computing error");
+            //System.out.println(iteration + "\t" + currentError);
         }
     }
 
@@ -68,7 +81,10 @@ public class Backpropagation {
 
         IntStream.range(0, differenceExampleMinusOutput.size()).forEach(idx -> {
             Node node = network.getOutputNodes().get(idx);
-            Double value = node.getFirstDerivationAtX(results.getComputedOutputs().get(idx)) * differenceExampleMinusOutput.get(idx);
+            Double value = //node.getFirstDerivationAtFunctionValue(results.getComputedOutputs().get(idx),null)
+                    node.getFirstDerivationAtX(results.getComputedOutputs().get(idx),null)
+                    // I call this big bug.... need to test the uncommented line
+                    * differenceExampleMinusOutput.get(idx);
             sigma.put(node, value);
         });
 
@@ -125,7 +141,8 @@ public class Backpropagation {
                             return network.getWeight(edge) * sigma.get(edge.getTarget());
                         })
                         .sum();
-                sigma.put(node, sigmaSum * node.getFirstDerivationAtFunctionValue(results.getComputedValues().get(node)));
+                // furt minimalizuju i pri cross entropy?
+                sigma.put(node, sigmaSum * node.getFirstDerivationAtFunctionValue(results.getComputedValues().get(node),null));
             });
             layersComputed++;
         }

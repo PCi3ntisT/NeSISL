@@ -34,8 +34,9 @@ public class AttributePropertyFactory {
 
                 String values = line.substring(start + 1, end);
                 String[] valuesSplitted = values.split(DatasetImpl.CLASS_VALUES_DELIMITER);
-                if (2 == values.length()){
+                if (2 == valuesSplitted.length){
                     attribute = new ClassAttribute(order,orderWithComments,valuesSplitted[0].trim(),valuesSplitted[1].trim());
+                    //attribute = new ClassAttribute(order,orderWithComments,DatasetImpl.CLASS_TOKEN,valuesSplitted[1].trim());
                 }else{
                     List<String> classes = Arrays.stream(valuesSplitted).map(value -> value.trim()).collect(Collectors.toList());
                     attribute = new ClassAttribute(order,orderWithComments,classes);
@@ -55,9 +56,9 @@ public class AttributePropertyFactory {
         }
 
         if(null != attribute && !(attribute instanceof CommentAttribute)){
-            orderWithComments++;
+            order++;
         }
-        order++;
+        orderWithComments++;
 
         return attribute;
     }

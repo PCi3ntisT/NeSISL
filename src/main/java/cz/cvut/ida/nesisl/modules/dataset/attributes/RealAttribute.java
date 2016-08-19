@@ -30,6 +30,9 @@ public class RealAttribute implements AttributeProprety{
 
     @Override
     public void addValue(String string) {
+        if("?".equals(string)){
+            return;
+        }
         Double value = Double.valueOf(string);
         if(value < min){
             min = value;

@@ -192,7 +192,6 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         return hiddenNodeLayer.get(node);
     }
 
-
     @Override
     public Set<Edge> getOutgoingEdges(Node node) {
         return joinEdges(getOutgoingForwardEdges(node), getOutgoingBackwardEdges(node));
@@ -392,7 +391,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         if (getLayerNumber(edge.getSource()) == getLayerNumber(edge.getTarget())
                 && edge.getSource() != getBias()
                 && !inputNodes.contains(edge.getSource())
-                && !outputNodes.contains(edge.getTarget())){
+                && !outputNodes.contains(edge.getTarget())) {
             // just for debug
             System.out.println("uzly jen pres vrstvy ;)\n"
                     + edge.getSource() + "\n"
@@ -537,9 +536,9 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
         IntStream.range(0, input.size()).forEach(idx -> {
             Node node = inputNodes.get(idx);
-            outputValues.put(node, node.getValue(input.get(idx)));
+            outputValues.put(node, node.getValue(input.get(idx), null));
         });
-        outputValues.put(getBias(), getBias().getValue(0.0));
+        outputValues.put(getBias(), getBias().getValue(0.0, null));
 
         LongStream.rangeClosed(0, getMaximalNumberOfHiddenLayer()).forEach(layer -> {
             if (network.containsKey(layer) && null != network.get(layer)) {
@@ -547,7 +546,12 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             }
         });
 
+        //if (outputNodes.size() > 1) {
+        // they are softmax nodes
+        //            evaluateFeedForwardSoftmaxOutputLayer(outputNodes, outputValues);
+        //      } else {
         evaluateFeedforwardLayer(outputNodes, outputValues);
+        //     }
 
         /*System.out.println("kontrolni vypis");
         outputValues.entrySet().forEach(entry -> System.out.println(entry.getKey() + "\t" + entry.getValue()));
@@ -561,6 +565,54 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         outputNodesValues.forEach(System.out::println);
         System.out.println("konecLeft");*/
         return new Results(outputNodesValues, outputValues);
+    }
+
+    private void evaluateFeedForwardSoftmaxOutputLayer(List<Node> outputNodes, Map<Node, Double> outputValues) {
+        Map<Node, Double> outputNodeInput = computeNodesFeedforwardInput(outputNodes, outputValues);
+        outputNodes.forEach(node -> {
+            List<Double> others = outputNodeInput.entrySet()
+                    .stream()
+                    .filter(entry -> !node.equals(entry.getKey()))
+                    .map(entry -> entry.getValue())
+                    .collect(Collectors.toList());
+            double nodeOutput = node.getValue(outputNodeInput.get(node), others);
+            outputValues.put(node, nodeOutput);
+        });
+    }
+
+    private Map<Node, Double> computeNodesFeedforwardInput(List<Node> nodes, Map<Node, Double> outputValues) {
+        Map<Node, Double> result = new HashMap<>();
+        nodes.forEach(node -> result.put(node, computeNodeFeedforwardInput(node, outputValues)));
+        return result;
+    }
+
+    private Double computeNodeFeedforwardInput(Node node, Map<Node, Double> outputValues) {
+        Double sum = 0.0d;
+        if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
+            sum = forwardIncomingEdges.get(node)
+                    .stream()
+                    .filter(edge -> edge.getSource() != edge.getTarget())
+                    .mapToDouble(edge -> {
+                                if (null == outputValues.get(edge.getSource())) {
+                                    throw new IllegalStateException("some wierdness here (2)\n\t" +
+                                            edge.getSource().getIndex() + "(l: " + getInputNodes().contains(edge.getSource())
+                                            + "\n\t\t " + getHiddenNodes().contains(edge.getSource())
+                                            + "\n\t\t " + getOutputNodes().contains(edge.getSource())
+                                            + "\n\t\t " + (getBias() == edge.getSource())
+                                            + "\n\t\t " + getLayerNumber(edge.getSource()) + ")\n\t" +
+                                            edge.getTarget() + "(l: " + getInputNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + getHiddenNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + getOutputNodes().contains(edge.getTarget())
+                                            + "\n\t\t " + (getBias() == edge.getTarget())
+                                            + "\n\t " + getLayerNumber(edge.getTarget()) + ")\n");
+                                    //evaluateFeedforwardNode(edge.getSource(), outputValues);
+                                }
+
+                                return outputValues.get(edge.getSource()) * this.getWeight(edge);
+                            }
+                    ).sum();
+        }
+        return sum;
     }
 
     @Override
@@ -647,7 +699,9 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private void evaluateFeedforwardNode(Node node, Map<Node, Double> outputValues) {
         Double sum = 0.0d;
         if (forwardIncomingEdges.containsKey(node) && null != forwardIncomingEdges.get(node)) {
-            sum = forwardIncomingEdges.get(node).stream().filter(edge -> edge.getSource() != edge.getTarget())
+            sum = forwardIncomingEdges.get(node)
+                    .stream()
+                    .filter(edge -> edge.getSource() != edge.getTarget())
                     .mapToDouble(edge -> {
                                 if (null == outputValues.get(edge.getSource())) {
                                     throw new IllegalStateException("some wierdness here\n\t" +
@@ -663,11 +717,13 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                                             + "\n\t " + getLayerNumber(edge.getTarget()) + ")\n");
                                     //evaluateFeedforwardNode(edge.getSource(), outputValues);
                                 }
+
+
                                 return outputValues.get(edge.getSource()) * this.getWeight(edge);
                             }
                     ).sum();
         }
-        outputValues.put(node, node.getValue(sum));
+        outputValues.put(node, node.getValue(sum, null));
     }
 
     private void evaluateFeedforwardLayer(List<Node> nodes, Map<Node, Double> outputValues) {

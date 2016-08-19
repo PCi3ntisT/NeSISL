@@ -11,6 +11,7 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
@@ -33,7 +34,9 @@ public class MultilayeredConstructiveArchitecture {
 
     public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
-        List<Node> output = NodeFactory.generateNodes(outputFactOrder, Sigmoid.getFunction());
+        // automatci creation of softmax when multiclass classification
+        ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
         NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
 
         List<Node> bias = new LinkedList<>();
@@ -212,7 +215,7 @@ public class MultilayeredConstructiveArchitecture {
                 ).sum();
 
                 return IntStream.range(0, sample.getOutput().size()).mapToDouble(idx ->
-                                Math.signum(sample.getOutput().get(idx).getValue() - outputAverages.get(idx)) * node.getFirstDerivationAtX(nodeInput) * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
+                                Math.signum(sample.getOutput().get(idx).getValue() - outputAverages.get(idx)) * node.getFirstDerivationAtX(nodeInput,null) * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
                 ).sum();
             }).sum();
             Double value = pair.getRight() + wls.getLearningRate() * derivative;

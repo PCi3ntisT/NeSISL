@@ -5,6 +5,8 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Parameters;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 
+import java.util.List;
+
 /**
  * Created by EL on 9.2.2016.
  */
@@ -23,24 +25,24 @@ public class NodeImpl implements Node {
     }
 
     @Override
-    public Double getValue(Value value) {
-        return getValue(value.getValue());
+    public Double getValue(Value value, List<Double> othersInGroup) {
+        return getValue(value.getValue(), othersInGroup);
     }
 
     @Override
-    public Double getValue(double x) {
+    public Double getValue(double x, List<Double> othersInGroup) {
         assert null != (Double) x;
-        return function.getValueAt(x, parameters);
+        return function.getValueAt(x, parameters, othersInGroup);
     }
 
     @Override
-    public double getFirstDerivationAtX(double x) {
-        return function.getFirstDerivationAt(x, parameters);
+    public double getFirstDerivationAtX(double x, List<Double> othersInGroup) {
+        return function.getFirstDerivationAt(x, parameters,othersInGroup);
     }
 
     @Override
-    public double getFirstDerivationAtFunctionValue(double x) {
-        return function.getFirstDerivationAtFunctionValue(x,parameters);
+    public double getFirstDerivationAtFunctionValue(double x, List<Double> othersInGroup) {
+        return function.getFirstDerivationAtFunctionValue(x,parameters,othersInGroup);
     }
 
     @Override

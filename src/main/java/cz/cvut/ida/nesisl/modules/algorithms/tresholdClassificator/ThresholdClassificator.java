@@ -55,7 +55,19 @@ public class ThresholdClassificator implements Classifier {
         return classify(value) ? 1.0d : 0.0d;
     }
 
-    public static ThresholdClassificator create(NeuralNetwork network, Dataset dataset) {
+    @Override
+    public Boolean isCorrectlyClassified(List<Value> sampleOutputs, List<Double> computedOutputs) {
+        if (sampleOutputs.size() != 1){
+            throw new IllegalStateException("Cannot classify by threshold classifier something that does not have precisely one output.");
+        }
+        return Tools.isZero(sampleOutputs.get(0).getValue() - classifyToDouble(computedOutputs.get(0)));
+    }
+
+    // oki, this creation is awful, should be reimplemented to give more sense
+    public static Classifier create(NeuralNetwork network, Dataset dataset) {
+        if (network.getNumberOfOutputNodes() > 1){
+            return SoftMaxClassifier.create(Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
+        }
         return create(Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
     }
 

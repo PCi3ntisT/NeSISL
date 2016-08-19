@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
+import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.Literal;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
@@ -67,8 +68,10 @@ public class RuleFile {
         facts.add(fact);
     }
 
-    public static RuleFile create(File file) {
+    public static RuleFile create(File file, Dataset dataset) {
         RuleCreationWrapper wrapper = new RuleCreationWrapper();
+        wrapper.getInputFacts().addAll(dataset.getInputFactOrder());
+        wrapper.getConclusionFacts().addAll(dataset.getOutputFactOrder());
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             ReadingState state = null;
@@ -247,8 +250,10 @@ public class RuleFile {
         }
         Literal literal = wrapper.getFactory().getLiteral(splitted[0].trim());
 
+        System.out.println(line);
+        System.out.println(literal);
         if (literal.getFact().getFact().length() < DatasetImpl.CLASS_TOKEN.length()
-                || !literal.getFact().getFact().substring(0, DatasetImpl.CLASS_TOKEN.length() + 1).equals(DatasetImpl.CLASS_TOKEN.length())) {
+                || !literal.getFact().getFact().substring(0, DatasetImpl.CLASS_TOKEN.length()).equals(DatasetImpl.CLASS_TOKEN.length())) {
             addIntermediateIfNeeded(literal.getFact(), wrapper);
         }
 

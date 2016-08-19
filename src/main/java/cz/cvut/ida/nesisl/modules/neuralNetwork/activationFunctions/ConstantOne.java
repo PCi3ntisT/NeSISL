@@ -3,6 +3,8 @@ package main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Parameters;
 
+import java.util.List;
+
 /**
  * Created by EL on 29.2.2016.
  */
@@ -22,17 +24,17 @@ public class ConstantOne implements ActivationFunction {
     }
 
     @Override
-    public double getValueAt(double x, Parameters parameter) {
+    public double getValueAt(double x, Parameters parameter, List<Double> otherInGroups) {
         return VALUE;
     }
 
     @Override
-    public double getFirstDerivationAt(double x, Parameters parameter) {
+    public double getFirstDerivationAt(double x, Parameters parameter, List<Double> otherInGroups) {
         return 0;
     }
 
     @Override
-    public double getFirstDerivationAtFunctionValue(double functionValue, Parameters parameter) {
+    public double getFirstDerivationAtFunctionValue(double functionValue, Parameters parameter, List<Double> otherInGroups) {
         return 0;
     }
 

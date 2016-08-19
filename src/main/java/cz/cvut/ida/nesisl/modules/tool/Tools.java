@@ -9,10 +9,14 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.SoftMaxClassifier;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -64,15 +68,18 @@ public class Tools {
         return data.stream().map(sample -> computeError(network, sample.getInput(), sample.getOutput()));
     }
 
-    public static double computeAverageSquaredTotalError(Map<Sample, Results> evaluation) {
+    // computeAverageSquaredTotalError
+    public static double computeTotalError(Map<Sample, Results> evaluation) {
         return computeAverageSquaredTotalError(evaluation.entrySet().stream().map(entry -> computeDiff(entry.getValue(), entry.getKey().getOutput())));
     }
 
     // tady napsat metody genericke a na jakych mnozine dat se to trenuje
+    // computeAverageSquaredTrainTotalError
     public static double computeAverageSquaredTrainTotalError(NeuralNetwork network, Dataset dataset) {
         return computeAverageSquaredTotalError(processTrainErrorStream(network, dataset));
     }
 
+    //computeAverageSquaredTotalError
     private static double computeAverageSquaredTotalError(Stream<List<Double>> diffs) {
         return diffs.mapToDouble(Tools::squaredError).average().orElse(0);
     }
@@ -93,7 +100,28 @@ public class Tools {
     // list<Double> of diferences (computedOutputValues - labels)
     public static Pair<List<Double>, Results> computeErrorResults(NeuralNetwork network, List<Value> input, List<Value> output) {
         Results result = network.evaluateAndGetResults(input);
+        /*if(network.getNumberOfOutputNodes() > 1){
+            // softmax case
+            // would be nicer to make modularized/parametrized instead of this hard coding
+            return computeCrossEntropyDiff(result, output);
+        }else {
+            return computeDiffs(result, output);
+        }*/
         return computeDiffs(result, output);
+    }
+
+    private static Pair<List<Double>, Results> computeCrossEntropyDiff(Results result, List<Value> output) {
+        List<Double> list =  new ArrayList<>();
+        IntStream.range(0,output.size())
+                .forEach(idx -> list.add(result.getComputedOutputs().get(idx) - output.get(idx).getValue()));
+        return new Pair<>(list,result);
+    }
+
+    private static Pair<List<Double>, Results> computeCrossEntropy(Results result, List<Value> output) {
+        List<Double> list =  new ArrayList<>();
+        IntStream.range(0,output.size())
+                .forEach(idx -> list.add(output.get(idx).getValue() * Math.log(result.getComputedOutputs().get(idx))));
+        return new Pair<>(list,result);
     }
 
     private static Pair<List<Double>, Results> computeDiffs(Results result, List<Value> labeledOutput) {
@@ -210,6 +238,9 @@ public class Tools {
     }
 
     private static Boolean isClassifiedCorrectly(Classifier classifier, Sample sample, Results result) {
+        if(classifier instanceof SoftMaxClassifier){
+            return ((SoftMaxClassifier) classifier).isCorrectlyClassified(sample.getOutput(),result.getComputedOutputs());
+        }
         for (int idx = 0; idx < result.getComputedOutputs().size(); idx++) {
             if (!isZero(Math.abs(sample.getOutput().get(idx).getValue() - classifier.classifyToDouble(result.getComputedOutputs().get(idx))))) {
                 return false;
@@ -260,6 +291,16 @@ public class Tools {
         return computeAverageSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
 
+    public static double computeCrossEntropyTrainTotalError(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
+        return  dataset.getTrainData(network).stream()
+                .mapToDouble(sample -> {
+                    Results results = network.evaluateAndGetResults(sample.getInput());
+                    Pair<List<Double>, Results> pair = computeCrossEntropy(results, sample.getOutput());
+                    return -pair.getLeft().stream().mapToDouble(d -> d).sum();
+                })
+                .sum();
+    }
+
     public static double computeSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
         return computeSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
@@ -277,7 +318,18 @@ public class Tools {
     }
 
     public static Double convergedError() {
-        return 0.0001;
+        return 0.001;
+    }
+
+    public static void storeToFile(String content, String fileName){
+        File file = new File(fileName);
+        try {
+            FileWriter fw = new FileWriter(file);
+            fw.write(content);
+            fw.close();
+        } catch (IOException iox) {
+            iox.printStackTrace();
+        }
     }
 
 }

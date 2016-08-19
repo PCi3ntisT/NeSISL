@@ -4,11 +4,13 @@ import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
+import main.java.cz.cvut.ida.nesisl.application.Main;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,6 +41,11 @@ public class ExperimentResult {
     private long numberOfHiddenNodes;
     private double averageSquaredTotalTrainError;
     private double trainAccuracy;
+    private Long trepanNumberOfInnerNodes;
+    private Double trepanTestFidelity;
+    private Double trepanTrainFidelity;
+    private Double trepanTrainAcc;
+    private Double trepanTestAcc;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -143,14 +150,17 @@ public class ExperimentResult {
         this.setRunningTime(end - start);
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
-        this.setAverageSquaredTotalTestError(Tools.computeAverageSquaredTotalError(evaluation));
+        this.setAverageSquaredTotalTestError(Tools.computeTotalError(evaluation));
 
         Map<Sample, Results> train = Tools.evaluateOnTrainDataAllAndGetResults(dataset, network);
-        this.setAverageSquaredTotalTrainError(Tools.computeAverageSquaredTotalError(train));
+        this.setAverageSquaredTotalTrainError(Tools.computeTotalError(train));
         this.setTrainAccuracy(AccuracyCalculation.create(network, train).getAccuracy());
-        this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
-        this.setThreshold(network.getClassifier().getThreshold());
+
+        //this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
+        //this.setThreshold(network.getClassifier().getThreshold());
+
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
+
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
     }
 
@@ -169,7 +179,7 @@ public class ExperimentResult {
                 "results.txt";
 
         File expFile = new File(experimentsFile);
-        if(!expFile.getParentFile().exists()){
+        if (!expFile.getParentFile().exists()) {
             expFile.getParentFile().mkdirs();
         }
         PrintWriter writer = null;
@@ -191,10 +201,17 @@ public class ExperimentResult {
         process.add(new Pair<>("trainError", () -> results.stream().mapToDouble(e -> e.getAverageSquaredTotalTrainError())));
         process.add(new Pair<>("accuracy", () -> results.stream().mapToDouble(e -> e.getAccuracy())));
         process.add(new Pair<>("trainAccuracy", () -> results.stream().mapToDouble(e -> e.getTrainAccuracy())));
-        process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
+        //process.add(new Pair<>("RocAuc", () -> results.stream().mapToDouble(e -> e.getRocAuc())));
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
-        process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
-        process.add(new Pair<>("numberOfHiddenNodes", () -> results.stream().mapToDouble(e -> e.getNumberOfHiddenNodes())));
+        //process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
+
+        if (Main.TREPAN_RUN && false) { // cannot be run on grid
+            process.add(new Pair<>("trepanTrainAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTrainAcc())));
+            process.add(new Pair<>("trepanTestAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTestAcc())));
+            process.add(new Pair<>("trepanTrainFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTrainFidelity())));
+            process.add(new Pair<>("trepanTestFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTestFidelity())));
+            process.add(new Pair<>("trepanNumberOfInnerNodes", () -> results.stream().mapToDouble(e -> e.getTrepanNumberOfInnerNodes())));
+        }
 
         process.forEach(pair -> appendContent(pair.getLeft(), pair.getRight(), writer));
     }
@@ -252,4 +269,65 @@ public class ExperimentResult {
         results.forEach(r -> writer.print(r.getAverageSquaredTestError() + "\t"));
         writer.print("\n");
     }*/
+
+    public String getMyAdress() {
+        return myAdress;
+    }
+
+    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan) {
+        //addExperiment(learnedNetwork, start, end, dataset);
+        addExperiment(learnedNetwork, start, end, dataset);
+        /*
+        this.setTrainAccuracy(trepan.getNetworkTrainAccuracy());
+        this.setAccuracy(trepan.getNetworkTestAccuracy());
+
+        this.setTrepanTrainAcc(trepan.getTrpanTrainAccuracy());
+        this.setTrepanTestAcc(trepan.getTrepanTestAccuracy());
+        this.setTrepanTrainFidelity(trepan.getTrainFidelity());
+        this.setTrepanTestFidelity(trepan.getTestFidelity());
+        this.setTrepanNumberOfInnerNodes(trepan.getNumberOfInnerNodes());
+        */
+    }
+
+    public void setTrepanNumberOfInnerNodes(Long trepanNumberOfInnerNodes) {
+        this.trepanNumberOfInnerNodes = trepanNumberOfInnerNodes;
+    }
+
+    public Long getTrepanNumberOfInnerNodes() {
+        return trepanNumberOfInnerNodes;
+    }
+
+    public void setTrepanTestFidelity(Double trepanTestFidelity) {
+        this.trepanTestFidelity = trepanTestFidelity;
+    }
+
+    public Double getTrepanTestFidelity() {
+        return trepanTestFidelity;
+    }
+
+    public void setTrepanTrainFidelity(Double trepanTrainFidelity) {
+        this.trepanTrainFidelity = trepanTrainFidelity;
+    }
+
+    public Double getTrepanTrainFidelity() {
+        return trepanTrainFidelity;
+    }
+
+    public void setTrepanTrainAcc(Double trepanTrainAcc) {
+        this.trepanTrainAcc = trepanTrainAcc;
+    }
+
+    public Double getTrepanTrainAcc() {
+        return trepanTrainAcc;
+    }
+
+    public void setTrepanTestAcc(Double trepanTestAcc) {
+        this.trepanTestAcc = trepanTestAcc;
+    }
+
+    public Double getTrepanTestAcc() {
+        return trepanTestAcc;
+    }
+
+
 }

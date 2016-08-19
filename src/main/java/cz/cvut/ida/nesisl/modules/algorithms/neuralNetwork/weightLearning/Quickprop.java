@@ -72,7 +72,8 @@ public class Quickprop {
         Map<Edge, Double> partialDerivatives = new HashMap<>();
         IntStream.range(0, differenceSampleMinusOutput.size()).forEach(idx -> {
             Node node = network.getOutputNodes().get(idx);
-            Double partial = node.getFirstDerivationAtX(node.getFirstDerivationAtX(results.getComputedOutputs().get(idx))) * differenceSampleMinusOutput.get(idx);
+            // just blaffing
+            Double partial = node.getFirstDerivationAtX(node.getFirstDerivationAtX(results.getComputedOutputs().get(idx),null),null) * differenceSampleMinusOutput.get(idx);
             sigmas.put(node, partial); // ten vypocet presunout do funkce, etc.
         });
 
