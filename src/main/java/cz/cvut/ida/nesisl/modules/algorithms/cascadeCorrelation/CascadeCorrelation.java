@@ -12,11 +12,11 @@ import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 import java.util.stream.IntStream;
@@ -37,7 +37,10 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
     public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
-        List<Node> output = NodeFactory.generateNodes(outputFactOrder, Sigmoid.getFunction());
+        // automatci creation of softmax when multiclass classification
+        //ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        ActivationFunction outputFce = Sigmoid.getFunction();
+        List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
         NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
 
         inputs.add(network.getBias());
@@ -68,7 +71,9 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                 break;
             }
 
-            CandidateWrapper bestCandidate = LongStream.range(0, cascadeCorrelationSetting.getSizeOfCasCorPool()).parallel()
+            CandidateWrapper bestCandidate = LongStream
+                    .range(0, cascadeCorrelationSetting.getSizeOfCasCorPool())
+                    //.parallel()
                     .mapToObj(i -> makeAndLearnCandidate(network, dataset, randomGenerator, wls, cascadeCorrelationSetting))
                     .max(CandidateWrapper::compare).get();
 
@@ -76,7 +81,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
             numberOfAddedNodes++;
 
-            System.out.println(numberOfAddedNodes + "\t" + currentError);
+            //System.out.println(numberOfAddedNodes + "\t" + currentError);
         }
         this.network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
         return this.network;
@@ -113,7 +118,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         long iteration = 0l;
         Double correlation;
         while (true) {
-            Pair<Double, Map<Sample, Double>> candidateAverageOutputs = computeAverage(edges, cache, dataset, network);
+            Pair<Double, Map<Sample, Double>> candidateAverageOutputs = computeAverage(currentEdges, cache, dataset, network);
             Pair<Double, Set<Pair<Edge, Double>>> current = computeCorrelationAndComputeWeights(node, candidateAverageOutputs.getLeft(), candidateAverageOutputs.getRight(), network, dataset, currentEdges, wls);
 
             correlation = current.getLeft();
@@ -124,6 +129,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                 break;
             }
             iteration++;
+            //System.out.println("\t" + iteration + "\t" + correlation);
         }
 
         return new Pair<>(currentEdges, correlation);
@@ -169,7 +175,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
         IntStream.range(0, outputAverages.size()).forEach(idx -> outputs.put(idx, 0.0d));
 
-        // computation of correlation error - TODO nemela by se ta korelace pocitat po update vah?
+        // correlation computation; possible, it could be computed after the weights are modified
         dataset.getTrainData(network)
                 .stream()
                 .map(sample -> computeCascadeError(averageCandidateOutput, sampleCandidateOutput, outputAverages, sample))
@@ -202,7 +208,7 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                                         outputNodeCorrelation.get(idx)
                                                 * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx))
                                                 * sample.getOutput().get(idx).getValue() - outputAverages.get(idx)
-                                                * node.getFirstDerivationAtX(nodeInput)
+                                                * node.getFirstDerivationAtX(nodeInput,null)
                                                 * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
                         ).sum();
             }).sum();
