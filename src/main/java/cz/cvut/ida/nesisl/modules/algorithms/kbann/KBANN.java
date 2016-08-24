@@ -7,6 +7,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearn
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
@@ -17,6 +18,7 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by EL on 1.3.2016.
@@ -36,9 +38,42 @@ public class KBANN implements NeuralNetworkOwner {
         NeuralNetwork networkConstruction = constructNetwork(ruleFile);
         networkConstruction = addSpecificNodes(specific, networkConstruction);
         networkConstruction = addFullyConnectionToAdjacentLayers(networkConstruction);
+        if (settings.isEdgesBetweenAdjacentLayersOnly()) {
+            networkConstruction = removeEdgesBetwenNonAdjacentLayers(networkConstruction);
+        }
         networkConstruction = perturbeNetworkConnection(networkConstruction, settings);
         this.network = networkConstruction;
     }
+
+    private NeuralNetwork removeEdgesBetwenNonAdjacentLayers(NeuralNetwork network) {
+        Set<Node> previousLayer = new HashSet<>(network.getInputNodes());
+        Set<Node> currentLayer = null;
+        Node bias = network.getBias();
+        for (int idx = 0; idx <= network.getMaximalNumberOfHiddenLayer() + 1; idx++) {
+            if (network.getMaximalNumberOfHiddenLayer() < idx) {
+                currentLayer = new HashSet<>(network.getOutputNodes());
+            } else {
+                currentLayer = new HashSet<>(network.getHiddenNodesInLayer(idx));
+            }
+            if (currentLayer.isEmpty()) {
+                continue;
+            }
+
+            for (Node node : currentLayer) {
+                Set<Edge> toDelete = new HashSet<>();
+                for (Edge edge : network.getIncomingForwardEdges(node)) {
+                    if (!previousLayer.contains(edge.getSource()) && !bias.equals(edge.getSource())) {
+                        toDelete.add(edge);
+                    }
+                }
+                network.removeEdgesStateful(toDelete);
+            }
+
+            previousLayer = currentLayer;
+        }
+        return network;
+    }
+
 
     public static NeuralNetwork perturbeNetworkConnection(NeuralNetwork network, KBANNSettings settings) {
         network.getWeights().entrySet().forEach(entry -> {
@@ -71,14 +106,18 @@ public class KBANN implements NeuralNetworkOwner {
 
     private NeuralNetwork createEdgeStructure(Map<Fact, Node> map, Rules rules, NeuralNetwork network) {
         rules.getFinalRules().forEach(rule -> {
+            //System.out.println("implying\t" + rule.getHead());
             switch (rule.getType()) {
                 case CONJUNCTION:
+                    //System.out.println("con");
                     addConjunctionRuleToNetwork(rule, map, network);
                     break;
                 case DISJUNCTION:
+                    //System.out.println("dis");
                     addDisjunctionRuleToNetwork(rule, map, network);
                     break;
                 case N_TRUE:
+                    //System.out.println("n");
                     addNTrueRuleToNetwork(rule, map, network);
                     break;
                 default:
@@ -94,7 +133,7 @@ public class KBANN implements NeuralNetworkOwner {
         rule.getBody().forEach(literal -> {
             Fact fact = literal.getFact();
             Node source = map.get(fact);
-            Double weight = (literal.isPositive()) ? 1.0 : -1.0;
+            Double weight = ((literal.isPositive()) ? 1.0 : -1.0) * settings.getOmega();
             network.addEdgeStateful(new Edge(source, target, Edge.Type.FORWARD, rule.isModifiable()), weight);
         });
         Node bias = network.getBias();
@@ -108,7 +147,7 @@ public class KBANN implements NeuralNetworkOwner {
         rule.getBody().forEach(literal -> {
             Fact fact = literal.getFact();
             Node source = map.get(fact);
-            Double weight = (literal.isPositive()) ? 1.0 : -1.0;
+            Double weight = ((literal.isPositive()) ? 1.0 : -1.0) * settings.getOmega();
             network.addEdgeStateful(new Edge(source, target, Edge.Type.FORWARD, rule.isModifiable()), weight);
         });
         Node bias = network.getBias();
@@ -122,12 +161,15 @@ public class KBANN implements NeuralNetworkOwner {
         rule.getBody().forEach(literal -> {
             Fact fact = literal.getFact();
             Node source = map.get(fact);
-            Double weight = (literal.isPositive()) ? 1.0 : -1.0;
+            Double weight = ((literal.isPositive()) ? 1.0 : -1.0) * settings.getOmega();
             network.addEdgeStateful(new Edge(source, target, Edge.Type.FORWARD, rule.isModifiable()), weight);
         });
         Node bias = network.getBias();
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
-        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * rule.getBody().size() * settings.getOmega() / 2);
+        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()),
+                -1 *
+                        (rule.getBody().stream().filter(l -> l.isPositive()).count() - 1 / 2) *
+                        settings.getOmega());
     }
 
     private NeuralNetwork createNodeStructure(Map<Fact, Node> map, Rules rules, NeuralNetwork network) {
