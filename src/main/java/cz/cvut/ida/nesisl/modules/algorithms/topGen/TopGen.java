@@ -43,7 +43,7 @@ public class TopGen implements NeuralNetworkOwner {
     }
 
     public NeuralNetwork learn(Dataset dataset, WeightLearningSetting wls, TopGenSettings tgSettings) {
-        int innerFolds = 5;
+        int innerFolds = 3;
         Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset, randomGenerator, innerFolds);
 
         KBANNSettings kbannSetting = new KBANNSettings(randomGenerator, tgSettings.getOmega(), tgSettings.perturbationMagnitude());
@@ -51,13 +51,12 @@ public class TopGen implements NeuralNetworkOwner {
         Double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, crossValDataset, wls);
 
         Comparator<Triple<? extends Object, Double, Double>> comparator = (t1, t2) -> {
-            if (Tools.isZero(t1.getT() - t2.getT()) && Tools.isZero(t1.getW() - t2.getW())) {
-                return 0;
-            } else if (t1.getT() >= t2.getT()) {
+            if (t1.getT() < t2.getT()) {
                 return -1;
-            } else {
+            } else if (t1.getT() > t2.getT()) {
                 return 1;
             }
+            return 0;
         };
         PriorityQueue<Triple<NeuralNetwork, Double, Double>> queue = new PriorityQueue<>(comparator);
         queue.add(new Triple<>(network, error, 1.0));
@@ -65,8 +64,11 @@ public class TopGen implements NeuralNetworkOwner {
         List<Double> errors = new ArrayList<>();
         long iteration = 0;
         while (!queue.isEmpty() && tgSettings.canContinue(iteration, errors)) {
+            System.out.println("opening node\t" + errors.size() + "\t" + (!errors.isEmpty() ? errors.get(errors.size() - 1) : ""));
+
             Triple<NeuralNetwork, Double, Double> current = queue.poll();
             updateNetwork(current);
+            System.out.println("current\t" + current.getT());
 
             if (current.getT() < tgSettings.getEpsilonLimit()) {
                 break;
@@ -102,8 +104,12 @@ public class TopGen implements NeuralNetworkOwner {
 
     private List<Triple<NeuralNetwork, Double, Double>> generateAndLearnSuccessors(NeuralNetwork network, Dataset dataset, TopGenSettings tgSettings, WeightLearningSetting wls, Double previousLearningRate, KBANNSettings kbannSetting) {
         List<Triple<Pair<Node, Boolean>, Long, Long>> generated = generateSorted(network, dataset, tgSettings);
-        Stream<Triple<Pair<Node, Boolean>, Long, Long>> cut = generated.stream().limit(tgSettings.getNumberOfSuccessors());
-        return cut.parallel().map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(), triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting, tgSettings)).collect(Collectors.toCollection(ArrayList::new));
+        Stream<Triple<Pair<Node, Boolean>, Long, Long>> cut = generated
+                .stream()
+                .limit(tgSettings.getNumberOfSuccessors());
+        return cut
+                //.parallel()
+                .map(triple -> addNodeAndLearnNetwork(triple.getK().getLeft(), triple.getK().getRight(), network, dataset, wls, previousLearningRate, kbannSetting, tgSettings)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> generateSorted(NeuralNetwork network, Dataset dataset, TopGenSettings tgSetting) {
@@ -129,7 +135,8 @@ public class TopGen implements NeuralNetworkOwner {
 
     private static List<Triple<Pair<Node, Boolean>, Long, Long>> computeValues(NeuralNetwork network, Map<Sample, Results> results, Map<Sample, Boolean> correctlyClassified, TopGenSettings tgSetting) {
         return network.getHiddenNodes()
-                .parallelStream()
+                //.parallelStream()
+                .stream()
                 .map(node -> computeFPandFN(network, node, results, correctlyClassified, tgSetting))
                 .flatMap(l -> l.stream()).collect(Collectors.toCollection(ArrayList::new));
     }
@@ -178,6 +185,7 @@ public class TopGen implements NeuralNetworkOwner {
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
         double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
         network.setClassifierStateful(ThresholdClassificator.create(network, dataset));
+        System.out.println("\t" + error);
         return new Triple<>(network, error, learningRate);
     }
 
@@ -193,9 +201,18 @@ public class TopGen implements NeuralNetworkOwner {
     public static boolean isAndNode(Node node, NeuralNetwork network) {
         Node bias = network.getBias();
         final NeuralNetwork finalNetwork = network;
-        Double positiveWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
-        Double negativeWeightSum = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
-        Double biasWeight = network.getIncomingForwardEdges(node).parallelStream().filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+        Double positiveWeightSum = network.getIncomingForwardEdges(node)
+                //.parallelStream()
+                .stream()
+                .filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) >= 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+        Double negativeWeightSum = network.getIncomingForwardEdges(node)
+                //.parallelStream()
+                .stream()
+                .filter(edge -> !bias.equals(edge.getSource()) && finalNetwork.getWeight(edge) < 0).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
+        Double biasWeight = network.getIncomingForwardEdges(node)
+                //.parallelStream()
+                .stream()
+                .filter(edge -> bias.equals(edge.getSource())).mapToDouble(edge -> finalNetwork.getWeight(edge)).sum();
 
         // cause in AND case biasWeight is to be negative
         // and in OR case biasWeight is to be positive

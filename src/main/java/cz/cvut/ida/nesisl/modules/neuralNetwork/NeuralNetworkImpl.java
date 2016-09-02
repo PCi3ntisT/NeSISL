@@ -623,7 +623,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public Node getBias() {
         if (null == bias) {
-            bias = NodeFactory.create(ConstantOne.getFunction());
+            bias = NodeFactory.create(ConstantOne.getFunction(),"bias");
         }
         return bias;
     }

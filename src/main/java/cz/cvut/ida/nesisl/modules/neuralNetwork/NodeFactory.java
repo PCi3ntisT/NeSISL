@@ -47,6 +47,11 @@ public class NodeFactory {
         long count = index.incrementAndGet();
         node = new NodeImpl(function, new Parameters(parameters), count);
         node.setName(nodeName);
+
+        /*if("" == nodeName){
+            System.out.println("odstranit ;)");
+            throw new IllegalStateException("proc bezejmena?");
+        }*/
         return node;
     }
 

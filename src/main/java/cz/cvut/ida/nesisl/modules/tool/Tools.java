@@ -145,7 +145,7 @@ public class Tools {
 
         list.forEach(sample ->
                         IntStream.range(0, size)
-                                .parallel()
+                                //.parallel()
                                 .forEach(idx -> {
                                     Double newValue = cache.get(idx) + sample.get(idx).getValue();
                                     cache.put(idx, newValue);

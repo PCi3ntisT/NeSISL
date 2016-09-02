@@ -16,6 +16,7 @@ public class KBANNSettings {
     private final RandomGenerator randomGenerator;
     private final Double omega;
     private final Double perturbationMagnitude;
+    private final boolean edgesBetweenAdjacentLayersOnly;
     private boolean backpropOnly;
 
     public KBANNSettings(RandomGenerator randomGenerator, Double omega, Double perturbationMagnitude) {
@@ -23,13 +24,23 @@ public class KBANNSettings {
         this.omega = omega;
         this.perturbationMagnitude = perturbationMagnitude;
         this.backpropOnly = false;
+        this.edgesBetweenAdjacentLayersOnly = false;
     }
 
     public KBANNSettings(RandomGenerator randomGenerator, Double perturbationMagnitude, boolean backpropOnly) {
         this.randomGenerator = randomGenerator;
         this.omega = 0.0;
-        this.backpropOnly = true;
         this.perturbationMagnitude = perturbationMagnitude;
+        this.backpropOnly = backpropOnly;
+        this.edgesBetweenAdjacentLayersOnly = false;
+    }
+
+    public KBANNSettings(RandomGenerator randomGenerator, Double perturbationMagnitude, boolean backpropOnly, boolean edgesBetweenAdjacentLayersOnly) {
+        this.randomGenerator = randomGenerator;
+        this.omega = 0.0;
+        this.backpropOnly = backpropOnly;
+        this.perturbationMagnitude = perturbationMagnitude;
+        this.edgesBetweenAdjacentLayersOnly = edgesBetweenAdjacentLayersOnly;
     }
 
     public RandomGenerator getRandomGenerator() {
@@ -94,5 +105,9 @@ public class KBANNSettings {
 
     public boolean isBackpropOnly() {
         return backpropOnly;
+    }
+
+    public boolean isEdgesBetweenAdjacentLayersOnly() {
+        return edgesBetweenAdjacentLayersOnly;
     }
 }

@@ -145,7 +145,8 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         });
 
         Double average = map.entrySet()
-                .parallelStream()
+                //.parallelStream()
+                .stream()
                 .mapToDouble(entry -> entry.getValue())
                 .average()
                 .orElse(0);
@@ -154,9 +155,12 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
     private static Double computeCandidateValueForSampleAsInput(Sample sample, Set<Pair<Edge, Double>> edges, Map<Sample, Results> cache) {
         Results currentResults = cache.get(sample);
-        return edges.parallelStream().mapToDouble(pair ->
-                        currentResults.getComputedValues().get(pair.getLeft().getSource()) * pair.getRight()
-        ).sum();
+        return edges
+                //.parallelStream()
+                .stream()
+                .mapToDouble(pair ->
+                                currentResults.getComputedValues().get(pair.getLeft().getSource()) * pair.getRight()
+                ).sum();
     }
 
     private static void generateAndAddEdge(Set<Pair<Edge, Double>> edges, Node source, Node target, RandomGenerator randomGenerator) {
@@ -186,7 +190,8 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
                                     outputs.put(idx, newValue);
                                 }));
         double correlation = outputs.entrySet()
-                .parallelStream()
+                //.parallelStream()
+                .stream()
                 .mapToDouble(entry -> Math.abs(entry.getValue()))
                 .sum();
 
@@ -196,22 +201,27 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
 
         // adjusting weights (probably)
         originalEdges.forEach(pair -> {
-            Double derivative = dataset.getTrainData(network).parallelStream().mapToDouble(sample -> {
-                double nodeInput = originalEdges.parallelStream()
-                        .mapToDouble(entry ->
-                                        cache.get(sample).getComputedValues().get(entry.getLeft().getSource())
-                                                * entry.getRight()
-                        ).sum();
+            Double derivative = dataset.getTrainData(network)
+                    //.parallelStream()
+                    .stream()
+                    .mapToDouble(sample -> {
+                        double nodeInput = originalEdges
+                                //.parallelStream()
+                                .stream()
+                                .mapToDouble(entry ->
+                                                cache.get(sample).getComputedValues().get(entry.getLeft().getSource())
+                                                        * entry.getRight()
+                                ).sum();
 
-                return IntStream.range(0, sample.getOutput().size())
-                        .mapToDouble(idx ->
-                                        outputNodeCorrelation.get(idx)
-                                                * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx))
-                                                * sample.getOutput().get(idx).getValue() - outputAverages.get(idx)
-                                                * node.getFirstDerivationAtX(nodeInput,null)
-                                                * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
-                        ).sum();
-            }).sum();
+                        return IntStream.range(0, sample.getOutput().size())
+                                .mapToDouble(idx ->
+                                                outputNodeCorrelation.get(idx)
+                                                        * (sample.getOutput().get(idx).getValue() - outputAverages.get(idx))
+                                                        * sample.getOutput().get(idx).getValue() - outputAverages.get(idx)
+                                                        * node.getFirstDerivationAtX(nodeInput, null)
+                                                        * cache.get(sample).getComputedValues().get(pair.getLeft().getSource())
+                                ).sum();
+                    }).sum();
             Double value = pair.getRight() + wls.getLearningRate() * derivative;
             edges.add(new Pair<>(pair.getLeft(), value));
         });

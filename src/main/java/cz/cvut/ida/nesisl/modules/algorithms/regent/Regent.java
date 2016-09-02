@@ -64,11 +64,18 @@ public class Regent implements NeuralNetworkOwner {
         this.kbann.learn(dataset, wls);
         this.neuralNetwork = kbann.getNeuralNetwork();
 
-        int innerFolds = 5;
+        int innerFolds = 3;
         Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset, randomGenerator, innerFolds);
+        //Dataset crossValDataset = DatasetImpl.stratifiedSplitHalfToHalf(dataset, randomGenerator);
 
         this.bestSoFarScore = Tools.computeAverageSquaredTrainTotalError(neuralNetwork, crossValDataset);
 
+
+        //System.out.println("initial network");
+        //System.out.println(((NeuralNetworkImpl) neuralNetwork).getMsg() + "\tzprava\n"
+        //        + TikzExporter.exportToString(neuralNetwork));
+
+        System.out.println("\t\tCREATING INITIAL POPULATION");
         List<NeuralNetwork> children = mutateInitialNetworkToMakeChildrenAndAddOriginalNetwork(this.neuralNetwork, crossValDataset, regentSetting);
         List<Individual> population = computeFitness(children, crossValDataset);
 
@@ -88,7 +95,10 @@ public class Regent implements NeuralNetworkOwner {
         };
         List<Double> errors = new ArrayList<>();
         while (regentSetting.canContinue(regentSetting.computedFitness(), errors)) {
+            System.out.println("\t\tWHILE GEERATION\t" + errors.size());
+
             List<Pair<NeuralNetwork, NeuralNetwork>> selectedForCrossover = tournamentSelectionForCrossover(population, regentSetting);
+            System.out.println("\t\t\tCROSSOVER INITIALIZED");
             List<NeuralNetwork> crossovered = crossover(selectedForCrossover, crossValDataset, regentSetting);
 
             crossovered.forEach(n -> {
@@ -100,6 +110,7 @@ public class Regent implements NeuralNetworkOwner {
             List<NeuralNetwork> mutation = new ArrayList<>();
             addToMutationFromCrossovers(mutation, crossovered, regentSetting);
             addToMutationFromPopulation(mutation, population, regentSetting);
+            System.out.println("\t\t\tMUTATION INITIALIZED");
             List<NeuralNetwork> mutated = mutateNetwork(mutation, crossValDataset, regentSetting);
 
             mutated.forEach(n -> {
@@ -131,9 +142,12 @@ public class Regent implements NeuralNetworkOwner {
         //nodes.addAll(network.getOutputNodes());
         Node bias = network.getBias();
         long count = nodes.stream()
-                .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(bias, n, Edge.Type.FORWARD))).count();
+                .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(bias, n, Edge.Type.FORWARD)))
+                .count();
         count += nodes.stream()
-                .filter(n -> network.getIncomingForwardEdges(n).size() == 0 || network.getOutgoingForwardEdges(n).size() == 0).count();
+                .filter(n -> network.getIncomingForwardEdges(n).size() == 0
+                        || network.getOutgoingForwardEdges(n).size() == 0)
+                .count();
         if (count > 0) {
             System.out.println("problem v \t" + where);
             nodes.stream()
@@ -152,8 +166,8 @@ public class Regent implements NeuralNetworkOwner {
 
     private List<NeuralNetwork> crossover(List<Pair<NeuralNetwork, NeuralNetwork>> pairs, Dataset dataset, RegentSetting regentSetting) {
         return pairs
-                //.stream()
-                .parallelStream()
+                .stream()
+                //.parallelStream()
                         //.map(pair -> generatedSuccessor(pair.getLeft().getCopy(), pair.getRight().getCopy(), dataset, regentSetting))
                 .map(pair -> generatedSuccessor(pair.getLeft().getCopy(), pair.getRight().getCopy(), dataset, regentSetting))
                 .flatMap(l -> l.stream())
@@ -311,7 +325,10 @@ public class Regent implements NeuralNetworkOwner {
     }
 
     private Double averageValues(Node node, Map<Sample, Results> map) {
-        return map.entrySet().parallelStream().mapToDouble(entry -> entry.getValue().getComputedValues().get(node)).average().orElse(0);
+        return map.entrySet()
+                //.parallelStream()
+                .stream()
+                .mapToDouble(entry -> entry.getValue().getComputedValues().get(node)).average().orElse(0);
     }
 
     private NeuralNetwork averagesOutputsBiases(NeuralNetwork network, Map<Node, NeuralNetwork> nodeOriginalNetwork) {
@@ -478,7 +495,8 @@ public class Regent implements NeuralNetworkOwner {
      */
     private void addEvaluatedSuccessors(List<NeuralNetwork> parents, List<Individual> successors, RegentSetting regentSetting, Dataset dataset, WeightLearningSetting wls) {
         List<Individual> evaluated = parents
-                .parallelStream()
+                //.parallelStream()
+                .stream()
                 .map(network -> evaluate(network, regentSetting, dataset, wls))
                 .collect(Collectors.toList());
         successors.addAll(evaluated);
@@ -487,8 +505,11 @@ public class Regent implements NeuralNetworkOwner {
     private void addEvaluatedElites(List<Individual> population, List<Individual> successors, RegentSetting regentSetting, Dataset dataset, WeightLearningSetting wls) {
         List<Individual> selected = population.subList(0, regentSetting.getNumberOfElites());
         List<Individual> evaluated = selected
-                .parallelStream().map(individual -> individual.getNeuralNetwork()) // .getCopy()
-                .parallel().map(network -> evaluate(network, regentSetting, dataset, wls))
+                //.parallelStream()
+                .stream()
+                .map(individual -> individual.getNeuralNetwork()) // .getCopy()
+                //.parallel()
+                .map(network -> evaluate(network, regentSetting, dataset, wls))
                 .collect(Collectors.toList());
         successors.addAll(evaluated);
     }
@@ -520,15 +541,15 @@ public class Regent implements NeuralNetworkOwner {
 
     private List<NeuralNetwork> mutateNetwork(List<NeuralNetwork> mutation, Dataset dataset, RegentSetting regentSetting) {
         return mutation
-                //.stream()
-                .parallelStream()
+                .stream()
+                //.parallelStream()
                 .map(network -> mutate(network, dataset, regentSetting, false))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private List<NeuralNetwork> mutateInitialNetworkToMakeChildrenAndAddOriginalNetwork(NeuralNetwork network, Dataset dataset, RegentSetting regentSetting) {
         List<NeuralNetwork> population = LongStream.range(0, regentSetting.getPopulationSize() - 1)
-                .parallel()
+                //.parallel()
                 .mapToObj(i -> mutate(network, dataset, regentSetting, true))
                 .collect(Collectors.toCollection(ArrayList::new));
         population.add(network);
@@ -539,7 +560,7 @@ public class Regent implements NeuralNetworkOwner {
         if (check(network, " going to mutate")) {
             throw new IllegalStateException();
         }
-        if (canDelete(canDeleteNode, regentSetting)) {
+        if (canDelete(canDeleteNode, regentSetting) && network.getNumberOfHiddenNodes() > 0) {
             return mutationByNodeDeletion(network);
         } else {
             return mutationByAddingNode(network, dataset, canDeleteNode, regentSetting);
@@ -548,7 +569,7 @@ public class Regent implements NeuralNetworkOwner {
 
     private NeuralNetwork mutationByAddingNode(NeuralNetwork network, Dataset dataset, boolean isPopulationInitialization, RegentSetting regentSetting) {
         int which = 0;
-        if (isPopulationInitialization) {
+        if (isPopulationInitialization && network.getNumberOfHiddenNodes() > 0) {
             which = randomGenerator.nextIntegerTo((int) network.getNumberOfHiddenNodes());
         }
         return TopGen.generateSuccessor(network, dataset, which, regentSetting.getKBANNSetting(), regentSetting.getTopGenSettings(), randomGenerator);
@@ -556,6 +577,12 @@ public class Regent implements NeuralNetworkOwner {
 
     private NeuralNetwork mutationByNodeDeletion(NeuralNetwork network) {
         long size = network.getNumberOfHiddenNodes();
+        System.out.println(size);
+        if(size < 1){
+            NeuralNetwork r = network.getCopy();
+            ((NeuralNetworkImpl) r).setMsg("by deleting (nothing deleted, since zero hidden nodes inside) \t");
+            return r;
+        }
         long idx = randomGenerator.nextLongTo(size);
         Node node = network.getHiddenNodes().get((int) idx);
         NeuralNetwork r = network.removeHiddenNode(node);
@@ -610,7 +637,11 @@ public class Regent implements NeuralNetworkOwner {
     }
 
     public static List<Individual> computeFitness(List<NeuralNetwork> children, Dataset dataset) {
-        return children.parallelStream().map(network -> computeFitness(network, dataset)).collect(Collectors.toCollection(ArrayList::new));
+        return children
+                //.parallelStream()
+                .stream()
+                .map(network -> computeFitness(network, dataset))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public static Individual computeFitness(NeuralNetwork network, Dataset dataset) {

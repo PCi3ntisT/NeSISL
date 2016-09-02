@@ -49,7 +49,9 @@ public class RocAucCalculation {
     }
 
     private void computeAndStoreAUC() {
-        String data = evaluation.entrySet().parallelStream()
+        String data = evaluation.entrySet()
+                //.parallelStream()
+                .stream()
                 .map(this::resultsToString)
                 .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
                 .toString().trim();

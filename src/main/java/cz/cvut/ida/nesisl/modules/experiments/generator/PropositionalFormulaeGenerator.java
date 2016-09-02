@@ -144,7 +144,7 @@ public class PropositionalFormulaeGenerator {
 
     private void storeSorteredScores(List<Triple<Integer, Long, Formula>> list, File folder, String fileName) {
         Comparator<? super Triple<Integer, Long, Formula>> comparator = (t1, t2) -> {
-            if(t1.getT() == t2.getT()){
+            if (t1.getT() == t2.getT()) {
                 return t1.getK().compareTo(t2.getK());
             }
             return t1.getT().compareTo(t2.getT());
@@ -153,7 +153,7 @@ public class PropositionalFormulaeGenerator {
         try {
             File file = new File(folder + File.separator + fileName);
             FileWriter formulaWriter = new FileWriter(file);
-            for(Triple<Integer,Long,Formula> triple : list){
+            for (Triple<Integer, Long, Formula> triple : list) {
                 formulaWriter.write(triple.getK() + "\t" + triple.getT() + "\t" + triple.getW() + "\n");
             }
             formulaWriter.close();
@@ -277,12 +277,18 @@ public class PropositionalFormulaeGenerator {
     }
 
     private List<Pair<Formula, List<Sample>>> filterDatasets(List<Pair<Formula, List<Sample>>> datasets, double minimalTresholdForEachClass) {
-        return datasets.parallelStream().filter(pair -> filterFormula(pair.getRight(), minimalTresholdForEachClass)).collect(Collectors.toCollection(ArrayList::new));
+        return datasets
+                //.parallelStream()
+                .stream()
+                .filter(pair -> filterFormula(pair.getRight(), minimalTresholdForEachClass)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private Boolean filterFormula(List<Sample> samples, double minimalTresholdForEachClass) {
         Predicate<? super Sample> predicate = (sample) -> Tools.isZero(sample.getOutput().get(0).getValue() - 1.0);
-        long numberOfPositives = samples.parallelStream().filter(predicate).count();
+        long numberOfPositives = samples
+                //.parallelStream()
+                .stream()
+                .filter(predicate).count();
         double ration = numberOfPositives / (double) samples.size();
         return ration >= minimalTresholdForEachClass && ration <= (1 - minimalTresholdForEachClass);
     }
@@ -317,9 +323,12 @@ public class PropositionalFormulaeGenerator {
 
     private List<Pair<Formula, List<Sample>>> generateDatasets(List<Formula> formulae) {
         List<Pair<List<Boolean>, List<Value>>> inputs = IntStream.range(0, (int) Math.pow(2, numberOfAtoms)).mapToObj(idx -> generateInput(idx)).collect(Collectors.toCollection(ArrayList::new));
-        Stream<Pair<Formula, List<Sample>>> stream = formulae.parallelStream().map(formula ->
-                new Pair<Formula, List<Sample>>(formula,
-                        inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new))));
+        Stream<Pair<Formula, List<Sample>>> stream = formulae
+                //.parallelStream()
+                .stream()
+                .map(formula ->
+                        new Pair<Formula, List<Sample>>(formula,
+                                inputs.stream().map(p -> evaluateInputs(formula, p.getLeft(), p.getRight())).collect(Collectors.toCollection(ArrayList::new))));
         return stream.collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -358,7 +367,7 @@ public class PropositionalFormulaeGenerator {
             generated.addAll(successors);
             System.out.println(generated.size());
         }
-        generated = generated.subList(0,maxNumberOfGenerated);
+        generated = generated.subList(0, maxNumberOfGenerated);
         return generated;
     }
 
@@ -428,7 +437,10 @@ public class PropositionalFormulaeGenerator {
     }
 
     private List<Formula> generateSuccessors(Formula first, Formula second) {
-        return operators.parallelStream().map(operator -> generateSuccessor(operator, first, second)).collect(Collectors.toCollection(ArrayList::new));
+        return operators
+                //.parallelStream()
+                .stream()
+                .map(operator -> generateSuccessor(operator, first, second)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     private Formula generateSuccessor(Operator operator, Formula first, Formula second) {

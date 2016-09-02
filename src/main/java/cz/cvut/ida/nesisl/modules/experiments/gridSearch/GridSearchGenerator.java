@@ -49,7 +49,7 @@ public class GridSearchGenerator {
         Map<String, List<String>> map = new HashMap<>();
         map.put(CascadeCorrelationSetting.POOL_SIZE_LIMIT_TOKEN, orderedList("4")); //"1", "4", "8"));
         map.put(CascadeCorrelationSetting.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //, "0.3"));
-        map.put(CascadeCorrelationSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("150"));
+        map.put(CascadeCorrelationSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("50"));
         map.put(CascadeCorrelationSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("15")); //"10", "20"));
         map.put(CascadeCorrelationSetting.LONG_TIME_WINDOW_TOKEN, orderedList("45")); //"30", "60"));
         map.put(CascadeCorrelationSetting.CANDIDATE_ITERATION_LEARNING_LIMIT_TOKEN, orderedList("2500"));
@@ -60,13 +60,13 @@ public class GridSearchGenerator {
         Map<String, List<String>> map = new HashMap<>();
         // regent part
         map.put(RegentSetting.TOURNAMENT_SIZE_TOKEN, orderedList("2")); //"2", "4"));
-        map.put(RegentSetting.POPULATION_SIZE_TOKEN, orderedList("6")); //"20", "50", "100"));
+        map.put(RegentSetting.POPULATION_SIZE_TOKEN, orderedList("8")); //"20", "50", "100"));
         map.put(RegentSetting.MUTATION_OF_POPULATION_TOKEN, orderedList("60")); //"10", "30", "60"));
         map.put(RegentSetting.MUTATION_OF_CROSSOVERS_TOKEN, orderedList("20")); //"10", "20", "40"));
         map.put(RegentSetting.CROSSOVER_CHILDREN_TOKEN, orderedList("20")); //"10", "20", "50"));
-        map.put(RegentSetting.ELITES_TOKEN, orderedList("1")); //"1", "2"));
+        map.put(RegentSetting.ELITES_TOKEN, orderedList("0")); //"1", "2"));
         map.put(RegentSetting.EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN, orderedList("0.2"));
-        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("70"));
+        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("200"));
         map.put(RegentSetting.NODE_DELETION_PROBABILITY_TOKEN, orderedList("0.5"));
 
         map.put(RegentSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("5"));
@@ -78,13 +78,14 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.EPSILON_LIMIT_TOKEN, orderedList("0.1")); //"0.01", "0.1", "0.3"));
         map.put(TopGenSettings.OMEGA_TOKEN, orderedList("4.0")); //"2.0", "4.0", "6.0"));
         map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
-        map.put(TopGenSettings.SUCCESSORS_GENERATED_LIMIT_TOKEN, orderedList("10")); //"5", "10", "25"));
-        map.put(TopGenSettings.OPEN_LIST_LIMIT_TOKEN, orderedList("60")); //"30", "65", "100"));
+        map.put(TopGenSettings.SUCCESSORS_GENERATED_LIMIT_TOKEN, orderedList("5")); //"5", "10", "25"));
+        map.put(TopGenSettings.OPEN_LIST_LIMIT_TOKEN, orderedList("30")); //"30", "65", "100"));
         map.put(TopGenSettings.SHORT_TIME_WINDOW_TOKEN, orderedList("5")); //"10", "20"));
         map.put(TopGenSettings.LONG_TIME_WINDOW_TOKEN, orderedList("15")); //"30", "60"));
         map.put(TopGenSettings.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.001", "0.01", "0.1", "0.3"));
-        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.9")); //"0.1", "0.5", "0.8"));
+        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("1")); //"0.1", "0.5", "0.8"));
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));
+        map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("10"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -97,9 +98,10 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.SHORT_TIME_WINDOW_TOKEN, orderedList("5")); //"10", "20"));
         map.put(TopGenSettings.LONG_TIME_WINDOW_TOKEN, orderedList("15")); //"30", "60"));
         map.put(TopGenSettings.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.001", "0.01", "0.1", "0.3"));
-        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.9")); //"0.1", "0.5", "0.8"));
-        map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));
+        map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("1")); //"0.1", "0.5", "0.8"));
+        map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.49"));//"0.15"));
         map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
+        map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("15"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -109,7 +111,7 @@ public class GridSearchGenerator {
         map.put(DNCSetting.TIME_WINDOW_TOKEN, orderedList("200"));
         map.put(DNCSetting.CA_TOKEN, orderedList("0.001"));
         map.put(DNCSetting.CM_TOKEN, orderedList("0.01"));
-        map.put(DNCSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("150"));
+        map.put(DNCSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("50"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -124,8 +126,13 @@ public class GridSearchGenerator {
         Map<String, List<String>> map = new HashMap<>();
         map.put(WeightLearningSetting.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.1", "0.3"));
         map.put(WeightLearningSetting.EPOCH_TOKEN, orderedList("2500"));
-        map.put(WeightLearningSetting.LEARNING_RATE_TOKEN, orderedList("0.1")); //"0.1", "0.4", "0.9"));
-        map.put(WeightLearningSetting.MOMENTUM_ALPHA_TOKEN, orderedList("0.5")); //"0.01", "0.1", "0.3", "0.9"));
+
+        map.put(WeightLearningSetting.LEARNING_RATE_TOKEN, orderedList("0.5")); //"0.1", "0.4", "0.9"));
+        map.put(WeightLearningSetting.MOMENTUM_ALPHA_TOKEN, orderedList("0.3")); //"0.01", "0.1", "0.3", "0.9"));
+
+        //map.put(WeightLearningSetting.LEARNING_RATE_TOKEN, orderedList("0.1")); //"0.1", "0.4", "0.9"));
+        //map.put(WeightLearningSetting.MOMENTUM_ALPHA_TOKEN, orderedList("0.5")); //"0.01", "0.1", "0.3", "0.9"));
+
         map.put(WeightLearningSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("15")); //"10", "20"));
         map.put(WeightLearningSetting.LONG_TIME_WINDOW_TOKEN, orderedList("45")); //"30", "60"));
 

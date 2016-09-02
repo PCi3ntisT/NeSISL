@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.regent;
 
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
@@ -41,21 +42,33 @@ public class RegentSetting {
     private final Integer shortTimeWindow;
     private final Integer longTimeWindow;
 
-    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer numberOfMutationOfPopulation, Integer numberOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer numberOfCrossoverChildren, Integer numberOfElites, Double edgeWeightLimitAfterCrossover, Integer shortTimewindow, Integer longTimewindow, Double epsilonConvergent) {
+    public RegentSetting(long tournamentSize, long populationSize, TopGenSettings topGenSettings, Integer percentageOfMutationOfPopulation, Integer percentageOfMutationOfCrossovers, KBANNSettings KBANNSetting, Double probabilityOfNodeDeletion, Long maxAllowedFitness, Integer percentageOfCrossoverChildren, Integer numberOfElites, Double edgeWeightLimitAfterCrossover, Integer shortTimewindow, Integer longTimewindow, Double epsilonConvergent) {
         this.tournamentSize = tournamentSize;
         this.populationSize = populationSize;
         this.topGenSettings = topGenSettings;
-        this.percentageOfMutationOfPopulation = numberOfMutationOfPopulation;
-        this.percentageOfMutationOfCrossovers = numberOfMutationOfCrossovers;
+        this.percentageOfMutationOfPopulation = percentageOfMutationOfPopulation;
+        this.percentageOfMutationOfCrossovers = percentageOfMutationOfCrossovers;
         this.KBANNSetting = KBANNSetting;
         this.probabilityOfNodeDeletion = probabilityOfNodeDeletion;
         this.maxAllowedFitness = maxAllowedFitness;
-        this.percentageOfCrossoverChildrenPairs = numberOfCrossoverChildren;
+        this.percentageOfCrossoverChildrenPairs = percentageOfCrossoverChildren;
         this.numberOfElites = numberOfElites;
         this.edgeWeightLimitAfterCrossover = edgeWeightLimitAfterCrossover;
         this.longTimeWindow = longTimewindow;
         this.shortTimeWindow = shortTimewindow;
         this.epsilonConvergent = epsilonConvergent;
+    }
+
+    public Integer getPercentageOfMutationOfPopulation() {
+        return percentageOfMutationOfPopulation;
+    }
+
+    public Integer getPercentageOfMutationOfCrossovers() {
+        return percentageOfMutationOfCrossovers;
+    }
+
+    public Integer getPercentageOfCrossoverChildrenPairs() {
+        return percentageOfCrossoverChildrenPairs;
     }
 
     public long getTournamentSize() {
@@ -70,14 +83,14 @@ public class RegentSetting {
         return topGenSettings;
     }
 
-    @Override
+    /*@Override
     public String toString() {
         return "RegentSetting{" +
                 "tournamentSize=" + tournamentSize +
                 ", populationSize=" + populationSize +
                 ", topGenSettings=" + topGenSettings +
                 '}';
-    }
+    }*/
 
     public Long getMaxAllowedFitness() {
         return maxAllowedFitness;
@@ -235,5 +248,43 @@ public class RegentSetting {
                 || Tools.hasConverged(errors, getLongTimeWindow(), getShortTimeWindow(), getEpsilonConvergent())
                 || (errors.size() > 0 && errors.get(errors.size() - 1) < Tools.convergedError())
         );
+    }
+
+    public static RegentSetting create(RegentSetting regentSetting) {
+        return new RegentSetting(regentSetting.getTournamentSize(),
+                regentSetting.getPopulationSize(),
+                regentSetting.getTopGenSettings(),
+                regentSetting.getPercentageOfMutationOfPopulation(),
+                regentSetting.getPercentageOfMutationOfCrossovers(),
+                regentSetting.getKBANNSetting(),
+                regentSetting.getProbabilityOfNodeDeletion(),
+                regentSetting.getMaxAllowedFitness(),
+                regentSetting.getPercentageOfCrossoverChildrenPairs(),
+                regentSetting.getNumberOfElites(),
+                regentSetting.getEdgeWeightLimitAfterCrossover(),
+                regentSetting.getShortTimeWindow(),
+                regentSetting.getLongTimeWindow(),
+                regentSetting.getEpsilonConvergent());
+    }
+
+    @Override
+    public String toString() {
+        return "RegentSetting{" +
+                "tournamentSize=" + tournamentSize +
+                ", populationSize=" + populationSize +
+                ", topGenSettings=" + topGenSettings +
+                ", percentageOfMutationOfPopulation=" + percentageOfMutationOfPopulation +
+                ", percentageOfMutationOfCrossovers=" + percentageOfMutationOfCrossovers +
+                ", KBANNSetting=" + KBANNSetting +
+                ", probabilityOfNodeDeletion=" + probabilityOfNodeDeletion +
+                ", maxAllowedFitness=" + maxAllowedFitness +
+                ", percentageOfCrossoverChildrenPairs=" + percentageOfCrossoverChildrenPairs +
+                ", numberOfElites=" + numberOfElites +
+                ", computedFitness=" + computedFitness +
+                ", edgeWeightLimitAfterCrossover=" + edgeWeightLimitAfterCrossover +
+                ", epsilonConvergent=" + epsilonConvergent +
+                ", shortTimeWindow=" + shortTimeWindow +
+                ", longTimeWindow=" + longTimeWindow +
+                '}';
     }
 }

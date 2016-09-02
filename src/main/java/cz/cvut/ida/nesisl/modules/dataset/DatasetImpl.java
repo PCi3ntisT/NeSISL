@@ -100,7 +100,8 @@ public class DatasetImpl implements Dataset {
             List<Double> result = cachedAverage;
             if (null == cachedOutput || !areDataCached(network, cachedInput, cachedOutput)) {
                 List<List<Value>> outputs = data
-                        .parallelStream()
+                        //.parallelStream()
+                        .stream()
                         .map(sample -> sample.getOutput())
                         .collect(Collectors.toCollection(ArrayList::new));
                 result = Tools.computeAverages(outputs);
@@ -165,7 +166,10 @@ public class DatasetImpl implements Dataset {
     }
 
     private Triple<List<Sample>, List<Fact>, List<Fact>> permuteSamples(List<Fact> inputFactPermutation, List<Fact> outputFactPermutation, List<Map<Fact, Value>> cachedSamples, NeuralNetwork network) {
-        List<Sample> samples = cachedSamples.parallelStream().map(map -> permuteSample(map, inputFactPermutation, outputFactPermutation, network.getMissingValuesProcessor())).collect(Collectors.toCollection(ArrayList::new));
+        List<Sample> samples = cachedSamples
+                //.parallelStream()
+                .stream()
+                .map(map -> permuteSample(map, inputFactPermutation, outputFactPermutation, network.getMissingValuesProcessor())).collect(Collectors.toCollection(ArrayList::new));
         return new Triple<>(samples, Collections.unmodifiableList(inputFactPermutation), Collections.unmodifiableList(outputFactPermutation));
     }
 

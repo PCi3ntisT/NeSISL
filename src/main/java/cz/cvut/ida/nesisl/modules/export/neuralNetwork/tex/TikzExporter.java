@@ -39,7 +39,7 @@ public class TikzExporter {
         mainSB.append(convertToTikz(network));
         mainSB.append(documentTexTail());
         //return mainSB.toString();
-        return mainSB.toString().replaceAll("==","--");
+        return mainSB.toString().replaceAll("==", "--");
     }
 
     private static void initDescriptions() {
@@ -155,7 +155,7 @@ public class TikzExporter {
         if (null == node.getName() || node.getName().equals("")) {
             return "n" + node.getIndex();
         }
-        return node.getName()+node.getIndex();
+        return node.getName() + "-" + node.getIndex();
     }
 
     private static String documentTexHead() {

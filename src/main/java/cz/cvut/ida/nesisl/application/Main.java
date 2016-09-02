@@ -32,6 +32,7 @@ import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -49,6 +50,9 @@ public class Main {
     private Integer numberOfFolds = 10;
 
     public static void main(String arg[]) throws FileNotFoundException {
+        Arrays.stream(arg).forEach(e -> System.out.println(e + "\t"));
+        System.out.println();
+
         //arg = new String[]{"DNC", "1", "./ruleExamples/sampleInput/sampleOne.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/KBANN/sampleOne.txt"};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", ""};
         //arg = new String[]{"SLF", "1", "./ruleExamples/sampleInput/xor.txt", "./ruleExamples/sampleInput/wlsSettings.txt", "./ruleExamples/sampleInput/SLFinput.txt"};
@@ -99,6 +103,9 @@ public class Main {
                 break;
             case "backprop":
                 main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                break;
+            case "fullyConnected":
+                main.runFullyConnected(arg, numberOfRepeats, dataset, wls, randomGenerator);
                 break;
             case "CasCor":
                 main.runCasCor(arg, numberOfRepeats, dataset, wls, randomGenerator);
@@ -202,6 +209,30 @@ public class Main {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
+    private void runFullyConnected(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run backpropagation on fully connected KBANN's network with edges only between adjacent layers  use 'fullyConnected   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile   '");
+        }
+        if (arg.length > 6) {
+            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
+        }
+
+        String algName = "fullyConnected";
+        File ruleFile = new File(arg[4]);
+        File settingFile = new File(arg[5]);
+        KBANNSettings kbannSettings = new KBANNSettings(randomGenerator, 1.0, true, true);
+
+        List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
+
+        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings);
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
+        Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
+
+        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
+
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+    }
+
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run Cascade Correlation use 'CasCor   #ofRepeats  datasetFile  weightLearningSettingsFile  cascadeCorrelationSetting'");
@@ -265,12 +296,11 @@ public class Main {
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
 
         Initable<TopGen> initialize = () -> TopGen.create(new File(arg[4]), specific, randomGenerator, tgSetting, dataset);
-        Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, tgSetting);
+        Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, TopGenSettings.create(tgSetting));
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
-
 
     private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
@@ -288,7 +318,8 @@ public class Main {
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
         Initable<Regent> initialize = () -> Regent.create(new File(arg[4]), specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting, dataset);
-        Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
+        Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, RegentSetting.create(regentSetting), new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
+        //Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
