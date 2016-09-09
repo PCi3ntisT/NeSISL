@@ -46,6 +46,8 @@ public class ExperimentResult {
     private Double trepanTrainFidelity;
     private Double trepanTrainAcc;
     private Double trepanTestAcc;
+    private Long treeRuleSetComplexity;
+    private double ruleSetComplexity;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -146,7 +148,7 @@ public class ExperimentResult {
         return numberOfHiddenNodes;
     }
 
-    public void addExperiment(NeuralNetwork network, long start, long end, Dataset dataset) {
+    public void addExperiment(NeuralNetwork network, long start, long end, Dataset dataset, long ruleSetComplexity) {
         this.setRunningTime(end - start);
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
@@ -162,6 +164,7 @@ public class ExperimentResult {
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
 
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
+        this.setRuleSetComplexity(ruleSetComplexity);
     }
 
     public void exportSavedNetworksToTex() {
@@ -205,12 +208,15 @@ public class ExperimentResult {
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
         //process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
 
-        if (Main.TREPAN_RUN && false) { // cannot be run on grid
+        process.add(new Pair<>("ruleSetComplexity", () -> results.stream().mapToDouble(e -> e.getRuleSetComplexity())));
+
+        if (Main.TREPAN_RUN) {
             process.add(new Pair<>("trepanTrainAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTrainAcc())));
             process.add(new Pair<>("trepanTestAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTestAcc())));
             process.add(new Pair<>("trepanTrainFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTrainFidelity())));
             process.add(new Pair<>("trepanTestFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTestFidelity())));
             process.add(new Pair<>("trepanNumberOfInnerNodes", () -> results.stream().mapToDouble(e -> e.getTrepanNumberOfInnerNodes())));
+            process.add(new Pair<>("treeRuleSetComplexity", () -> results.stream().mapToDouble(e -> e.getTreeRuleSetComplexity())));
         }
 
         process.forEach(pair -> appendContent(pair.getLeft(), pair.getRight(), writer));
@@ -274,10 +280,10 @@ public class ExperimentResult {
         return myAdress;
     }
 
-    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan) {
+    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan,long ruleSetComplexity) {
         //addExperiment(learnedNetwork, start, end, dataset);
-        addExperiment(learnedNetwork, start, end, dataset);
-        /*
+        addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity);
+
         this.setTrainAccuracy(trepan.getNetworkTrainAccuracy());
         this.setAccuracy(trepan.getNetworkTestAccuracy());
 
@@ -286,7 +292,7 @@ public class ExperimentResult {
         this.setTrepanTrainFidelity(trepan.getTrainFidelity());
         this.setTrepanTestFidelity(trepan.getTestFidelity());
         this.setTrepanNumberOfInnerNodes(trepan.getNumberOfInnerNodes());
-        */
+        this.setTreeRuleSetComplexity(trepan.getTreeRuleSetComplexity());
     }
 
     public void setTrepanNumberOfInnerNodes(Long trepanNumberOfInnerNodes) {
@@ -329,5 +335,19 @@ public class ExperimentResult {
         return trepanTestAcc;
     }
 
+    public void setTreeRuleSetComplexity(Long treeRuleSetComplexity) {
+        this.treeRuleSetComplexity = treeRuleSetComplexity;
+    }
 
+    public Long getTreeRuleSetComplexity() {
+        return treeRuleSetComplexity;
+    }
+
+    public double getRuleSetComplexity() {
+        return ruleSetComplexity;
+    }
+
+    public void setRuleSetComplexity(double ruleSetComplexity) {
+        this.ruleSetComplexity = ruleSetComplexity;
+    }
 }

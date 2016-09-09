@@ -1,5 +1,8 @@
 package main.java.cz.cvut.ida.nesisl.modules.trepan;
 
+import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTree;
+import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTreeReader;
+
 import java.io.*;
 
 /**
@@ -14,8 +17,9 @@ public class TrepanResults {
     private final Double testFidelity;
     private final Double networkTrainAccuracy;
     private final Double networkTestAccuracy;
+    private final Long treeRuleSetComplexity;
 
-    private TrepanResults(Long numberOfInnerNodes, Double trpanTrainAccuracy, Double trepanTestAccuracy, Double trainFidelity, Double testFidelity, Double networkTrainAcc, Double networkTestAcc) {
+    private TrepanResults(Long numberOfInnerNodes, Double trpanTrainAccuracy, Double trepanTestAccuracy, Double trainFidelity, Double testFidelity, Double networkTrainAcc, Double networkTestAcc,Long treeRuleSetComplexity) {
         this.numberOfInnerNodes = numberOfInnerNodes;
         this.trpanTrainAccuracy = trpanTrainAccuracy;
         this.trepanTestAccuracy = trepanTestAccuracy;
@@ -23,6 +27,7 @@ public class TrepanResults {
         this.testFidelity = testFidelity;
         this.networkTrainAccuracy = networkTrainAcc;
         this.networkTestAccuracy = networkTestAcc;
+        this.treeRuleSetComplexity = treeRuleSetComplexity;
     }
 
     public Double getNetworkTrainAccuracy() {
@@ -53,15 +58,26 @@ public class TrepanResults {
         return testFidelity;
     }
 
+    public Long getTreeRuleSetComplexity() {
+        return treeRuleSetComplexity;
+    }
+
     public static TrepanResults create(File tree, File fidelity,File accuracyFile) {
-        System.out.println("trepan disabled");
-        return null;
-        //long finalNumberOfInnerNodes = getNumberOfNodes(tree);
-        //return retrieveValuesFromFidelityAndAccuracy(finalNumberOfInnerNodes, fidelity, accuracyFile);
+        //System.out.println("trepan disabled");
+        //return null;
+        long finalNumberOfInnerNodes = getNumberOfNodes(tree);
+        long treeRuleSetComplexity = getTreeRuleSetComplexity(tree);
+        return retrieveValuesFromFidelityAndAccuracy(finalNumberOfInnerNodes, fidelity, accuracyFile, treeRuleSetComplexity);
+    }
+
+    private static long getTreeRuleSetComplexity(File tree) {
+        DotTree dotTree = DotTreeReader.getDefault().create(tree);
+        long complexity = MofNTreeRuleSetComplexity.getDefault().compute(dotTree);
+        return complexity;
     }
 
     // does not take in account possibility of validation set in the result ;)
-    private static TrepanResults retrieveValuesFromFidelityAndAccuracy(long finalNumberOfInnerNodes, File fidelity, File accuracyFile) {
+    private static TrepanResults retrieveValuesFromFidelityAndAccuracy(long finalNumberOfInnerNodes, File fidelity, File accuracyFile, Long treeRuleSetComplexity) {
         Double trepanTrainAcc = 0.0;
         Double trepanTestAcc = 0.0;
         Double trainFidelity = 0.0;
@@ -110,7 +126,7 @@ public class TrepanResults {
             e.printStackTrace();
         }
 
-        return new TrepanResults(finalNumberOfInnerNodes,trepanTrainAcc,trepanTestAcc,trainFidelity,testFidelity,networkTrainAcc,networkTestAcc);
+        return new TrepanResults(finalNumberOfInnerNodes,trepanTrainAcc,trepanTestAcc,trainFidelity,testFidelity,networkTrainAcc,networkTestAcc,treeRuleSetComplexity);
     }
 
     private static long getNumberOfNodes(File tree) {

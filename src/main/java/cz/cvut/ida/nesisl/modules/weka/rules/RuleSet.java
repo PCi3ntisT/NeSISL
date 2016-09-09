@@ -127,4 +127,10 @@ public class RuleSet {
         trimmedRules.add(selectedRule,trimmedRule);
         return RuleSet.create(trimmedRules);
     }
+
+    public int getComplexity(){
+        return rules.stream()
+                .mapToInt(rule -> rule.getNumberOfImplications())
+                .sum();
+    }
 }

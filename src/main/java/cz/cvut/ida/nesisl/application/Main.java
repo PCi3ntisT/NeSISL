@@ -47,6 +47,8 @@ public class Main {
 
     public static final boolean TREPAN_RUN = true;
 
+    public static long fakeNumberTodo = 1;
+
     private Integer numberOfFolds = 10;
 
     public static void main(String arg[]) throws FileNotFoundException {
@@ -128,12 +130,12 @@ public class Main {
         }
     }
 
-    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls) {
-        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls);
+    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls, long ruleSetComplexity) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSetComplexity);
         ExperimentResult.storeResults(results, algName, crossval.getOriginalFile(), settingFile, wls);
     }
 
-    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls) {
+    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls, long ruleSetComplexity) {
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
                 .mapToObj(idx -> {
@@ -154,9 +156,9 @@ public class Main {
 
                     if (TREPAN_RUN) {
                         TrepanResults trepan = Trepan.create(learnedNetwork, dataset, algName, idx, currentResult.getMyAdress()).run();
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan);
+                        currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan,ruleSetComplexity);
                     } else {
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset);
+                        currentResult.addExperiment(learnedNetwork, start, end, dataset,ruleSetComplexity);
                     }
                     return currentResult;
                 }).collect(Collectors.toCollection(ArrayList::new));
@@ -182,7 +184,7 @@ public class Main {
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runBackprop(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -206,7 +208,7 @@ public class Main {
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runFullyConnected(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -230,7 +232,7 @@ public class Main {
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
 
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -247,7 +249,7 @@ public class Main {
         Learnable learn = (cascadeCorrelation, learningDataset) -> ((CascadeCorrelation) cascadeCorrelation).learn(learningDataset, finalWls, ccSetting);
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -264,7 +266,7 @@ public class Main {
         Learnable learn = (dnc, learningDataset) -> ((DynamicNodeCreation) dnc).learn(learningDataset, finalWls, dncSetting);
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runSLSF(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -278,7 +280,7 @@ public class Main {
         Learnable learn = (slsf, learningDataset) -> ((StructuralLearningWithSelectiveForgetting) slsf).learn(learningDataset, wls);
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), wls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), wls,fakeNumberTodo);
     }
 
     private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -299,7 +301,7 @@ public class Main {
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, TopGenSettings.create(tgSetting));
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -322,7 +324,7 @@ public class Main {
         //Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,fakeNumberTodo);
     }
 
     /*private void runMAC() {

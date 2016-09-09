@@ -62,6 +62,8 @@ public class RuleSetToTheory {
         StringBuilder theory = new StringBuilder();
         Set<String> before = new HashSet<>();
 
+        System.out.println("tady to jeste dodelat pro ten specialni pripad extre ;)");
+
         if (1 == ruleSet.getNumberOfRules() && 1 == ruleSet.getRules().get(0).getNumberOfImplications()) {
             // just a special case
         } else {

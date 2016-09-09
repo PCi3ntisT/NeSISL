@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 public class Trepan {
 
     // path to trepan executables !!!! (currently hardcoded)
-    private String trepanExe = "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe";
+    private String trepanExe = (System.getProperty("os.name").contains("Windows")) ? "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe" : "/mnt/storage-brno3-cerit/home/svatoma1/trepan/Trepan.exe";
 
 
     private final NeuralNetwork learnedNetwork;
@@ -47,7 +47,7 @@ public class Trepan {
         File folder = createFolder();
         createFiles();
         System.out.println("run\t" + folderName);
-        //runTrepan(folder);
+        runTrepan(folder);
         return extractResults();
     }
 
@@ -55,7 +55,7 @@ public class Trepan {
         File tree = new File(folderName + "trepan.tree");
         File fidelity = new File(folderName + "trepan.fidelity");
         File acc = new File(folderName + "trepan.acc");
-        return TrepanResults.create(tree,fidelity,acc);
+        return TrepanResults.create(tree, fidelity, acc);
     }
 
     private void runTrepan(File folder) {
@@ -64,10 +64,16 @@ public class Trepan {
     }
 
     private int runTrepanAcc(File folder) {
-        ProcessBuilder builder = new ProcessBuilder(trepanExe, folderName + "acc.cmd");//, ">", folderName  + "trepan.acc");
+        ProcessBuilder builder;
+        if (System.getProperty("os.name").contains("Windows")) {
+            builder = new ProcessBuilder(trepanExe, folderName + "acc.cmd");//, ">", folderName  + "trepan.acc");
+        } else {
+            // grid
+            builder = new ProcessBuilder("wine", trepanExe, folderName + "acc.cmd");//, ">", folderName  + "trepan.acc");
+        }
         builder = builder.directory(folder);
         //builder = builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-        builder = builder.redirectOutput(new File(folderName  + "trepan.acc"));
+        builder = builder.redirectOutput(new File(folderName + "trepan.acc"));
         Process process = null;
         try {
             process = builder.start();
@@ -83,7 +89,13 @@ public class Trepan {
     }
 
     private int runTrepanComputation(File folder) {
-        ProcessBuilder builder = new ProcessBuilder(trepanExe, folderName + "trepan.cmd");
+        ProcessBuilder builder;
+        if (System.getProperty("os.name").contains("Windows")) {
+            builder = new ProcessBuilder(trepanExe, folderName + "trepan.cmd");
+        } else {
+            // grid
+            builder = new ProcessBuilder("wine", trepanExe, folderName + "trepan.cmd");
+        }
         builder = builder.directory(folder);
         builder = builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
         Process process = null;
@@ -189,11 +201,11 @@ public class Trepan {
                             .forEach(attributeIdx -> {
                                 Value value = sample.getInput().get(attributeIdx);
                                 if (booleans.contains(attributeIdx)) {
-                                    if(Tools.isZero(value.getValue() - 0)){
+                                    if (Tools.isZero(value.getValue() - 0)) {
                                         sb.append("f");
-                                    }else if(Tools.isZero(value.getValue() - 1)){
+                                    } else if (Tools.isZero(value.getValue() - 1)) {
                                         sb.append("t");
-                                    }else{
+                                    } else {
                                         sb.append("?");
                                     }
                                 } else {
