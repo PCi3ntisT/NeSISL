@@ -64,8 +64,14 @@ public class RuleSetToTheory {
 
         System.out.println("tady to jeste dodelat pro ten specialni pripad extre ;)");
 
+
+
         if (1 == ruleSet.getNumberOfRules() && 1 == ruleSet.getRules().get(0).getNumberOfImplications()) {
             // just a special case
+            theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                    new ArrayList<>(),
+                    true) + "\n");
+            before.add(DatasetImpl.CLASS_TOKEN);
         } else {
             ruleSet.getRules().stream()
                     .forEach(targetImplicatorSet -> {
