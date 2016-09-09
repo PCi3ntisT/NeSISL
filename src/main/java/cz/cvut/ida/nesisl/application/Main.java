@@ -93,7 +93,7 @@ public class Main {
         // TODO NACITANI NORMALIZACE ZAJISTIT :) & zkontrolovat
 
         boolean normalize = true;
-        Dataset dataset = DatasetImpl.parseDataset(datasetFile, normalize);
+        Dataset dataset = DatasetImpl.parseAndGetDataset(datasetFile, normalize);
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         Main main = new Main();

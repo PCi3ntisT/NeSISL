@@ -1,6 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.dataset.attributes;
 
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +34,9 @@ public class NominalAttribute implements AttributeProprety {
 
     @Override
     public void addValue(String value) {
+        if(DatasetImpl.UNKNOWN_VALUE.equals(value)){
+            return;
+        }
         values.add(value);
     }
 

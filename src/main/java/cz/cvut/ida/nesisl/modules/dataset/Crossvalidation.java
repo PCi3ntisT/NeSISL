@@ -40,7 +40,7 @@ public class Crossvalidation {
                 others.addAll(datasets.get(îdx).getRawData());
             }
 
-            Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile());
+            Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile(),selected.getClassAttribute());
             fold = (fold + 1) % datasets.size();
             return split;
         }
@@ -58,7 +58,7 @@ public class Crossvalidation {
                 others.addAll(datasets.get(îdx).getRawData());
             }
 
-            Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile());
+            Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile(),selected.getClassAttribute());
             return split;
     }
 
@@ -82,7 +82,7 @@ public class Crossvalidation {
                 }
             });
             List<Dataset> datasets = new ArrayList<>();
-            folds.forEach(sampleSet -> datasets.add(new DatasetImpl(dataset.getInputFactOrder(),dataset.getOutputFactOrder(),sampleSet,dataset.getOriginalFile())));
+            folds.forEach(sampleSet -> datasets.add(new DatasetImpl(dataset.getInputFactOrder(),dataset.getOutputFactOrder(),sampleSet,dataset.getOriginalFile(),dataset.getClassAttribute())));
 
             /*System.out.println("folds size");
             folds.forEach(f -> System.out.println("\t" + f.size()));

@@ -19,6 +19,12 @@ public class RuleFile {
     public static final String OUTPUT_FACTS_HEADER = "OUTPUT FACTS";
     public static final String RULES = "RULES";
 
+    public static final String UNCHANGABLE_RULE = "::-";
+    public static final String CHANGABLE_RULE = ":-";
+    public static final String RULE_ENDING_TOKEN = "."; // this should be used in the parser but is not
+    public static final String NOT_TOKEN = "not"; // this should be used in the parser but is not
+    public static final String ANTECEDENTS_DELIMITER = ",";
+
     public Rules preprocessRules() {
         if (!this.isAcyclic()) {
             throw new IllegalStateException("Cannot make KBANN network from cyclic theory.");
@@ -94,7 +100,7 @@ public class RuleFile {
 
     // creator for (old) formating of artificial dataset
     /*
-    private static RuleCreationWrapper addRule(String line, RuleCreationWrapper wrapper) {
+    private static RuleCreationWrapper addImplication(String line, RuleCreationWrapper wrapper) {
         Fact head = retrieveHeadFromRule(line, wrapper);
         Set<Literal> body = retrieveBodyRule(line, wrapper);
         boolean isModifiable = retrieveModifiablitiy(line);
@@ -154,7 +160,7 @@ public class RuleFile {
                 wrapper = addOutputFact(line, wrapper);
                 break;
             case RULES:
-                wrapper = addRule(line, wrapper);
+                wrapper = addImplication(line, wrapper);
                 break;
             default:
                 throw new IllegalStateException("Proccesing line within uknown status.");
@@ -183,13 +189,13 @@ public class RuleFile {
     }
 
     private static boolean retrieveModifiablitiy(String line) {
-        return !line.contains("::-");
+        return !line.contains(UNCHANGABLE_RULE);
     }
 
     private static String retrieveBodyRule(String line, RuleCreationWrapper wrapper) {
-        String[] splitted = line.split("::-");
+        String[] splitted = line.split(UNCHANGABLE_RULE);
         if (splitted.length != 2) {
-            splitted = line.split(":-");
+            splitted = line.split(CHANGABLE_RULE);
         }
         if (splitted.length != 2) {
             throw new IllegalStateException("This line violates rule notation.");
@@ -241,9 +247,9 @@ public class RuleFile {
     }
 
     private static Fact retrieveHeadFromRule(String line, RuleCreationWrapper wrapper) {
-        String[] splitted = line.split("::-");
+        String[] splitted = line.split(UNCHANGABLE_RULE);
         if (splitted.length != 2) {
-            splitted = line.split(":-");
+            splitted = line.split(CHANGABLE_RULE);
         }
         if (splitted.length != 2) {
             throw new IllegalStateException("This line violates rule notation.");
@@ -320,17 +326,15 @@ public class RuleFile {
         List<String> result = new ArrayList<>();
         String trimmed = ruleBody.trim();
 
-        String DELIMITER = ",";
-
         String[] splitted;
         if (trimmed.contains("n-true ")){
             int start = trimmed.indexOf("n-true");
             String tripped = trimmed.substring(start);
             start = tripped.indexOf("(");
             int end = trimmed.indexOf(")");
-            splitted = tripped.substring(start+1,end).split(DELIMITER);
+            splitted = tripped.substring(start+1,end).split(ANTECEDENTS_DELIMITER);
         }else{
-            splitted = trimmed.split(DELIMITER);
+            splitted = trimmed.split(ANTECEDENTS_DELIMITER);
         }
 
         Arrays.stream(splitted).forEach(token -> result.add(retrieveProposition(token.trim())));
@@ -339,8 +343,8 @@ public class RuleFile {
     }
 
     private String retrieveProposition(String token) {
-        if(Pattern.matches("not\\(.+\\)", token)){
-            token = token.substring("not(".length(),token.length()-1);
+        if(Pattern.matches(NOT_TOKEN + "\\(.+\\)", token)){
+            token = token.substring((NOT_TOKEN + "(").length(),token.length()-1);
         }
         return token.replaceAll("\\s+","");
     }

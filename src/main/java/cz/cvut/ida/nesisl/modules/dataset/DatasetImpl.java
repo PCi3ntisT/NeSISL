@@ -9,17 +9,19 @@ import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.MissingValues;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.*;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.MissingValueGeneralProcessor;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Created by EL on 13.2.2016.
@@ -31,32 +33,36 @@ public class DatasetImpl implements Dataset {
     private final List<Map<Fact, Value>> samples;
     private final List<Map<Fact, Value>> nodeTrainSamples;
     private final List<Fact> inputFacts;
-    private final List<Fact> outputFacts;
+    private final ClassAttribute classAttribute;
 
+    private final List<Fact> outputFacts;
     private List<Fact> cachedInputOrder;
     private List<Fact> cachedOutputOrder;
     private List<Sample> cachedSamples;
-    private List<Double> cachedOutputAverage;
 
+    private List<Double> cachedOutputAverage;
     private List<Fact> cachedTrainNodeInputOrder;
     private List<Fact> cachedTrainNodeOutputOrder;
     private List<Sample> cachedTrainNode;
+
     private List<Double> cachedTrainNodeOutputAverage;
 
-    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples, File originalFile) {
+    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> samples, File originalFile,ClassAttribute classAttribute) {
         this.inputFacts = new ArrayList<>(inputFacts);
         this.outputFacts = new ArrayList<>(outputFacts);
         this.samples = new ArrayList<>(samples);
         this.originalFile = originalFile;
         this.nodeTrainSamples = new ArrayList<>(samples);
+        this.classAttribute = classAttribute;
     }
 
-    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData, File originalFile) {
+    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData, File originalFile,ClassAttribute classAttribute) {
         this.inputFacts = new ArrayList<>(inputFactOrder);
         this.outputFacts = new ArrayList<>(outputFactOrder);
         this.samples = new ArrayList<>(trainData);
         this.originalFile = originalFile;
         this.nodeTrainSamples = new ArrayList<>(nodeTrainData);
+        this.classAttribute = classAttribute;
     }
 
     @Override
@@ -212,10 +218,13 @@ public class DatasetImpl implements Dataset {
                     nodeTrainData.addAll(group.subList(border, group.size()));
                 }
             });
-            return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile());
+            return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile(),dataset.getClassAttribute());
         }
     }
 
+    public ClassAttribute getClassAttribute() {
+        return classAttribute;
+    }
 
     public static Dataset stratifiedSplitHalfToHalf(Dataset dataset, RandomGenerator randomGenerator) {
         return stratifiedSplit(dataset, randomGenerator, 2);
@@ -246,6 +255,8 @@ public class DatasetImpl implements Dataset {
     public static final String DATA_DELIMITER = ",";
     public static final String CLASS_VALUES_DELIMITER = ",";
     public static final String ATTRIBUTE_VALUE_DELIMITER = "==";
+    public static final String UNKNOWN_VALUE = "?";
+
 
     public static final String REAL_ATTRIBUTE_TOKEN = "real";
     public static final String NOMINAL_ATTRIBUTE_TOKEN = "nominal";
@@ -269,17 +280,156 @@ public class DatasetImpl implements Dataset {
     }
 
     public static Dataset parseDataset(String pathToFile, boolean normalize) {
-        return parseDataset(new File(pathToFile), normalize);
+        return parseAndGetDataset(new File(pathToFile), normalize);
+    }
+
+    private static Pair<Dataset, Instances> parseAndGetDatasets(String pathToFile, boolean normalize) {
+        return parseAndGetDatasets(new File(pathToFile), normalize);
+    }
+
+    /**
+     * Parses and returns datasets - first for NESISL, second for WEKA.
+     *
+     * @param file
+     * @param normalize
+     * @return
+     */
+    public static Pair<Dataset, Instances> parseAndGetDatasets(File file, boolean normalize) {
+        Triple<List<AttributeProprety>, List<List<String>>, List<Pair<String, Set<String>>>> triple = parseDataset(file, normalize);
+        List<Pair<String, Set<String>>> ambigious = triple.getW();
+        List<AttributeProprety> attributes = triple.getK();
+        List<List<String>> examples = triple.getT();
+
+        Dataset nesislDataset = createNesislDataset(ambigious, attributes, examples, file, normalize);
+        Instances wekaDataset = createWekaDataset(ambigious, attributes, examples, file, normalize);
+
+        return new Pair<>(nesislDataset, wekaDataset);
+    }
+
+    private static Instances createWekaDataset(List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes, List<List<String>> examples, File file, boolean normalize) {
+        System.out.println("TODO - resolve ambigious ");
+        String stringForm = datasetToString(attributes, examples, normalize);
+
+        System.out.println("data'");
+        System.out.println(stringForm);
+        System.out.println("'");
+
+        InputStream stream = new ByteArrayInputStream(stringForm.getBytes(StandardCharsets.UTF_8));
+        Instances data = null;
+        try {
+            data = ConverterUtils.DataSource.read(stream);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        data.setClassIndex(data.numAttributes() - 1);
+        return data;
+    }
+
+    private static String datasetToString(List<AttributeProprety> attributes, List<List<String>> examples, boolean normalize) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Instances.ARFF_RELATION + "\tdata\n");
+
+        sb.append(attributesToString(attributes));
+
+        sb.append(Instances.ARFF_DATA + "\n");
+        sb.append(examplesToString(attributes, examples, normalize));
+
+        return sb.toString();
+    }
+
+    private static String examplesToString(List<AttributeProprety> attributes, List<List<String>> examples, boolean normalize) {
+        StringBuilder sb = new StringBuilder();
+        Set<Integer> comments = new HashSet<>();
+        Set<Integer> reals = new HashSet<>();
+        int classIdx = 0;
+        for (int idx = 0; idx < attributes.size(); idx++) {
+            if (attributes.get(idx) instanceof ClassAttribute) {
+                classIdx = idx;
+                comments.add(idx);
+            } else if (attributes.get(idx) instanceof CommentAttribute) {
+                comments.add(idx);
+            } else if (attributes.get(idx) instanceof RealAttribute) {
+                reals.add(idx);
+            }
+        }
+
+        final int finalClassIdx = classIdx;
+        examples.forEach(example -> {
+            // otherwise we do not know what to predict ;)
+            if (!example.get(finalClassIdx).equals(UNKNOWN_VALUE)) {
+                StringBuilder sample = new StringBuilder();
+                IntStream
+                        .range(0, example.size())
+                        .filter(idx -> !comments.contains(idx))
+                        .forEach(idx -> {
+                            if (reals.contains(idx)) {
+                                sample.append(formateNumber(example.get(idx), normalize, (RealAttribute) attributes.get(idx)) + ",");
+                            } else {
+                                sample.append(example.get(idx) + ",");
+                            }
+                        });
+                sample.append(example.get(finalClassIdx));
+                sb.append(sample.toString()+ "\n");
+            }
+        });
+
+        return sb.toString();
+    }
+
+    private static Double formateNumber(String exampleValue, boolean normalize, RealAttribute real) {
+        if (UNKNOWN_VALUE.equals(exampleValue)) {
+            // should not be hardcoded, but based on MissingValueProcesor, and so on
+            exampleValue = "0.5";//MissingValueKBANN.
+        }
+        Double value = Double.valueOf(exampleValue);
+        if (normalize) {
+            value = (value - real.getMin()) / (real.getMax() - real.getMin());
+        }
+        return value;
+    }
+
+    private static String attributesToString(List<AttributeProprety> attributes) {
+        StringBuilder sb = new StringBuilder();
+        attributes.forEach(attribute -> {
+            if (attribute instanceof NominalAttribute) {
+                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
+            } else if (attribute instanceof NominalAttribute) {
+                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t" + REAL_ATTRIBUTE_TOKEN);
+            }
+        });
+        attributes.forEach(attribute -> {
+            if (attribute instanceof ClassAttribute) {
+                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
+            }
+        });
+        return sb.toString();
+    }
+
+    private static String valuesToString(AttributeProprety attribute) {
+        // leaving out unkwnown value
+        StringBuilder sb = new StringBuilder();
+        Stream<String> stream = Stream.empty();
+        if (attribute instanceof NominalAttribute) {
+            stream = ((NominalAttribute) attribute).getValues().stream();
+        } else if (attribute instanceof ClassAttribute) {
+            stream = ((ClassAttribute) attribute).getValues().stream();
+        }
+        stream.filter(value -> !UNKNOWN_VALUE.equals(value))
+                .forEach(value -> sb.append(value + ","));
+        return sb.toString().substring(0, sb.length() - 1);
+    }
+
+    private static Dataset createNesislDataset(List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes, List<List<String>> examples, File file, boolean normalize) {
+        List<Fact> inputFacts = generateInputFacts(ambigious, attributes);
+        List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only)
+        List<Map<Fact, Value>> reformatedExamples = reformateData(inputFacts, outputFacts, examples, attributes, ambigious, normalize);
+        ClassAttribute classAttribute = (ClassAttribute) attributes.stream()
+                .filter(attribute -> attribute instanceof ClassAttribute).toArray()[0];
+        return new DatasetImpl(Collections.unmodifiableList(inputFacts), Collections.unmodifiableList(outputFacts), reformatedExamples, file, classAttribute);
     }
 
 
-    /**
-     * Parses dataset, containing test and train data, from given file.
-     *
-     * @param file
-     * @return
-     */
-    public static Dataset parseDataset(File file, boolean normalize) {
+    public static Triple<List<AttributeProprety>, List<List<String>>, List<Pair<String, Set<String>>>> parseDataset(File file, boolean normalize) {
         State state = State.ATTRIBUTES;
         //List<Fact> factsOrder = null;
         //List<Map<Fact, Value>> examples = new ArrayList<>();
@@ -325,12 +475,20 @@ public class DatasetImpl implements Dataset {
         }
 
 
-        List<Fact> inputFacts = generateInputFacts(ambigious, attributes);
-        List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only)
-        List<Map<Fact, Value>> reformatedExamples = reformateData(inputFacts, outputFacts, examples, attributes, ambigious, normalize);
-
-        return new DatasetImpl(Collections.unmodifiableList(inputFacts), Collections.unmodifiableList(outputFacts), reformatedExamples, file);
+        System.out.println("TODO solve ambigious input (promoters)");
+        return new Triple<>(attributes, examples, ambigious);
     }
+
+    /**
+     * Parses dataset, containing test and train data, from given file.
+     *
+     * @param file
+     * @return
+     */
+    public static Dataset parseAndGetDataset(File file, boolean normalize) {
+        return parseAndGetDatasets(file, normalize).getLeft();
+    }
+
 
     private static List<Map<Fact, Value>> reformateData(List<Fact> inputFacts, List<Fact> outputFacts, List<List<String>> examples, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambigious, boolean normalize) {
         Map<String, Fact> inputs = new HashMap<>();
@@ -379,22 +537,15 @@ public class DatasetImpl implements Dataset {
                     });
                 }
 
-            } else if (attribute instanceof RealAttribute) {
-                RealAttribute real = (RealAttribute) attribute;
+            } else {
+                if (attribute instanceof RealAttribute) {
+                    RealAttribute real = (RealAttribute) attribute;
+                    Double value = formateNumber(exampleValue, normalize, real);
+                    Fact fact = inputs.get(real.getOrder());
+                    sample.put(fact, Value.create(value + ""));
 
-                if("?".equals(exampleValue)){
-                    // should not be hardcoded, but based on MissingValueProcesor, and so on
-                    exampleValue = "0.5";//MissingValueKBANN.
+                } else if (attribute instanceof CommentAttribute) {
                 }
-
-                Double value = Double.valueOf(exampleValue);
-                if (normalize) {
-                    value = (value - real.getMin()) / (real.getMax() - real.getMin());
-                }
-                Fact fact = inputs.get(real.getOrder());
-                sample.put(fact, Value.create(value + ""));
-
-            } else if (attribute instanceof CommentAttribute) {
             }
         }
         return sample;
@@ -461,8 +612,7 @@ public class DatasetImpl implements Dataset {
         return facts;
     }
 
-    private static List<Pair<String, Set<String>>> readAmbiguous(String
-                                                                         line, List<Pair<String, Set<String>>> ambigious) {
+    private static List<Pair<String, Set<String>>> readAmbiguous(String line, List<Pair<String, Set<String>>> ambigious) {
         String[] splitted = line.split(AMBIGUOUS_DELIMITER);
         Set<String> instead = new HashSet<>();
         String head = splitted[0].trim();
@@ -480,10 +630,10 @@ public class DatasetImpl implements Dataset {
 
         boolean missingClass = false;
         for (int idx = 0; idx < list.size(); idx++) {
-            if(attributes.get(idx) instanceof ClassAttribute){
-              if(list.get(idx).equals("?")){
-                  missingClass=true;
-              }
+            if (attributes.get(idx) instanceof ClassAttribute) {
+                if (list.get(idx).equals("?")) {
+                    missingClass = true;
+                }
                 break;
             }
         }

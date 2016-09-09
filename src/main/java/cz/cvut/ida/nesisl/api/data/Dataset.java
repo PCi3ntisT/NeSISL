@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.api.data;
 
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 
 import java.io.File;
 import java.util.List;
@@ -31,6 +32,8 @@ public interface Dataset {
      * @return
      */
     public List<Map<Fact,Value>> getRawData();
+
+    public ClassAttribute getClassAttribute();
 
     public String cannonicalOutput(Map<Fact, Value> sample);
 }

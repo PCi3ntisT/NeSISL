@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.api.data;
 
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+
 /**
  * Created by EL on 7.3.2016.
  */
@@ -34,5 +36,14 @@ public class Value {
         } else {
             return new Value(Double.valueOf(value));
         }
+    }
+
+
+    public boolean isOne() {
+        return Tools.isZero(1.0-value);
+    }
+
+    public boolean isZero() {
+        return Tools.isZero(value);
     }
 }
