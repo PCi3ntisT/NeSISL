@@ -8,7 +8,6 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AntecedentsTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.Relabeling;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleTrimmer;
@@ -73,6 +72,7 @@ public class NeuralSymbolicCycle {
         Dataset nesislDataset = datasetsPair.getLeft();
         Instances wekaDataset = datasetsPair.getRight();
 
+        /*
         RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
         ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
         ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
@@ -80,15 +80,14 @@ public class NeuralSymbolicCycle {
         System.out.println(theory);
 
         RuleAccuracy acc = RuleAccuracy.create(ruleSet);
-        System.out.println(acc.computeAccuracy(nesislDataset.getRawData(), nesislDataset));
+        System.out.println(acc.computeTrainAccuracy(nesislDataset.getRawData(), nesislDataset));
         System.out.println(acc.numberOfConsistentClassifications(nesislDataset.getRawData(), nesislDataset));
 
         Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
         RuleAccuracy relabeledAcc = RuleAccuracy.create(ruleSet);
-        System.out.println(relabeledAcc.computeAccuracy(relabeled.getRawData(), relabeled));
+        System.out.println(relabeledAcc.computeTrainAccuracy(relabeled.getRawData(), relabeled));
         System.out.println(relabeledAcc.numberOfConsistentClassifications(relabeled.getRawData(), relabeled));
 
-        Main.fakeNumberTheoryComplexityTodo = ruleSet.getComplexity();
         File file = Tools.storeToTemporaryFile(theory);
         Main main = new Main();
         String[] rearanged = {arg[0], // KBANN
@@ -100,6 +99,8 @@ public class NeuralSymbolicCycle {
                 //arg[6], // [ruleSpecificFile]
                 };
         main.runKBANN(rearanged, numberOfRepeats, nesislDataset, wls, randomGenerator);
+
+        */
 
         //RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
         //RuleSet r1 = RuleTrimmer.create(ruleSet).getRuleSet();

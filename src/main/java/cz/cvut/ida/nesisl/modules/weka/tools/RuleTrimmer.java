@@ -45,4 +45,19 @@ public class RuleTrimmer {
         }
         return new RuleTrimmer(RuleSet.create(result));
     }
+
+    public static RuleSet create(RuleSet ruleSet,Integer howMany) {
+        if(howMany < 1){
+            throw new IllegalStateException("Use natural number.");
+        }
+        for (int idx = 0; idx < howMany; idx++) {
+            try{
+                RuleSet trimmed = RuleTrimmer.create(ruleSet).getRuleSet();
+                ruleSet = trimmed;
+            }catch (Exception e){
+                return ruleSet;
+            }
+        }
+        return ruleSet;
+    }
 }

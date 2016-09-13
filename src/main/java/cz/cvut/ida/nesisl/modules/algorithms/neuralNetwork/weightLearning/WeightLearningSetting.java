@@ -17,6 +17,8 @@ public class WeightLearningSetting {
     public static final String MOMENTUM_ALPHA_TOKEN = "momentumAlpha";
     public static final String PENALTY_EPSILON_TOKEN = "SLFPenaltyEpsilon";
     public static final String SLSF_THRESHOLD_TOKEN = "SLFThreshold";
+    public static final String CROSSENTROPY_TOKEN = "CrossEntropyLearning";
+
 
     private final Double epsilonConvergent;
     private final Double learningRate;
@@ -27,8 +29,9 @@ public class WeightLearningSetting {
     private final Double slfThreshold;
     private final Double penaltyEpsilon;
     private final File file;
+    private final Boolean crossEntropy;
 
-    public WeightLearningSetting(File file, Double epsilonConvergent, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold) {
+    public WeightLearningSetting(File file, Double epsilonConvergent, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold, boolean crossEntropy) {
         this.epsilonConvergent = epsilonConvergent;
         this.learningRate = learningRate;
         this.momentumAlpha = momentumAlpha;
@@ -38,6 +41,7 @@ public class WeightLearningSetting {
         this.penaltyEpsilon = penaltyEpsilon;
         this.slfThreshold = slfThreshold;
         this.file = file;
+        this.crossEntropy = crossEntropy;
     }
 
     public static WeightLearningSetting parse(File file) {
@@ -49,6 +53,7 @@ public class WeightLearningSetting {
         Integer longTimeWindow = null;
         Double penaltyEpsilon = null;
         Double slfThreshold = null;
+        Boolean crossEntropy = false;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -91,6 +96,9 @@ public class WeightLearningSetting {
                     case SLSF_THRESHOLD_TOKEN:
                         slfThreshold = Double.valueOf(value);
                         break;
+                    case CROSSENTROPY_TOKEN:
+                        crossEntropy = Boolean.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -101,7 +109,7 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(file, epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold);
+        return new WeightLearningSetting(file, epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold, crossEntropy);
     }
 
     public Double getEpsilonConvergent() {
@@ -158,6 +166,10 @@ public class WeightLearningSetting {
 
     public static WeightLearningSetting turnOffRegularization(WeightLearningSetting wls) {
         System.out.println("Turning off regularization parameters.");
-        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(),wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d,-1.0d);
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d, -1.0d, wls.isLearningWithCrossEntropy());
+    }
+
+    public boolean isLearningWithCrossEntropy() {
+        return crossEntropy;
     }
 }

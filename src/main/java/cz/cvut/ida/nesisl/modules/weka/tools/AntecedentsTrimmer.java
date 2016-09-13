@@ -52,4 +52,19 @@ public class AntecedentsTrimmer {
         RuleSet trimmedRuleSet = ruleSet.replaceRule(selectedRule, trimmedRule);
         return new AntecedentsTrimmer(trimmedRuleSet);
     }
+
+    public static RuleSet create(RuleSet ruleSet,Integer howMany) {
+        if(howMany < 1){
+            throw new IllegalStateException("Use natural number.");
+        }
+        for (int idx = 0; idx < howMany; idx++) {
+            try{
+                RuleSet trimmed = AntecedentsTrimmer.create(ruleSet).getRuleSet();
+                ruleSet = trimmed;
+            }catch (Exception e){
+                return ruleSet;
+            }
+        }
+        return ruleSet;
+    }
 }

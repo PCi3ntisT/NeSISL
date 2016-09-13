@@ -64,7 +64,7 @@ public class Regent implements NeuralNetworkOwner {
         this.kbann.learn(dataset, wls);
         this.neuralNetwork = kbann.getNeuralNetwork();
 
-        int innerFolds = 3;
+        int innerFolds = regentSetting.getTopGenSettings().getInnerCrossvalidationRatio();
         Dataset crossValDataset = DatasetImpl.stratifiedSplit(dataset, randomGenerator, innerFolds);
         //Dataset crossValDataset = DatasetImpl.stratifiedSplitHalfToHalf(dataset, randomGenerator);
 

@@ -86,6 +86,7 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("1")); //"0.1", "0.5", "0.8"));
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));
         map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("10"));
+        map.put(TopGenSettings.INNER_CROSSVALIDATION_RATIO, orderedList("10"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -102,6 +103,7 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.49"));//"0.15"));
         map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
         map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("15"));
+        map.put(TopGenSettings.INNER_CROSSVALIDATION_RATIO, orderedList("10"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }
 
@@ -138,6 +140,9 @@ public class GridSearchGenerator {
 
         map.put(WeightLearningSetting.PENALTY_EPSILON_TOKEN, orderedList("0")); //"0.1", "1", "10"));
         map.put(WeightLearningSetting.SLSF_THRESHOLD_TOKEN, orderedList("0")); //"0.01", "0.1", "0.3"));
+
+
+        map.put(WeightLearningSetting.CROSSENTROPY_TOKEN, orderedList("0")); //"0.01", "0.1", "0.3"));
 
         return new GridSearchGenerator(map, new File(folder),settingName);
     }

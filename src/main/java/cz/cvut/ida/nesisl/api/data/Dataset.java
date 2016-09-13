@@ -33,6 +33,8 @@ public interface Dataset {
      */
     public List<Map<Fact,Value>> getRawData();
 
+    public List<Map<Fact,Value>> getRawTestData();
+
     public ClassAttribute getClassAttribute();
 
     public String cannonicalOutput(Map<Fact, Value> sample);

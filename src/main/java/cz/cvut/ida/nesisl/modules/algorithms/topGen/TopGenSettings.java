@@ -21,8 +21,9 @@ public class TopGenSettings {
     public static final String NODE_ACTIVATION_THRESHOLD_TOKEN = "nodeActivationThreshold";
     public static final String PERTURBATION_TOKEN = "perturbation";
     public static final String NODE_SEARCH_LIMIT = "nodeSearchLimit"; // its not node limit, but picked nodes from the queue
+    public static final String INNER_CROSSVALIDATION_RATIO = "innerCrossvalidationRatioFolds";
 
-
+    private final Integer innerCrossvalidationRatio;
     private final Double perturbationMagnitude;
     private final Double epsilonLimit;
     private final Double omega;
@@ -36,7 +37,7 @@ public class TopGenSettings {
     private final Integer nodeSearchLimit;
     private int invoked = 0;
 
-    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega, Integer longTimeWindow, Integer shortTimeWindow, Double epsilonConvergent, Double learningRateDecay, Double nodeActivationThreshold, Double perturbationMagnitude, Integer nodeSearchLimit) {
+    public TopGenSettings(Double epsilonLimit, Long numberOfSuccessors, Long lengthOfOpenList, Double omega, Integer longTimeWindow, Integer shortTimeWindow, Double epsilonConvergent, Double learningRateDecay, Double nodeActivationThreshold, Double perturbationMagnitude, Integer nodeSearchLimit, Integer innerCrossvalidationRatio) {
         this.epsilonLimit = epsilonLimit;
         this.numberOfSuccessors = numberOfSuccessors;
         this.lengthOfOpenList = lengthOfOpenList;
@@ -48,6 +49,11 @@ public class TopGenSettings {
         this.nodeActivationThreshold = nodeActivationThreshold;
         this.perturbationMagnitude = perturbationMagnitude;
         this.nodeSearchLimit = nodeSearchLimit;
+        this.innerCrossvalidationRatio = innerCrossvalidationRatio;
+    }
+
+    public Integer getInnerCrossvalidationRatio() {
+        return innerCrossvalidationRatio;
     }
 
     public Double getEpsilonLimit() {
@@ -86,6 +92,7 @@ public class TopGenSettings {
         Double nodeActivationThreshold = null;
         Double perturbation = null;
         Integer nodeSearchLimit = null;
+        Integer innerCrossvalidationRatio = null;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             String token;
@@ -137,6 +144,9 @@ public class TopGenSettings {
                     case NODE_SEARCH_LIMIT:
                         nodeSearchLimit = Integer.valueOf(value);
                         break;
+                    case INNER_CROSSVALIDATION_RATIO:
+                        innerCrossvalidationRatio = Integer.valueOf(value);
+                        break;
                     default:
                         System.out.println("Do not know how to parse '" + line + "'.");
                         break;
@@ -147,7 +157,7 @@ public class TopGenSettings {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay, nodeActivationThreshold, perturbation, nodeSearchLimit);
+        return new TopGenSettings(thresholdErrorToStop, numberOfSuccessors, lengthOfOpenList, omega, longTimeWindow, shortTimeWindow, epsilon, learningRateDecay, nodeActivationThreshold, perturbation, nodeSearchLimit,innerCrossvalidationRatio);
     }
 
     public boolean canContinue(long iteration, List<Double> errors) {
@@ -199,6 +209,7 @@ public class TopGenSettings {
                 tgSetting.getLearningRateDecay(),
                 tgSetting.getNodeActivationThreshold(),
                 tgSetting.getPerturbationMagnitude(),
-                tgSetting.getNodeSearchLimit());
+                tgSetting.getNodeSearchLimit(),
+                tgSetting.getInnerCrossvalidationRatio());
     }
 }

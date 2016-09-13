@@ -315,7 +315,8 @@ public class Tools {
                     /*System.out.println("");
                     pair.getLeft().stream()
                             .forEach(s -> System.out.println("\t" + s));
-                    */return -pair.getLeft().stream().mapToDouble(d -> d).sum();
+                    */
+                    return -pair.getLeft().stream().mapToDouble(d -> d).sum();
                 })
                 .sum();
     }
@@ -364,4 +365,23 @@ public class Tools {
         }
     }
 
+    public static int parseInt(String input, String errorMsg) {
+        try {
+            return Integer.valueOf(input);
+        } catch (Exception ex) {
+            System.out.println(errorMsg);
+            System.exit(-1);
+        }finally {
+            return -1;
+        }
+    }
+
+    public static File retrieveFile(String input, String errorMsg) {
+        File file = new File(input);
+        if (!file.exists()) {
+            System.out.println(errorMsg);
+            System.exit(-1);
+        }
+        return file;
+    }
 }

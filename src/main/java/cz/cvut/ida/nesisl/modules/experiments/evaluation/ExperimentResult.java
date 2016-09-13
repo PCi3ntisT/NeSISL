@@ -48,6 +48,8 @@ public class ExperimentResult {
     private Double trepanTestAcc;
     private Long treeRuleSetComplexity;
     private double ruleSetComplexity;
+    private double testRuleSetAccuracy;
+    private double trainRuleSetAccuracy;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -148,7 +150,7 @@ public class ExperimentResult {
         return numberOfHiddenNodes;
     }
 
-    public void addExperiment(NeuralNetwork network, long start, long end, Dataset dataset, long ruleSetComplexity) {
+    public void addExperiment(NeuralNetwork network, long start, long end, Dataset dataset, long ruleSetComplexity, double trainRuleSetAccuracy, double testRuleSetAccuracy) {
         this.setRunningTime(end - start);
         this.setFinalNetwork(network.getCopy());
         Map<Sample, Results> evaluation = Tools.evaluateOnTestAllAndGetResults(dataset, network);
@@ -165,6 +167,8 @@ public class ExperimentResult {
 
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
         this.setRuleSetComplexity(ruleSetComplexity);
+        this.setTrainRuleSetAccuracy(trainRuleSetAccuracy);
+        this.setTestRuleSetAccuracy(testRuleSetAccuracy);
     }
 
     public void exportSavedNetworksToTex() {
@@ -209,6 +213,8 @@ public class ExperimentResult {
         //process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
 
         process.add(new Pair<>("ruleSetComplexity", () -> results.stream().mapToDouble(e -> e.getRuleSetComplexity())));
+        process.add(new Pair<>("trainRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTrainRuleSetAccuracy())));
+        process.add(new Pair<>("testRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTestRuleSetAccuracy())));
 
         if (Main.TREPAN_RUN) {
             process.add(new Pair<>("trepanTrainAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTrainAcc())));
@@ -280,9 +286,9 @@ public class ExperimentResult {
         return myAdress;
     }
 
-    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan,long ruleSetComplexity) {
+    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan,long ruleSetComplexity, double trainRuleSetAccuracy,double testRuleSetAccuracy) {
         //addExperiment(learnedNetwork, start, end, dataset);
-        addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity);
+        addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity, trainRuleSetAccuracy,testRuleSetAccuracy);
 
         this.setTrainAccuracy(trepan.getNetworkTrainAccuracy());
         this.setAccuracy(trepan.getNetworkTestAccuracy());
@@ -349,5 +355,21 @@ public class ExperimentResult {
 
     public void setRuleSetComplexity(double ruleSetComplexity) {
         this.ruleSetComplexity = ruleSetComplexity;
+    }
+
+    public void setTestRuleSetAccuracy(double testRuleSetAccuracy) {
+        this.testRuleSetAccuracy = testRuleSetAccuracy;
+    }
+
+    public double getTestRuleSetAccuracy() {
+        return testRuleSetAccuracy;
+    }
+
+    public void setTrainRuleSetAccuracy(double trainRuleSetAccuracy) {
+        this.trainRuleSetAccuracy = trainRuleSetAccuracy;
+    }
+
+    public double getTrainRuleSetAccuracy() {
+        return trainRuleSetAccuracy;
     }
 }

@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
  */
 public class RuleAccuracy {
 
-
     private final RuleSet ruleSet;
 
     public RuleAccuracy(RuleSet ruleSet) {
@@ -33,10 +32,21 @@ public class RuleAccuracy {
                 .count();
     }
 
-    public double computeAccuracy(List<Map<Fact, Value>> data, Dataset nesislDataset) {
-        return (1.0 * numberOfConsistentClassifications(data, nesislDataset)) / data.size();
+    public double computeTrainAccuracy(Dataset dataset) {
+        return computeAccuracy(dataset.getRawData(),dataset);
     }
 
+    public double computeTestAccuracy(Dataset dataset) {
+        return computeAccuracy(dataset.getRawTestData(),dataset);
+    }
+
+    public double computeAccuracy(List<Map<Fact, Value>> data, Dataset nesislDataset) {
+        // awful
+        if(null == ruleSet){
+            return 0.0;
+        }
+        return (1.0 * numberOfConsistentClassifications(data, nesislDataset)) / data.size();
+    }
 
     public boolean isConsistent(Map<Fact, Value> sample, Dataset nesislDataset, RuleSet ruleSet) {
         for (Rule rule : ruleSet.getRules()) {

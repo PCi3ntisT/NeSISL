@@ -127,6 +127,11 @@ public class DatasetImpl implements Dataset {
     }
 
     @Override
+    public List<Map<Fact, Value>> getRawTestData() {
+        return new ArrayList<>(nodeTrainSamples);
+    }
+
+    @Override
     public String cannonicalOutput(Map<Fact, Value> sample) {
         synchronized (outputFacts) {
             return IntStream.range(0, outputFacts.size())
