@@ -24,7 +24,7 @@ public class MofNTreeRuleSetComplexity {
     }
 
     private long getScore(DotNode node, DotTree tree) {
-        System.out.println("copmuting score for\t" + node.getName());
+        //System.out.println("copmuting score for\t" + node.getName());
         if (isTerminal(node, tree)) {
             return 1;
         }

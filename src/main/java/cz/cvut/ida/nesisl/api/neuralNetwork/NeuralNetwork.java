@@ -86,4 +86,6 @@ public interface NeuralNetwork {
 
     public Classifier getClassifier();
 
+    public Boolean areSoftmaxOutputs();
+
 }

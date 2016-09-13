@@ -43,21 +43,22 @@ public class Backpropagation {
         // todo vypocet derivace asi trochu upravit
 
         while (wls.canContinueBackpropagation(iteration, errors)) {
+            // TODO permutate for stochastic gradient descent
             for (Sample sample : dataset.getTrainData(network)) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);
             }
-            //double currentError = network.getNumberOfOutputNodes() > 1
-            //        ?
-            //        Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls)
-            //        :
-            //        Tools.computeCrossEntropyTrainTotalError(network, dataset, wls);
-            double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
+            double currentError = network.areSoftmaxOutputs()
+                    ? Tools.computeCrossEntropyTrainTotalError(network, dataset, wls)
+                    : Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
+            //double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
             errors.add(currentError);
             iteration++;
-            //System.out.println("computing error");
-            //System.out.println(iteration + "\t" + currentError);
+            System.out.println("computing error");
+            System.out.println(iteration + "\t" + currentError);
+
+
         }
     }
 
@@ -81,10 +82,19 @@ public class Backpropagation {
 
         IntStream.range(0, differenceExampleMinusOutput.size()).forEach(idx -> {
             Node node = network.getOutputNodes().get(idx);
-            Double value = //node.getFirstDerivationAtFunctionValue(results.getComputedOutputs().get(idx),null)
-                    node.getFirstDerivationAtX(results.getComputedOutputs().get(idx),null)
-                    // I call this big bug.... need to test the uncommented line
-                    * differenceExampleMinusOutput.get(idx);
+
+            /*Double value = //node.getFirstDerivationAtFunctionValue(results.getComputedOutputs().get(idx),null)
+                    node.getFirstDerivationAtX(results.getComputedOutputs().get(idx), null)
+                            // I call this big bug.... need to test the uncommented line
+                            * differenceExampleMinusOutput.get(idx);
+                            */
+            Double value;
+            if (!network.areSoftmaxOutputs()) {
+                value = node.getFirstDerivationAtX(results.getComputedOutputs().get(idx), null)
+                        * differenceExampleMinusOutput.get(idx);
+            } else {
+                value = differenceExampleMinusOutput.get(idx);
+            }
             sigma.put(node, value);
         });
 
@@ -97,26 +107,43 @@ public class Backpropagation {
             } else {
                 nodeLayer = network.getHiddenNodesInLayer(layer);
             }
+//            final long finalCurrentLayer = layer;
             nodeLayer.forEach(node ->
-                            network.getIncomingForwardEdges(node).stream().filter(Edge::isModifiable).forEach(edge -> {
-                                double previousDelta = 0.0d;
-                                if (previousDeltas.containsKey(edge)) {
-                                    previousDelta = previousDeltas.get(edge);
-                                }
-                                // delta with learning and momentum
-                                Double value = wls.getLearningRate() * sigma.get(node) * results.getComputedValues().get(edge.getSource())
-                                        + wls.getMomentumAlpha() * previousDelta;
+                            network.getIncomingForwardEdges(node)
+                                    .stream()
+                                    .filter(Edge::isModifiable)
+                                    .forEach(edge -> {
+                                        double previousDelta = 0.0d;
+                                        if (previousDeltas.containsKey(edge)) {
+                                            previousDelta = previousDeltas.get(edge);
+                                        }
+                                        // delta with learning and momentum
+                                        // standard square error
+                                        Double value = wls.getLearningRate()
+                                                * sigma.get(node)
+                                                * results.getComputedValues().get(edge.getSource())
+                                                + wls.getMomentumAlpha() * previousDelta;
 
-                                // edge zeoring
-                                Double edgeWeight = network.getWeight(edge);
-                                Double edgeAbsoluteWeight = Math.abs(edgeWeight);
-                                if (edgeAbsoluteWeight < wls.getSLFThreshold()) {
-                                    Double penaltyTerm = wls.getLearningRate() * wls.getPenaltyEpsilon() * Math.signum(edgeWeight);
-                                    value = value - penaltyTerm;
-                                }
+                                        // nothing changed
+                                        /*
+                                        if (network.areSoftmaxOutputs() && network.getMaximalNumberOfHiddenLayer() + 1 == finalCurrentLayer) {
+                                            value = wls.getLearningRate()
+                                                    * sigma.get(node)
+                                                    * results.getComputedValues().get(edge.getSource())
+                                                    + wls.getMomentumAlpha() * previousDelta;
+                                        }*/
 
-                                deltas.put(edge, value);
-                            })
+
+                                        // edge zeoring
+                                        Double edgeWeight = network.getWeight(edge);
+                                        Double edgeAbsoluteWeight = Math.abs(edgeWeight);
+                                        if (edgeAbsoluteWeight < wls.getSLFThreshold()) {
+                                            Double penaltyTerm = wls.getLearningRate() * wls.getPenaltyEpsilon() * Math.signum(edgeWeight);
+                                            value = value - penaltyTerm;
+                                        }
+
+                                        deltas.put(edge, value);
+                                    })
             );
 
             network.getHiddenNodesInLayer(layer - 1).forEach(node -> {
@@ -141,8 +168,10 @@ public class Backpropagation {
                             return network.getWeight(edge) * sigma.get(edge.getTarget());
                         })
                         .sum();
-                // furt minimalizuju i pri cross entropy?
-                sigma.put(node, sigmaSum * node.getFirstDerivationAtFunctionValue(results.getComputedValues().get(node),null));
+
+                sigma.put(node,
+                        sigmaSum * node.getFirstDerivationAtFunctionValue(results.getComputedValues().get(node),
+                                null));
             });
             layersComputed++;
         }
@@ -154,6 +183,9 @@ public class Backpropagation {
         deltas.entrySet().forEach(entry -> {
             if (entry.getKey().isModifiable()) {
                 Double value = network.getWeight(entry.getKey()) + entry.getValue();
+                /*if(network.areSoftmaxOutputs()){
+                    value = network.getWeight(entry.getKey()) - entry.getValue();
+                }*/
                 network.setEdgeWeight(entry.getKey(), value);
             }
         });

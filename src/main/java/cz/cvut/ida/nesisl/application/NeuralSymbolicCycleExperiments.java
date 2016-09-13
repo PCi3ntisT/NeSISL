@@ -12,7 +12,7 @@ import java.util.Set;
 public class NeuralSymbolicCycleExperiments {
     public static void main(String arg[]) {
 
-        String numberOfRepeats = "2";
+        String numberOfRepeats = "10";
 
         String[] domains = new String[]{
        /*         "breastCancer1",
@@ -36,7 +36,7 @@ public class NeuralSymbolicCycleExperiments {
           //      "voting",
             //    "wine"/**/
 
-                "monks2",
+                "iris",
 
                 //"voting"
         };

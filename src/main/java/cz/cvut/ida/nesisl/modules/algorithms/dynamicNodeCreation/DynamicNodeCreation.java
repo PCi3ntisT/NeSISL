@@ -119,13 +119,12 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
         );
     }
 
-    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
+    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator,boolean softmaxOutputs) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
         // automatci creation of softmax when multiclass classification
-        //ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
-        ActivationFunction outputFce = Sigmoid.getFunction();
+        ActivationFunction outputFce = (softmaxOutputs) ? SoftMax.getFunction() : Sigmoid.getFunction();
         List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
-        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
+        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues,softmaxOutputs);
 
         Node hiddenNode = NodeFactory.create(Sigmoid.getFunction());
         network.addNodeAtLayerStateful(hiddenNode, 0);
@@ -144,8 +143,8 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
         return network;
     }
 
-    public static DynamicNodeCreation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValueKBANN missingValue) {
-        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValue, randomGenerator);
+    public static DynamicNodeCreation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValueKBANN missingValue,boolean softmaxOutputs) {
+        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValue, randomGenerator,softmaxOutputs);
         return new DynamicNodeCreation(network, randomGenerator);
     }
 }

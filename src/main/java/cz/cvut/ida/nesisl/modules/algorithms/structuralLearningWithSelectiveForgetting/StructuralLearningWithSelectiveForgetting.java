@@ -43,8 +43,9 @@ public class StructuralLearningWithSelectiveForgetting implements NeuralNetworkO
 
     public static NeuralNetwork createInitNetwork(File file, Dataset dataset, RandomGeneratorImpl randomGenerator) {
         List<Node> inputs = NodeFactory.generateNodes(dataset.getInputFactOrder(), Identity.getFunction());
+        // watch out, hard-coded
         List<Node> outputs = NodeFactory.generateNodes(dataset.getOutputFactOrder(), Sigmoid.getFunction());
-        NeuralNetwork network = new NeuralNetworkImpl(inputs, outputs, new MissingValueKBANN());
+        NeuralNetwork network = new NeuralNetworkImpl(inputs, outputs, new MissingValueKBANN(),false);
 
         String content = null;
         try {

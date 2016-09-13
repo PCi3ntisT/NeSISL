@@ -29,13 +29,13 @@ public class KBANN implements NeuralNetworkOwner {
     private final KBANNSettings settings;
 
 
-    public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings) {
-        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings);
+    public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings, boolean softmaxOutputs) {
+        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs);
     }
 
-    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings) {
+    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs) {
         this.settings = settings;
-        NeuralNetwork networkConstruction = constructNetwork(ruleFile);
+        NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs);
         networkConstruction = addSpecificNodes(specific, networkConstruction);
         networkConstruction = addFullyConnectionToAdjacentLayers(networkConstruction);
         if (settings.isEdgesBetweenAdjacentLayersOnly()) {
@@ -88,14 +88,18 @@ public class KBANN implements NeuralNetworkOwner {
         return network;
     }
 
-    private NeuralNetwork constructNetwork(RuleFile ruleFile) {
+    private NeuralNetwork constructNetwork(RuleFile ruleFile, boolean areSoftmaxOutputs) {
         Map<Fact, Node> map = new HashMap<>();
         Rules rules = ruleFile.preprocessRules();
 
         List<Node> inputNodes = createInputNodes(rules, map);
-        List<Node> outputNodes = createOutputNodes(rules, map);
+        List<Node> outputNodes = createOutputNodes(rules, map, areSoftmaxOutputs);
 
-        NeuralNetwork network = new NeuralNetworkImpl(inputNodes, outputNodes, new MissingValueKBANN());
+        NeuralNetwork network = new NeuralNetworkImpl(inputNodes,
+                outputNodes,
+                new MissingValueKBANN(),
+                areSoftmaxOutputs
+        );
 
         network = createNodeStructure(map, rules, network);
         network = createEdgeStructure(map, rules, network);
@@ -181,11 +185,9 @@ public class KBANN implements NeuralNetworkOwner {
         return network;
     }
 
-    private List<Node> createOutputNodes(Rules rules, Map<Fact, Node> map) {
+    private List<Node> createOutputNodes(Rules rules, Map<Fact, Node> map, boolean areSoftmaxOutputs) {
         List<Node> list = new ArrayList<>();
-        // automatci creation of softmax when multiclass classification
-        //ActivationFunction fce = (rules.getConclusionFacts().size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
-        ActivationFunction fce = Sigmoid.getFunction();
+        ActivationFunction fce = (areSoftmaxOutputs) ? SoftMax.getFunction() : Sigmoid.getFunction();
         rules.getConclusionFacts().forEach(fact -> {
             Node node = NodeFactory.create(fce, fact.getFact());
             list.add(node);

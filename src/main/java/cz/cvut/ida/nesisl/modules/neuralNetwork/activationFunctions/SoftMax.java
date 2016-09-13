@@ -27,6 +27,7 @@ public class SoftMax implements ActivationFunction {
     @Override
     public double getValueAt(double x, Parameters parameter, List<Double> otherInGroups) {
         double myValue = Math.exp(x);
+        //System.out.println("*\t" + myValue + "\t" + otherInGroups.stream().mapToDouble(z -> Math.exp(z)).sum() + "\t|\t" + x);
         return myValue / (myValue + otherInGroups.stream().mapToDouble(z -> Math.exp(z)).sum());
     }
 
@@ -47,7 +48,7 @@ public class SoftMax implements ActivationFunction {
     }
 
     public double getCrossentropyDerivationAt(double x, double targetValue, Parameters parameters, List<Double> otherInGroups) {
-        return getValueAt(x,parameters,otherInGroups) - targetValue;
+        return getValueAt(x, parameters, otherInGroups) - targetValue;
     }
 
     @Override

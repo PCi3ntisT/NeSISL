@@ -27,17 +27,17 @@ public class MultilayeredConstructiveArchitecture {
     private NeuralNetwork network;
     private RandomGenerator randomGenerator;
 
-    public MultilayeredConstructiveArchitecture(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGenerator randomGenerator) {
-        this.network = constructNetwork(inputFactOrder, outputFactOrder, new MissingValueKBANN(), randomGenerator);
+    public MultilayeredConstructiveArchitecture(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGenerator randomGenerator, boolean softmaxOutputs) {
+        this.network = constructNetwork(inputFactOrder, outputFactOrder, new MissingValueKBANN(), randomGenerator, softmaxOutputs);
         this.randomGenerator = randomGenerator;
     }
 
-    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
+    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator, boolean softmaxOutputs) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
         // automatci creation of softmax when multiclass classification
-        ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        ActivationFunction outputFce = (softmaxOutputs) ? SoftMax.getFunction() : Sigmoid.getFunction();
         List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
-        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
+        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues,softmaxOutputs);
 
         List<Node> bias = new LinkedList<>();
         bias.add(network.getBias());

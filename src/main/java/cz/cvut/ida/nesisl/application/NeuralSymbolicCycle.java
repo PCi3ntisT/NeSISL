@@ -5,6 +5,7 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearn
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AntecedentsTrimmer;
@@ -73,6 +74,8 @@ public class NeuralSymbolicCycle {
         Instances wekaDataset = datasetsPair.getRight();
 
         RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+        ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
+        ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
         String theory = ruleSet.getTheory();
         System.out.println(theory);
 
@@ -85,8 +88,24 @@ public class NeuralSymbolicCycle {
         System.out.println(relabeledAcc.computeAccuracy(relabeled.getRawData(), relabeled));
         System.out.println(relabeledAcc.numberOfConsistentClassifications(relabeled.getRawData(), relabeled));
 
+        Main.fakeNumberTheoryComplexityTodo = ruleSet.getComplexity();
+        File file = Tools.storeToTemporaryFile(theory);
+        Main main = new Main();
+        String[] rearanged = {arg[0], // KBANN
+                arg[1], // #ofRepeats
+                arg[2], // datasetFile
+                arg[3], // weightLearningSettingsFile
+                file.getAbsolutePath(),//arg[4], // ruleFile
+                arg[5], // KBANNsetting
+                //arg[6], // [ruleSpecificFile]
+                };
+        main.runKBANN(rearanged, numberOfRepeats, nesislDataset, wls, randomGenerator);
+
         //RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
         //RuleSet r1 = RuleTrimmer.create(ruleSet).getRuleSet();
+
+        // todo
+        // PARSERT NA FOLDy regent/topgen a mozna jeste dalsi veci
 
         // under development
 

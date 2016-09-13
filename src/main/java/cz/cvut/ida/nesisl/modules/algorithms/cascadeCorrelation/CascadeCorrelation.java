@@ -35,13 +35,13 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         this.randomGenerator = randomGenerator;
     }
 
-    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator) {
+    public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator, boolean softmaxOutputs) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
         // automatci creation of softmax when multiclass classification
-        //ActivationFunction outputFce = (outputFactOrder.size() > 1) ? SoftMax.getFunction() : Sigmoid.getFunction();
-        ActivationFunction outputFce = Sigmoid.getFunction();
+        ActivationFunction outputFce = (softmaxOutputs) ? SoftMax.getFunction() : Sigmoid.getFunction();
+        //ActivationFunction outputFce = Sigmoid.getFunction();
         List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
-        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues);
+        NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues,softmaxOutputs);
 
         inputs.add(network.getBias());
         Tools.makeFullInterLayerForwardConnections(inputs, output, network, randomGenerator);
@@ -259,8 +259,8 @@ public class CascadeCorrelation implements NeuralNetworkOwner {
         return list;
     }
 
-    public static CascadeCorrelation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValues missingValuesProcessor) {
-        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValuesProcessor, randomGenerator);
+    public static CascadeCorrelation create(List<Fact> inputFactOrder, List<Fact> outputFactOrder, RandomGeneratorImpl randomGenerator, MissingValues missingValuesProcessor, boolean softmaxOutputs) {
+        NeuralNetwork network = constructNetwork(inputFactOrder, outputFactOrder, missingValuesProcessor, randomGenerator, softmaxOutputs);
         return new CascadeCorrelation(network, randomGenerator);
     }
 }

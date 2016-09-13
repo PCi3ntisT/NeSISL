@@ -55,8 +55,8 @@ public class Regent implements NeuralNetworkOwner {
         }
     }
 
-    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega, RegentSetting regentSetting, Dataset dataset) {
-        KBANN kbann = KBANN.create(file, dataset, specific, new KBANNSettings(randomGenerator, omega, regentSetting.getTopGenSettings().perturbationMagnitude()));
+    public static Regent create(File file, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, Double omega, RegentSetting regentSetting, Dataset dataset, boolean softmaxOutputs) {
+        KBANN kbann = KBANN.create(file, dataset, specific, new KBANNSettings(randomGenerator, omega, regentSetting.getTopGenSettings().perturbationMagnitude()),softmaxOutputs);
         return new Regent(kbann, randomGenerator);
     }
 
@@ -408,7 +408,7 @@ public class Regent implements NeuralNetworkOwner {
     }
 
     private NeuralNetwork constructNetwork(NeuralNetwork network, Map<Long, List<Node>> structure) {
-        NeuralNetwork result = new NeuralNetworkImpl(network.getInputNodes(), network.getOutputNodes(), network.getMissingValuesProcessor());
+        NeuralNetwork result = new NeuralNetworkImpl(network.getInputNodes(), network.getOutputNodes(), network.getMissingValuesProcessor(),network.areSoftmaxOutputs());
         Long maxLayer = structure.keySet().stream().mapToLong(l -> l).max().orElse(0);
         // cause structure posses reversedLayerIdxs
         structure.entrySet().forEach(entry ->

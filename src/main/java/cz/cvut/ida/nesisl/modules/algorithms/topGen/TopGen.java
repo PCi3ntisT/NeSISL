@@ -307,8 +307,8 @@ public class TopGen implements NeuralNetworkOwner {
         return list;
     }
 
-    public static TopGen create(File ruleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, TopGenSettings topGenSettings, Dataset dataset) {
-        KBANN kbann = KBANN.create(ruleFile, dataset, specific, new KBANNSettings(randomGenerator, topGenSettings.getOmega(), topGenSettings.perturbationMagnitude()));
+    public static TopGen create(File ruleFile, List<Pair<Integer, ActivationFunction>> specific, RandomGeneratorImpl randomGenerator, TopGenSettings topGenSettings, Dataset dataset, boolean softmaxOutputs) {
+        KBANN kbann = KBANN.create(ruleFile, dataset, specific, new KBANNSettings(randomGenerator, topGenSettings.getOmega(), topGenSettings.perturbationMagnitude()),softmaxOutputs);
         return new TopGen(kbann, randomGenerator);
     }
 

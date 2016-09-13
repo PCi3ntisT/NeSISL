@@ -7,6 +7,8 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge.Type;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.ConstantOne;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
@@ -42,31 +44,48 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     private final List<Fact> inputFactOrder;
     private Classifier classifier;
     private String msg = "";
+    private final Boolean softmaxOutputs;
 
-    public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor) {
-        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, null);
+    public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor, boolean softmaxOutputs) {
+        this(Tools.generateIdentityNodes(numberOfInputNodes),
+                (softmaxOutputs) ? Tools.generateNodes(numberOfOutputNodes, SoftMax.getFunction()) : Tools.generateNodes(numberOfOutputNodes, Sigmoid.getFunction()),
+                missingValuesProcessor,
+                null,
+                softmaxOutputs);
     }
 
-    public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
-        this(Tools.generateIdentityNodes(numberOfInputNodes), Tools.generateIdentityNodes(numberOfOutputNodes), missingValuesProcessor, classifier);
+    public NeuralNetworkImpl(int numberOfInputNodes, int numberOfOutputNodes, MissingValues missingValuesProcessor, Classifier classifier, boolean softmaxOutputs) {
+        this(Tools.generateIdentityNodes(numberOfInputNodes),
+                (softmaxOutputs) ? Tools.generateNodes(numberOfOutputNodes, SoftMax.getFunction()) : Tools.generateNodes(numberOfOutputNodes, Sigmoid.getFunction()),
+                missingValuesProcessor,
+                classifier,
+                softmaxOutputs);
     }
 
-    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor) {
-        this(inputNodes, outputNodes, missingValuesProcessor, null);
+    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, boolean softmaxOutputs) {
+        this(inputNodes, outputNodes, missingValuesProcessor, null, softmaxOutputs);
     }
 
-    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, Classifier classifier) {
+    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes, MissingValues missingValuesProcessor, Classifier classifier, boolean softmaxOutputs) {
         this(inputNodes, outputNodes, new HashMap<>(), new HashMap<>(),
                 new HashMap<>(), new HashMap<>(),
-                new HashMap<>(), new HashMap<>(), missingValuesProcessor, classifier);
+                new HashMap<>(), new HashMap<>(),
+                missingValuesProcessor,
+                classifier,
+                softmaxOutputs);
     }
 
-    public NeuralNetworkImpl(List<Node> inputNodes, List<Node> outputNodes,
-                             Map<Long, List<Node>> network, Map<Edge, Double> weights,
+    public NeuralNetworkImpl(List<Node> inputNodes,
+                             List<Node> outputNodes,
+                             Map<Long, List<Node>> network,
+                             Map<Edge, Double> weights,
                              Map<Node, Set<Edge>> forwardIncomingEdges,
                              Map<Node, Set<Edge>> forwardOutgoingEdges,
                              Map<Node, Set<Edge>> backwardIncomingEdges,
-                             Map<Node, Set<Edge>> backwardOutgoingEdges, MissingValues missingValuesProcessor, Classifier classifier) {
+                             Map<Node, Set<Edge>> backwardOutgoingEdges,
+                             MissingValues missingValuesProcessor,
+                             Classifier classifier,
+                             boolean softmaxOutputs) {
         this.inputNodes = new ArrayList<>(inputNodes);
         this.outputNodes = new ArrayList<>(outputNodes);
         this.network = network;
@@ -89,6 +108,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
 
         this.missingValuesProcessor = missingValuesProcessor;
         this.classifier = classifier;
+        this.softmaxOutputs = softmaxOutputs && outputNodes.size() > 1;
     }
 
 
@@ -260,7 +280,11 @@ public class NeuralNetworkImpl implements NeuralNetwork {
         Map<Node, Node> mapping = new HashMap<>();
         Pair<List<Node>, Map<Node, Node>> newInputs = Tools.copyNodes(inputNodes);
         Pair<List<Node>, Map<Node, Node>> newOutputs = Tools.copyNodes(outputNodes);
-        NeuralNetwork copy = new NeuralNetworkImpl(newInputs.getLeft(), newOutputs.getLeft(), this.missingValuesProcessor, classifier);
+        NeuralNetwork copy = new NeuralNetworkImpl(newInputs.getLeft(),
+                newOutputs.getLeft(),
+                this.missingValuesProcessor,
+                classifier,
+                areSoftmaxOutputs());
         mapping.putAll(newInputs.getRight());
         mapping.putAll(newOutputs.getRight());
 
@@ -325,7 +349,10 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                 newForwardIncomingEdges,
                 newForwardOutgoingEdges,
                 newBackwardIncomingEdges,
-                newBackwardOutgoingEdges, this.missingValuesProcessor, classifier);
+                newBackwardOutgoingEdges,
+                this.missingValuesProcessor,
+                classifier,
+                areSoftmaxOutputs());
         return copy;
     }
 
@@ -546,12 +573,13 @@ public class NeuralNetworkImpl implements NeuralNetwork {
             }
         });
 
-        //if (outputNodes.size() > 1) {
-        // they are softmax nodes
-        //            evaluateFeedForwardSoftmaxOutputLayer(outputNodes, outputValues);
-        //      } else {
-        evaluateFeedforwardLayer(outputNodes, outputValues);
-        //     }
+
+        if (areSoftmaxOutputs()) {
+            // they are softmax nodes
+            evaluateFeedForwardSoftmaxOutputLayer(outputNodes, outputValues);
+        } else {
+            evaluateFeedforwardLayer(outputNodes, outputValues);
+        }
 
         /*System.out.println("kontrolni vypis");
         outputValues.entrySet().forEach(entry -> System.out.println(entry.getKey() + "\t" + entry.getValue()));
@@ -576,6 +604,15 @@ public class NeuralNetworkImpl implements NeuralNetwork {
                     .map(entry -> entry.getValue())
                     .collect(Collectors.toList());
             double nodeOutput = node.getValue(outputNodeInput.get(node), others);
+            if(Double.isNaN(nodeOutput)){
+                System.out.println("***");
+                outputNodes.forEach(e -> System.out.println(e));
+
+
+                System.exit(-1);
+            }
+            //System.out.println("output\t" + nodeOutput);
+           // System.out.println("!!! tady to zkontrolovat");
             outputValues.put(node, nodeOutput);
         });
     }
@@ -623,7 +660,7 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public Node getBias() {
         if (null == bias) {
-            bias = NodeFactory.create(ConstantOne.getFunction(),"bias");
+            bias = NodeFactory.create(ConstantOne.getFunction(), "bias");
         }
         return bias;
     }
@@ -694,6 +731,11 @@ public class NeuralNetworkImpl implements NeuralNetwork {
     @Override
     public Classifier getClassifier() {
         return classifier;
+    }
+
+    @Override
+    public Boolean areSoftmaxOutputs() {
+        return softmaxOutputs;
     }
 
     private void evaluateFeedforwardNode(Node node, Map<Node, Double> outputValues) {

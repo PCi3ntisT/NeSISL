@@ -65,7 +65,7 @@ public class ThresholdClassificator implements Classifier {
 
     // oki, this creation is awful, should be reimplemented to give more sense
     public static Classifier create(NeuralNetwork network, Dataset dataset) {
-        if (network.getNumberOfOutputNodes() > 1){
+        if (network.getNumberOfOutputNodes() > 1){ // network.areSoftmaxOutputs()
             return SoftMaxClassifier.create(Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));
         }
         return create(Tools.evaluateOnTrainDataAllAndGetResults(dataset, network));

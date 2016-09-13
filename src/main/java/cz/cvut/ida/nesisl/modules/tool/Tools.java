@@ -1,5 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.modules.tool;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
@@ -12,8 +13,8 @@ import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.SoftMaxClassifier;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.SoftMax;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -100,28 +101,41 @@ public class Tools {
     // list<Double> of diferences (computedOutputValues - labels)
     public static Pair<List<Double>, Results> computeErrorResults(NeuralNetwork network, List<Value> input, List<Value> output) {
         Results result = network.evaluateAndGetResults(input);
-        /*if(network.getNumberOfOutputNodes() > 1){
+        if (network.areSoftmaxOutputs()) {
             // softmax case
             // would be nicer to make modularized/parametrized instead of this hard coding
             return computeCrossEntropyDiff(result, output);
-        }else {
+        } else {
             return computeDiffs(result, output);
-        }*/
-        return computeDiffs(result, output);
+        }
+        //return computeDiffs(result, output);
     }
 
     private static Pair<List<Double>, Results> computeCrossEntropyDiff(Results result, List<Value> output) {
-        List<Double> list =  new ArrayList<>();
-        IntStream.range(0,output.size())
-                .forEach(idx -> list.add(result.getComputedOutputs().get(idx) - output.get(idx).getValue()));
-        return new Pair<>(list,result);
+        List<Double> list = new ArrayList<>();
+        IntStream.range(0, output.size())
+                .forEach(idx -> list.add(
+                                //result.getComputedOutputs().get(idx) - output.get(idx).getValue())
+                                output.get(idx).getValue() - result.getComputedOutputs().get(idx)
+                ));
+        // in fact returns x_i - t_i
+        return new Pair<>(list, result);
     }
 
     private static Pair<List<Double>, Results> computeCrossEntropy(Results result, List<Value> output) {
-        List<Double> list =  new ArrayList<>();
-        IntStream.range(0,output.size())
-                .forEach(idx -> list.add(output.get(idx).getValue() * Math.log(result.getComputedOutputs().get(idx))));
-        return new Pair<>(list,result);
+        List<Double> list = new ArrayList<>();
+        IntStream.range(0, output.size())
+                .forEach(idx -> {
+                    /*System.out.println("--");
+                    System.out.println(output.get(idx).getValue() + "\t" + result.getComputedOutputs().get(idx));
+                    System.out.println(Math.log(result.getComputedOutputs().get(idx)));
+                    */
+                    list.add(
+                            output.get(idx).getValue()
+                                    * Math.log(result.getComputedOutputs().get(idx)));
+
+                });
+        return new Pair<>(list, result);
     }
 
     private static Pair<List<Double>, Results> computeDiffs(Results result, List<Value> labeledOutput) {
@@ -237,9 +251,10 @@ public class Tools {
         return map;
     }
 
+    // also awful
     private static Boolean isClassifiedCorrectly(Classifier classifier, Sample sample, Results result) {
-        if(classifier instanceof SoftMaxClassifier){
-            return ((SoftMaxClassifier) classifier).isCorrectlyClassified(sample.getOutput(),result.getComputedOutputs());
+        if (classifier instanceof SoftMaxClassifier) {
+            return ((SoftMaxClassifier) classifier).isCorrectlyClassified(sample.getOutput(), result.getComputedOutputs());
         }
         for (int idx = 0; idx < result.getComputedOutputs().size(); idx++) {
             if (!isZero(Math.abs(sample.getOutput().get(idx).getValue() - classifier.classifyToDouble(result.getComputedOutputs().get(idx))))) {
@@ -288,15 +303,19 @@ public class Tools {
     }
 
     public static double computeAverageSquaredTrainTotalErrorPlusEdgePenalty(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
+        //System.out.println("\t" + computeAverageSquaredTrainTotalError(network, dataset));
         return computeAverageSquaredTrainTotalError(network, dataset) + computePenalty(network, wls.getPenaltyEpsilon(), wls.getSLFThreshold());
     }
 
     public static double computeCrossEntropyTrainTotalError(NeuralNetwork network, Dataset dataset, WeightLearningSetting wls) {
-        return  dataset.getTrainData(network).stream()
+        return dataset.getTrainData(network).stream()
                 .mapToDouble(sample -> {
                     Results results = network.evaluateAndGetResults(sample.getInput());
                     Pair<List<Double>, Results> pair = computeCrossEntropy(results, sample.getOutput());
-                    return -pair.getLeft().stream().mapToDouble(d -> d).sum();
+                    /*System.out.println("");
+                    pair.getLeft().stream()
+                            .forEach(s -> System.out.println("\t" + s));
+                    */return -pair.getLeft().stream().mapToDouble(d -> d).sum();
                 })
                 .sum();
     }
@@ -321,7 +340,20 @@ public class Tools {
         return 0.001;
     }
 
-    public static void storeToFile(String content, String fileName){
+    public static File storeToTemporaryFile(String content) {
+        try {
+            File temp = File.createTempFile("tempfile", ".tmp");
+            BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+            bw.write(content);
+            bw.close();
+            return temp;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void storeToFile(String content, String fileName) {
         File file = new File(fileName);
         try {
             FileWriter fw = new FileWriter(file);

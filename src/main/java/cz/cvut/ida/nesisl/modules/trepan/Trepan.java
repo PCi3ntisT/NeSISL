@@ -161,10 +161,10 @@ public class Trepan {
                 "\n" +
                 multiclass +
                 "set seed\t\t\t\t10\n" +
-                "set tree_size_limit\t\t35\n" +
+                "set tree_size_limit\t\t15\n" +
                 "set min_sample\t\t\t250\n" +
                 "\n" +
-                "trepan  " + folderName + "trepan.fidelity\n" +
+                "disjunctive_trepan  " + folderName + "trepan.fidelity\n" +
                 "test_fidelity\n" +
                 "test_correctness\n" +
                 "print_tree\n" +
