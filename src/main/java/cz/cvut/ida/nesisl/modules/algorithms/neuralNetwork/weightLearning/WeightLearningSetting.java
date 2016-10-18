@@ -169,6 +169,11 @@ public class WeightLearningSetting {
         return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d, -1.0d, wls.isLearningWithCrossEntropy());
     }
 
+    public static WeightLearningSetting turnOffCrossentropyLearning(WeightLearningSetting wls) {
+        System.out.println("Turning off crossentropy learning since there are only two classses.");
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold(), false);
+    }
+
     public boolean isLearningWithCrossEntropy() {
         return crossEntropy;
     }

@@ -184,6 +184,11 @@ public class RuleFile {
         if (!wrapper.getRules().containsKey(head)) {
             wrapper.getRules().put(head, new HashSet<>());
         }
+
+        if(body.trim().equals(".")){
+            // awful hack because of malformed (zero rule) theories.
+            return wrapper;
+        }
         wrapper.getRules().get(head).add(new Pair<>(body, isModifiable));
         return wrapper;
     }

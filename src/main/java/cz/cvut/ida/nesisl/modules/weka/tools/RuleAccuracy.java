@@ -33,16 +33,16 @@ public class RuleAccuracy {
     }
 
     public double computeTrainAccuracy(Dataset dataset) {
-        return computeAccuracy(dataset.getRawData(),dataset);
+        return computeAccuracy(dataset.getRawData(), dataset);
     }
 
     public double computeTestAccuracy(Dataset dataset) {
-        return computeAccuracy(dataset.getRawTestData(),dataset);
+        return computeAccuracy(dataset.getRawTestData(), dataset);
     }
 
     public double computeAccuracy(List<Map<Fact, Value>> data, Dataset nesislDataset) {
         // awful
-        if(null == ruleSet){
+        if (null == ruleSet) {
             return 0.0;
         }
         return (1.0 * numberOfConsistentClassifications(data, nesislDataset)) / data.size();
@@ -70,6 +70,9 @@ public class RuleAccuracy {
                 }
             }
         }
+
+        // implicit behavior for binary problems
+        System.out.println("Should not get so far! Missing last rule without no antecedent.");
         return false;
     }
 

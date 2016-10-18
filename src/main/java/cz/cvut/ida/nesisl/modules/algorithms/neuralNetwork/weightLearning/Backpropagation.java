@@ -55,8 +55,8 @@ public class Backpropagation {
             //double currentError = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);
             errors.add(currentError);
             iteration++;
-            System.out.println("computing error");
-            System.out.println(iteration + "\t" + currentError);
+            //System.out.println("computing error");
+            //System.out.println(iteration + "\t" + currentError);
 
 
         }

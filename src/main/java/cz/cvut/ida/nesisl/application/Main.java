@@ -28,7 +28,9 @@ import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
 import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
+import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
+import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RulesTrimmer;
 import weka.core.Instances;
 
 import java.io.File;
@@ -56,7 +58,7 @@ public class Main {
         System.out.println();
 
         if (arg.length < 4) {
-            System.out.println("Not enought arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG");
+            System.out.println("Not enough arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG");
             System.exit(0);
         }
 
@@ -83,14 +85,38 @@ public class Main {
         Dataset nesislDataset = datasetsPair.getLeft();
         Instances wekaDataset = datasetsPair.getRight();
 
+        if(nesislDataset.getOutputFactOrder().size() < 2 && wls.isLearningWithCrossEntropy()){
+            wls = WeightLearningSetting.turnOffCrossentropyLearning(wls);
+        }
+
         // TODO upravit nastaveni
         RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+
+
+        System.out.println(ruleSet.getTheory());
+        System.out.println(ruleSet.getComplexity());
 
         // popripade nejaky trimmer nebo relabelling
         // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
         // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
         // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
         Dataset dataset = nesislDataset;
+        double percentualAccuracyOfOriginalDataset = 0.7;
+        ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
+
+        System.out.println(ruleSet.getTheory());
+        System.out.println(ruleSet.getComplexity());
+
+
+        /*System.out.println(ruleSet.getTheory());
+
+        System.out.println("tady jeste predelat odrezavani ten pravidel - je to trochu jine kdyz je pouze jedna trida");
+        System.out.println("zaroven to predelat tak aby to accuracy orezaneho byla, dejme tomu, 75% puvodni accuracy");
+        System.out.println("kolik mel ten JRip ruleset pre oreyanim accuracy?");
+
+        ruleSet = RulesTrimmer.create(ruleSet, 3);
+        System.out.println(ruleSet.getTheory());
+        */
 
         Main main = new Main();
         switch (arg[0]) {
@@ -127,6 +153,7 @@ public class Main {
     }
 
     private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet) {
+        System.out.println(numberOfRepeats);
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
                 .mapToObj(idx -> {
@@ -146,8 +173,8 @@ public class Main {
                     */
 
                     long ruleSetComplexity = (null == ruleSet) ? 0 : ruleSet.getComplexity();
-                    double trainRuleAcc = RuleAccuracy.create(ruleSet).computeTrainAccuracy(dataset);
-                    double testRuleAcc = RuleAccuracy.create(ruleSet).computeTestAccuracy(dataset);
+                    double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(dataset);
+                    double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(dataset);
 
                     if (TREPAN_RUN) {
                         TrepanResults trepan = Trepan.create(learnedNetwork, dataset, algName, idx, currentResult.getMyAdress()).run();
@@ -201,8 +228,9 @@ public class Main {
             throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
         }
 
+
         String algName = "KBANN";
-        File settingFile = new File(arg[5]);
+        File settingFile = new File(arg[4]);
         KBANNSettings kbannSettings = KBANNSettings.create(randomGenerator, settingFile);
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
@@ -228,7 +256,7 @@ public class Main {
         List<Pair<Integer, ActivationFunction>> specific = new ArrayList<>();
 
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        File settingFile = new File(arg[5]);
+        File settingFile = new File(arg[4]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
         File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
 
@@ -252,7 +280,7 @@ public class Main {
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
 
         File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
-        File settingFile = new File(arg[5]);
+        File settingFile = new File(arg[4]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
         Initable<Regent> initialize = () -> Regent.create(ruleFile, specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting, dataset, wls.isLearningWithCrossEntropy());

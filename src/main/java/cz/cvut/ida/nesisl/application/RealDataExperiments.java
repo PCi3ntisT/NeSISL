@@ -11,7 +11,7 @@ import java.util.Set;
  */
 public class RealDataExperiments {
     public static void main(String arg[]) {
-        String numberOfRepeats = "2";
+        String numberOfRepeats = "10";
 
         Set<String> nominalized = new HashSet<>();
         nominalized.add("breastCancer1");
@@ -48,10 +48,10 @@ public class RealDataExperiments {
           //      "voting",
             //    "wine"/**/
 
+                "wine"
+                //"lenses",
 
-                //"monks2",
-
-                "voting"
+                //"cnf200-7"
         };
 
         Arrays.stream(domains).forEach(domain -> {
@@ -59,7 +59,7 @@ public class RealDataExperiments {
             String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
             String folder = experimentFolder + domain + File.separator;
             String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "-0-0" + File.separator + "kbannSetting.txt";
-            String wlsFolder = "-0-0-0-0-0-0-0-0";
+            String wlsFolder = "-0-0-0-0-0-0-0-0-0";
             String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + wlsFolder + File.separator + "wlsSetting.txt";
             String KBANNinput = folder + "theory";
             String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized": ""); //Nominalized";//Nominalized";
@@ -72,16 +72,16 @@ public class RealDataExperiments {
             String dncSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
             String regentSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
-            String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator +  "TopGen" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "TopGenSetting.txt";
+            String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator +  "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
-                Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
-                Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
-                //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
+                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
+                //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
+                Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
 
                 //Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
-                //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput, tgSetting});
+                //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, tgSetting});
 
                 //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
 

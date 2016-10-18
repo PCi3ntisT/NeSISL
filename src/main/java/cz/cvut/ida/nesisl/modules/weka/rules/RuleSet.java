@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.weka.rules;
 
+import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -107,11 +109,26 @@ public class RuleSet {
     }
 
     public boolean isBinaryClassClassification(){
-
         return 2 == rules.stream()
                 .map(rule -> rule.getHead())
                 .collect(Collectors.toSet())
-                .size();
+                .size()
+
+                ||
+                1 == rules.stream()
+                .map(rule -> rule.getHead())
+                .collect(Collectors.toSet())
+                .size() ;
+
+        /*return 1 == rules.stream()
+                .map(rule -> rule.getHead())
+                .collect(Collectors.toSet())
+                .size()
+
+                && rules.stream()
+                .filter(rule -> rule.getHead().equals(DatasetImpl.CLASS_TOKEN))
+                .count() > 1;
+                */
     }
 
     @Override

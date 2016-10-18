@@ -22,8 +22,10 @@ public class WekaJRip {
 
     public static WekaJRip create(Instances dataset) {
         JRip jrip = new JRip();
+        String[] args = new String[]{"-F","10"};
         System.out.println("TODO add parameters to JRIP");
         try {
+            jrip.setOptions(args);
             jrip.buildClassifier(dataset);
         } catch (Exception e) {
             e.printStackTrace();
@@ -37,6 +39,8 @@ public class WekaJRip {
         rules.forEach(rule -> System.out.println(((JRip.RipperRule)rule).toString()));
         System.out.println(jrip.toString());
         */
+
+        System.out.println(jrip.toString());
 
         RuleSet ruleSet = RuleSet.create(jrip.toString());
         return new WekaJRip(ruleSet);

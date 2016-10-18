@@ -1,3 +1,4 @@
 Manifest-Version: 1.0
 Main-Class: main.java.cz.cvut.ida.nesisl.application.Main
+Class-path: weka.jar
 

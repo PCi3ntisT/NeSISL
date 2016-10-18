@@ -44,7 +44,6 @@ public class Rules {
     public static Rules create(RuleFile ruleFile) {
         Set<KBANNRule> finalRules = makeFinalRules(ruleFile);
         Set<Pair<Fact, Integer>> hierarchy = makeHierarchy(finalRules,ruleFile);
-        
         return new Rules(finalRules, hierarchy, ruleFile.getInputFacts(), ruleFile.getConclusionFacts());
     }
 

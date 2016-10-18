@@ -205,6 +205,10 @@ public class DatasetImpl implements Dataset {
 
     public static Dataset stratifiedSplit(Dataset dataset, RandomGenerator randomGenerator, int numberOfFolds) {
         synchronized (dataset) {
+            if(1 == numberOfFolds){
+                return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), dataset.getRawData(), dataset.getRawData(), dataset.getOriginalFile(),dataset.getClassAttribute());
+            }
+
             List<Map<Fact, Value>> trainData = new ArrayList<>();
             List<Map<Fact, Value>> nodeTrainData = new ArrayList<>();
             List<List<Map<Fact, Value>>> splitted = splitAccordingToResults(dataset);
@@ -315,10 +319,6 @@ public class DatasetImpl implements Dataset {
         System.out.println("TODO - resolve ambigious ");
         String stringForm = datasetToString(attributes, examples, normalize);
 
-        System.out.println("data'");
-        System.out.println(stringForm);
-        System.out.println("'");
-
         InputStream stream = new ByteArrayInputStream(stringForm.getBytes(StandardCharsets.UTF_8));
         Instances data = null;
         try {
@@ -411,6 +411,7 @@ public class DatasetImpl implements Dataset {
     }
 
     private static String valuesToString(AttributeProprety attribute) {
+        System.out.println(attribute);
         // leaving out unkwnown value
         StringBuilder sb = new StringBuilder();
         Stream<String> stream = Stream.empty();
@@ -421,10 +422,16 @@ public class DatasetImpl implements Dataset {
         }
         stream.filter(value -> !UNKNOWN_VALUE.equals(value))
                 .forEach(value -> sb.append(value + ","));
+
+        System.out.println(sb.toString());
+
         return sb.toString().substring(0, sb.length() - 1);
     }
 
     private static Dataset createNesislDataset(List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes, List<List<String>> examples, File file, boolean normalize) {
+
+        System.out.println("Ouch, probably, while creating the weka-like dataset, output classes should be in order which is produced by JRip. Otherwise, it may give different results.");
+
         List<Fact> inputFacts = generateInputFacts(ambigious, attributes);
         List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only)
         List<Map<Fact, Value>> reformatedExamples = reformateData(inputFacts, outputFacts, examples, attributes, ambigious, normalize);

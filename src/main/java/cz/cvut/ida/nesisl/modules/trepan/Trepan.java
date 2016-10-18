@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 public class Trepan {
 
     // path to trepan executables !!!! (currently hardcoded)
-    private String trepanExe = (System.getProperty("os.name").contains("Windows")) ? "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe" : "/mnt/storage-brno3-cerit/home/svatoma1/trepan/Trepan.exe";
+    private String trepanExe = (System.getProperty("os.name").contains("Windows")) ? "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe" : "/mnt/storage-brno3-cerit/home/svatoma1/trepan/TrepanWin.exe";
 
 
     private final NeuralNetwork learnedNetwork;

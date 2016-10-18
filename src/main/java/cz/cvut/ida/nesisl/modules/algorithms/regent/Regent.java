@@ -150,6 +150,19 @@ public class Regent implements NeuralNetworkOwner {
                 .count();
         if (count > 0) {
             System.out.println("problem v \t" + where);
+            System.out.println("\thrany\tincomingSize==0");
+            nodes.stream()
+                    .filter(n -> network.getIncomingForwardEdges(n).size() == 0)
+                    .forEach(n-> System.out.println(n));
+            System.out.println("\thrany\toutgoingSize==0");
+            nodes.stream()
+                    .filter(n -> network.getOutgoingForwardEdges(n).size() == 0)
+                    .forEach(n-> System.out.println(n));
+            System.out.println("\tnemajici bias");
+            nodes.stream()
+                    .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(bias, n, Edge.Type.FORWARD)))
+                    .forEach(n -> System.out.println(n));
+
             nodes.stream()
                     .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(bias, n, Edge.Type.FORWARD)))
                     .forEach(n -> System.out.println(n));

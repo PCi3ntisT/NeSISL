@@ -154,11 +154,12 @@ public class OldMain {
                     System.out.println("\t" + learnedNetwork.getClassifier().getThreshold());
                     */
 
+
                     if (TREPAN_RUN) {
                         TrepanResults trepan = Trepan.create(learnedNetwork, dataset, algName, idx, currentResult.getMyAdress()).run();
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan, ruleSetComplexity);
+                        // TODO currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan, ruleSetComplexity);
                     } else {
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity);
+                        // TODO currentResult.addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity);
                     }
                     return currentResult;
                 }).collect(Collectors.toCollection(ArrayList::new));

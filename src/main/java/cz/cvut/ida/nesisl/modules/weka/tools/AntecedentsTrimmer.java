@@ -50,6 +50,9 @@ public class AntecedentsTrimmer {
         Implication trimmedImplication = Implication.create(rule.getImplications().get(selectedImplication).getBody().subList(0,rule.getImplications().get(selectedImplication).getNumberOfAntecedents()-1));
         Rule trimmedRule = rule.replaceImplication(selectedImplication, trimmedImplication);
         RuleSet trimmedRuleSet = ruleSet.replaceRule(selectedRule, trimmedRule);
+
+        System.out.println("antecedent trimmed");
+
         return new AntecedentsTrimmer(trimmedRuleSet);
     }
 

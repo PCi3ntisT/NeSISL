@@ -2,12 +2,12 @@ package main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.Backpropagation;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
-import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NeuralNetworkImpl;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
 import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
@@ -18,7 +18,6 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Created by EL on 1.3.2016.
@@ -39,13 +38,25 @@ public class KBANN implements NeuralNetworkOwner {
         networkConstruction = addSpecificNodes(specific, networkConstruction);
         networkConstruction = addFullyConnectionToAdjacentLayers(networkConstruction);
         if (settings.isEdgesBetweenAdjacentLayersOnly()) {
-            networkConstruction = removeEdgesBetwenNonAdjacentLayers(networkConstruction);
+            networkConstruction = removeEdgesBetweenNonAdjacentLayers(networkConstruction);
         }
+        networkConstruction = fillUnbiased(networkConstruction, settings.getRandomGenerator());
         networkConstruction = perturbeNetworkConnection(networkConstruction, settings);
         this.network = networkConstruction;
     }
 
-    private NeuralNetwork removeEdgesBetwenNonAdjacentLayers(NeuralNetwork network) {
+    private static NeuralNetwork fillUnbiased(NeuralNetwork network, RandomGenerator randomGenerator) {
+        List<Node> nodes = new ArrayList<>(network.getHiddenNodes());
+        nodes.addAll(network.getOutputNodes());
+
+        nodes.stream()
+                .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(network.getBias(), n, Edge.Type.FORWARD)))
+                .forEach(n -> network.addEdgeStateful(new Edge(network.getBias(), n, Edge.Type.FORWARD), randomGenerator.nextDouble()));
+
+        return network;
+    }
+
+    private NeuralNetwork removeEdgesBetweenNonAdjacentLayers(NeuralNetwork network) {
         Set<Node> previousLayer = new HashSet<>(network.getInputNodes());
         Set<Node> currentLayer = null;
         Node bias = network.getBias();

@@ -5,12 +5,6 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearn
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
-import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
-import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.Relabeling;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleTrimmer;
 import weka.core.Instances;
 
 import java.io.File;

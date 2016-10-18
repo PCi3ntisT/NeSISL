@@ -238,8 +238,6 @@ public class TopGen implements NeuralNetworkOwner {
 
         Tools.makeFullInterLayerForwardConnections(inputs, newNode, currentNetwork, randomGenerator);
 
-        ((NeuralNetworkImpl) currentNetwork).setMsg("by orNode\t" + newNode + "\n to network " + ((NeuralNetworkImpl) network).getMsg());
-
         if (Regent.check(currentNetwork, " addOrNode")) {
             System.out.println("right now added\t" + newNode + "\n"
                             + "from\n"
@@ -273,10 +271,10 @@ public class TopGen implements NeuralNetworkOwner {
 
         currentNetwork.insertIntermezzoNodeStateful(currentParent, newOr);
 
-        currentNetwork.addEdgeStateful(newNode, newOr, 1.0d, Edge.Type.FORWARD);
-        currentNetwork.addEdgeStateful(currentParent, newOr, 1.0d, Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(newNode, newOr, kbannSetting.getOmega(), Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(currentParent, newOr, kbannSetting.getOmega(), Edge.Type.FORWARD);
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
-        currentNetwork.addEdgeStateful(currentNetwork.getBias(), newOr, -1 * kbannSetting.getOmega() / 2, Edge.Type.FORWARD);
+        currentNetwork.addEdgeStateful(currentNetwork.getBias(), newOr, (-1) * kbannSetting.getOmega() / 2, Edge.Type.FORWARD);
 
         ((NeuralNetworkImpl) currentNetwork).setMsg("by andNode\t" + newNode + "\t" + newOr + "\n to network " + ((NeuralNetworkImpl) network).getMsg());
 

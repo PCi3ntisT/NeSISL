@@ -62,13 +62,34 @@ public class RuleSetToTheory {
         StringBuilder theory = new StringBuilder();
         Set<String> before = new HashSet<>();
 
+        if (ruleSet.isBinaryClassClassification()
+                && ruleSet.getRules().get(0).getNumberOfImplications() < 2) {
+            Rule firstRule = ruleSet.getRules().get(0);
 
-        if (1 == ruleSet.getNumberOfRules() && 1 == ruleSet.getRules().get(0).getNumberOfImplications()) {
+            if (0 == firstRule.getNumberOfImplications()) {
+                theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                        new ArrayList<>(),
+                        true) + "\n");
+            } else {
+                Implication implication = ruleSet.getRules().get(0).getImplications().get(0);
+                theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                        convertImplication(implication),
+                        true) + "\n");
+            }
+
+        /*}else if (1 == ruleSet.getNumberOfRules() && 0 == ruleSet.getRules().get(0).getNumberOfImplications()) {
             // just a special case
             theory.append(createRule(DatasetImpl.CLASS_TOKEN,
                     new ArrayList<>(),
                     true) + "\n");
             before.add(DatasetImpl.CLASS_TOKEN);
+        } else if (1 == ruleSet.getNumberOfRules() && 1 == ruleSet.getRules().get(0).getNumberOfImplications()) {
+            // just a special case
+            Implication implication = ruleSet.getRules().get(0).getImplications().get(0);
+            theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                    convertImplication(implication),
+                    true) + "\n");
+            before.add(DatasetImpl.CLASS_TOKEN);*/
         } else {
             ruleSet.getRules().stream()
                     .forEach(targetImplicatorSet -> {

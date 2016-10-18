@@ -10,7 +10,7 @@ import java.util.Arrays;
 public class Experiments {
 
     public static void main(String arg[]) {
-        String numberOfRepeats = "1";
+        String numberOfRepeats = "10";
         String[] domains = new String[]{
                 //"logic" + File.separator + "and2",
                 //"logic" + File.separator + "and2Reversed",
@@ -63,6 +63,7 @@ public class Experiments {
             String regentSetting = expSettings + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
             try {
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
                 //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
 
@@ -70,7 +71,7 @@ public class Experiments {
                 //Main.main(new String[]{"SLF", numberOfRepeats, data, wls, slfInput});
                 //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, KBANNinput, tgSetting});
 
-                Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
+                //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }

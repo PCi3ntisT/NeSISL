@@ -371,9 +371,8 @@ public class Tools {
         } catch (Exception ex) {
             System.out.println(errorMsg);
             System.exit(-1);
-        }finally {
-            return -1;
         }
+        return -1;
     }
 
     public static File retrieveFile(String input, String errorMsg) {
