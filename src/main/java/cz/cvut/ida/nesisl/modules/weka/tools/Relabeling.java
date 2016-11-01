@@ -9,8 +9,6 @@ import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Implication;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Rule;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 
-import javax.xml.crypto.Data;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +37,7 @@ public class Relabeling {
      */
     public static Relabeling create(Dataset dataset, RuleSet ruleSet) {
         RuleAccuracy accuracy = RuleAccuracy.create(ruleSet);
-        List<Map<Fact, Value>> samples = dataset.getRawData()
+        List<Map<Fact, Value>> samples = dataset.getTrainRawData()
                 .stream()
                 .map(sample -> relabel(sample, ruleSet, accuracy, dataset.getClassAttribute()))
                 .collect(Collectors.toCollection(ArrayList::new));

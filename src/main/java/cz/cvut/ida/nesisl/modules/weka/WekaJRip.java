@@ -22,7 +22,7 @@ public class WekaJRip {
 
     public static WekaJRip create(Instances dataset) {
         JRip jrip = new JRip();
-        String[] args = new String[]{"-F","10"};
+        String[] args = new String[]{};//{"-F","10"};
         System.out.println("TODO add parameters to JRIP");
         try {
             jrip.setOptions(args);

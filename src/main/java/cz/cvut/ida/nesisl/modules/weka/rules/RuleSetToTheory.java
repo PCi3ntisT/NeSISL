@@ -91,6 +91,7 @@ public class RuleSetToTheory {
                     true) + "\n");
             before.add(DatasetImpl.CLASS_TOKEN);*/
         } else {
+            Rule last = ruleSet.getRules().get(ruleSet.getRules().size() - 1);
             ruleSet.getRules().stream()
                     .forEach(targetImplicatorSet -> {
                         String output = targetImplicatorSet.getHead();
@@ -100,6 +101,12 @@ public class RuleSetToTheory {
                             // do nothing, since the first class is already translated and the second is not to be translated at all
                         } else {
                             if (impliedBy.isEmpty()) {
+                                // not really sound since when there are two last rules with zero antecedents, then it's not an ending case
+                                // e.g. rule set: [] => class1; [] => class2
+                                if(last != impliedBy){
+                                    throw new IllegalStateException("The translation algorithm does not implement transfering a theory that contains more than one last rule with zero antecedents.");
+                                }
+
                                 // ending case
                                 if (ruleSet.isBinaryClassClassification()) {
                                     theory.append(createRule(output, new ArrayList<>(), true) + "\n");

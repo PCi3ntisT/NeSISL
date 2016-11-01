@@ -75,10 +75,10 @@ public class RealDataExperiments {
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator +  "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
                 //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
-                Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
+                //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
 
                 //Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
                 //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, tgSetting});
@@ -89,6 +89,7 @@ public class RealDataExperiments {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+
         });
     }
 

@@ -41,6 +41,9 @@ public class NeuralSymbolicCycleExperiments {
                 //"voting"
         };
 
+        System.out.println("TODO: udelat cyklus :))");
+
+
         Arrays.stream(domains).forEach(domain -> {
 
             String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
@@ -62,7 +65,7 @@ public class NeuralSymbolicCycleExperiments {
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                NeuralSymbolicCycle.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});

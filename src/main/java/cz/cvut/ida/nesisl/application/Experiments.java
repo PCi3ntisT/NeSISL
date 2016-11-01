@@ -62,6 +62,7 @@ public class Experiments {
             String tgSetting = expSettings + "TopGen" + File.separator + "-0-0-0-0-0-0-0-0-0" + File.separator + "TopGenSetting.txt";
             String regentSetting = expSettings + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
+            /*
             try {
                 Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
@@ -74,7 +75,7 @@ public class Experiments {
                 //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-            }
+            }*/
         });
     }
 }

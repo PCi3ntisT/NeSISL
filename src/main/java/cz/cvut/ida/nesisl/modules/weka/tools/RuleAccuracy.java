@@ -10,10 +10,8 @@ import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Implication;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Rule;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by EL on 8.9.2016.
@@ -33,7 +31,7 @@ public class RuleAccuracy {
     }
 
     public double computeTrainAccuracy(Dataset dataset) {
-        return computeAccuracy(dataset.getRawData(), dataset);
+        return computeAccuracy(dataset.getTrainRawData(), dataset);
     }
 
     public double computeTestAccuracy(Dataset dataset) {

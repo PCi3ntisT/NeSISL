@@ -15,11 +15,12 @@ import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.Crossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.Initable;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiCrossvalidation;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
+import main.java.cz.cvut.ida.nesisl.modules.experiments.RuleSetInitable;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
@@ -30,7 +31,6 @@ import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RulesTrimmer;
 import weka.core.Instances;
 
 import java.io.File;
@@ -48,92 +48,94 @@ public class Main {
 
     // numeric attributes are not possible to predict in this version
 
+    // general setting; TREPAN_RUN is needed to be true if you want to run the whole NSL cycle
     public static final boolean TREPAN_RUN = true;
 
-    private Integer numberOfFolds = 10;
+    private static final double percentualAccuracyOfOriginalDataset = 0.7;
 
-    // automatic version with JRip and others
+
+    // settings for random generator
+    private static final Double SIGMA = 1d;
+    private static final Double MU = 0.0d;
+    private static final Integer SEED = 13;
+
+    //
+    private static final String CYCLE_TOKEN = "-cycle";
+
     public static void main(String arg[]) throws FileNotFoundException {
         Arrays.stream(arg).forEach(e -> System.out.println(e + "\t"));
         System.out.println();
+        System.out.println("inner parameters");
+        System.out.println("sigma:\t" + SIGMA);
+        System.out.println("mu:\t" + MU);
+        System.out.println("seed:\t" + SEED);
+        System.out.println("percentualAccuracyOfOriginalDataset:\t" + percentualAccuracyOfOriginalDataset);
+        System.out.println("TREPAN_RUN:\t" + TREPAN_RUN);
+        System.out.println("end of info");
+        System.out.println();
 
         if (arg.length < 4) {
-            System.out.println("Not enough arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG");
+            System.out.println("Not enough arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]' or '" + CYCLE_TOKEN + " numberOfCycleRuns algorithmName numberOfFolds datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG...");
+            //System.out.println("Not enough arguments. Right setting in form 'algorithmName numberOfRuns datasetFile weightLearningSettingFile [...]'. Possible algorithms KBANN, CasCor, DNC, SLSF, TopGen, REGENT; write as first argument to see more. TODO this MSG...");
             System.exit(0);
         }
 
-        double simga = 1d;
-        double mu = 0.0d;
-        int seed = 13;
-        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
+        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(SIGMA, MU, SEED);
 
-        int numberOfRepeats = Tools.parseInt(arg[1], "The second argument (number of repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
-        File datasetFile = Tools.retrieveFile(arg[2], "The third argument (datasetFile) does not exist.\nArgument input instead '" + arg[2] + "'.");
-        File wlsFile = Tools.retrieveFile(arg[3], "The fourth argument (weightLearningSettingFile) does not exist.\nArgument input instead '" + arg[3] + "'.");
+        int numberOfSingleCycles = 0;
+        boolean singleCycle = CYCLE_TOKEN.equals(arg[0]);
+        if (singleCycle) {
+            numberOfSingleCycles = Tools.parseInt(arg[1], "The second argument (number of single cycle repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
+            String[] swap = new String[arg.length - 2];
+            final String[] finalArg = arg;
+            IntStream.rangeClosed(2, arg.length).forEach(idx -> swap[idx] = finalArg[idx]);
+            arg = swap;
 
-        // vypinani regularizace (appendix)
+            throw new UnsupportedOperationException("TODO");
+        }
+
+
+        int numberOfRepeats = Tools.parseInt(arg[1], "The second/fourth argument (number of repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
+        File datasetFile = Tools.retrieveFile(arg[2], "The third/fifth argument (datasetFile) does not exist.\nArgument input instead '" + arg[2] + "'.");
+        File wlsFile = Tools.retrieveFile(arg[3], "The fourth/sixth argument (weightLearningSettingFile) does not exist.\nArgument input instead '" + arg[3] + "'.");
+
+        // turning off regularization (appendix)
         WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
         if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
 
 
-        // TODO NACITANI NORMALIZACE ZAJISTIT :)
+        // TODO: add parameter for reading normalization
         boolean normalize = true; // not needed since only nominal input are used
-        Pair<Dataset, Instances> datasetsPair = DatasetImpl.parseAndGetDatasets(datasetFile, normalize);
+        //Pair<Dataset, Instances> datasetsPair = DatasetImpl.parseAndGetDatasets(datasetFile, normalize);
+        MultiRepresentationDataset multiRepre = DatasetImpl.parseMultiRepresentationDataset(datasetFile, normalize);
 
-        Dataset nesislDataset = datasetsPair.getLeft();
-        Instances wekaDataset = datasetsPair.getRight();
+        Dataset nesislDataset = multiRepre.getNesislDataset();
 
-        if(nesislDataset.getOutputFactOrder().size() < 2 && wls.isLearningWithCrossEntropy()){
+        if (nesislDataset.getOutputFactOrder().size() < 2 && wls.isLearningWithCrossEntropy()) {
             wls = WeightLearningSetting.turnOffCrossentropyLearning(wls);
         }
 
-        // TODO upravit nastaveni
-        RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
 
-
-        System.out.println(ruleSet.getTheory());
-        System.out.println(ruleSet.getComplexity());
-
-        // popripade nejaky trimmer nebo relabelling
-        // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-        // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-        // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
-        Dataset dataset = nesislDataset;
-        double percentualAccuracyOfOriginalDataset = 0.7;
-        ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
-
-        System.out.println(ruleSet.getTheory());
-        System.out.println(ruleSet.getComplexity());
-
-
-        /*System.out.println(ruleSet.getTheory());
-
-        System.out.println("tady jeste predelat odrezavani ten pravidel - je to trochu jine kdyz je pouze jedna trida");
-        System.out.println("zaroven to predelat tak aby to accuracy orezaneho byla, dejme tomu, 75% puvodni accuracy");
-        System.out.println("kolik mel ten JRip ruleset pre oreyanim accuracy?");
-
-        ruleSet = RulesTrimmer.create(ruleSet, 3);
-        System.out.println(ruleSet.getTheory());
-        */
+        System.out.println("zmenit backprop na SGD");
 
         Main main = new Main();
         switch (arg[0]) {
             case "CasCor":
-                main.runCasCor(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                main.runCasCor(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             case "DNC":
-                main.runDNC(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                main.runDNC(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             case "KBANN":
-                main.runKBANN(arg, numberOfRepeats, dataset, wls, ruleSet, randomGenerator);
+                main.runKBANN(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             case "TopGen":
-                main.runTopGen(arg, numberOfRepeats, dataset, wls, ruleSet, randomGenerator);
+                main.runTopGen(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             case "REGENT":
-                main.runREGENT(arg, numberOfRepeats, dataset, wls, ruleSet, randomGenerator);
+                main.runREGENT(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             //case "backprop":
             //    main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
@@ -147,24 +149,49 @@ public class Main {
         }
     }
 
-    private void runAndStoreExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet) {
-        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSet);
+    private void runAndStoreExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls);
         ExperimentResult.storeResults(results, algName, crossval.getOriginalFile(), settingFile, wls);
     }
 
-    private List<ExperimentResult> runExperiments(Initable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, Crossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet) {
+    private List<ExperimentResult> runExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls) {
         System.out.println(numberOfRepeats);
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
                 .mapToObj(idx -> {
+                    System.out.println("\n\n--------- fold " + idx + ":\t dataset extraction\n\n");
+
+                    Dataset nesislDataset = crossval.getDataset(idx);
+                    Instances wekaDataset = crossval.getTrainWekaDataset(nesislDataset);
+
+                    System.out.println("\n\n--------- fold " + idx + ":\t rule set learning\n\n");
+                    RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+
+                    System.out.println(ruleSet.getTheory());
+                    System.out.println(ruleSet.getComplexity());
+
+                    // popripade nejaky trimmer nebo relabelling
+                    // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
+                    // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
+                    // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
+                    System.out.println("\n\n--------- fold " + idx + ":\t ruleset trimming\n\n");
+                    ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
+
+                    System.out.println(ruleSet.getTheory());
+                    System.out.println(ruleSet.getComplexity());
+                    File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
+                    /* end of rule mining and trimming */
+
+
                     ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls);
-                    NeuralNetworkOwner alg = initialize.initialize();
+
+                    System.out.println("\n\n--------- fold " + idx + ":\t network initialization\n\n");
+                    NeuralNetworkOwner alg = initialize.initialize(ruleFile);
                     currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
-                    Dataset dataset = crossval.getDataset(idx);
-
+                    System.out.println("\n\n--------- fold " + idx + ":\t structure & weight learning\n\n");
                     long start = System.currentTimeMillis();
-                    NeuralNetwork learnedNetwork = learn.learn(alg, dataset);
+                    NeuralNetwork learnedNetwork = learn.learn(alg, nesislDataset);
                     long end = System.currentTimeMillis();
 
                     /*
@@ -172,21 +199,31 @@ public class Main {
                     System.out.println("\t" + learnedNetwork.getClassifier().getThreshold());
                     */
 
-                    long ruleSetComplexity = (null == ruleSet) ? 0 : ruleSet.getComplexity();
-                    double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(dataset);
-                    double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(dataset);
 
+                    long ruleSetComplexity = (null == ruleSet) ? 0 : ruleSet.getComplexity();
+                    double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
+                    double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
+
+                    System.out.println("\n\n--------- fold " + idx + ":\t result storing & TREPAN learning\n\n");
                     if (TREPAN_RUN) {
-                        TrepanResults trepan = Trepan.create(learnedNetwork, dataset, algName, idx, currentResult.getMyAdress()).run();
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset, trepan, ruleSetComplexity, trainRuleAcc, testRuleAcc);
+                        System.out.println("\n\n--------- fold " + idx + ":\t TREPAN learning \n\n");
+                        TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
+                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetComplexity, trainRuleAcc, testRuleAcc);
                     } else {
-                        currentResult.addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity, trainRuleAcc, testRuleAcc);
+                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetComplexity, trainRuleAcc, testRuleAcc);
                     }
+
+                    // storing initial ruleSet
+                    Tools.storeToFile(ruleSet.getTheory(), currentResult.getMyAdress() + File.separator + "initialTheory");
+                    Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
+
+
+                    System.out.println("\n\n--------- fold " + idx + ":\t ending iteration\n\n");
                     return currentResult;
                 }).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private void runCasCor(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    private void runCasCor(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run Cascade Correlation use 'CasCor   #ofRepeats  datasetFile  weightLearningSettingsFile  cascadeCorrelationSetting'");
         }
@@ -196,14 +233,15 @@ public class Main {
         File settingFile = new File(arg[4]);
         CascadeCorrelationSetting ccSetting = CascadeCorrelationSetting.create(settingFile);
 
-        Initable<CascadeCorrelation> initialize = () -> CascadeCorrelation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN(), wls.isLearningWithCrossEntropy());
+        RuleSetInitable<CascadeCorrelation> initialize = (ruleSetFile) -> CascadeCorrelation.create(dataset.getNesislDataset().getInputFactOrder(), dataset.getNesislDataset().getOutputFactOrder(), randomGenerator, new MissingValueKBANN(), wls.isLearningWithCrossEntropy());
         Learnable learn = (cascadeCorrelation, learningDataset) -> ((CascadeCorrelation) cascadeCorrelation).learn(learningDataset, finalWls, ccSetting);
 
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, null);
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    private void runDNC(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+
+    private void runDNC(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run Dynamic Node Creation use 'DNC   #ofRepeats  datasetFile  weightLearningSettingsFile  DNCSetting'");
         }
@@ -213,14 +251,14 @@ public class Main {
         DNCSetting dncSetting = DNCSetting.create(settingFile);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
 
-        Initable<DynamicNodeCreation> initialize = () -> DynamicNodeCreation.create(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), randomGenerator, new MissingValueKBANN(), wls.isLearningWithCrossEntropy());
+        RuleSetInitable<DynamicNodeCreation> initialize = (ruleSetFile) -> DynamicNodeCreation.create(dataset.getNesislDataset().getInputFactOrder(), dataset.getNesislDataset().getOutputFactOrder(), randomGenerator, new MissingValueKBANN(), wls.isLearningWithCrossEntropy());
         Learnable learn = (dnc, learningDataset) -> ((DynamicNodeCreation) dnc).learn(learningDataset, finalWls, dncSetting);
 
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, null);
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    public void runKBANN(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RuleSet ruleSet, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    public void runKBANN(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile weightLearningSettingsFile  KBANNsetting    [ruleSpecificFile]'");
         }
@@ -235,17 +273,16 @@ public class Main {
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
-        File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
-
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings, wls.isLearningWithCrossEntropy());
+        RuleSetInitable<KBANN> initialize = (ruleSetFile) -> KBANN.create(ruleSetFile, dataset.getNesislDataset(), specificRules, kbannSettings, wls.isLearningWithCrossEntropy());
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet);
+        //Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    private void runTopGen(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RuleSet ruleSet, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    private void runTopGen(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "TopGen";
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run TopGen use 'TopGen   #ofRepeats  datasetFile  weightLearningSettingsFile TopGenSettings'");
@@ -258,16 +295,15 @@ public class Main {
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         File settingFile = new File(arg[4]);
         TopGenSettings tgSetting = TopGenSettings.create(settingFile);
-        File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
 
-        Initable<TopGen> initialize = () -> TopGen.create(ruleFile, specific, randomGenerator, tgSetting, dataset, wls.isLearningWithCrossEntropy());
+        RuleSetInitable<TopGen> initialize = (ruleSetFile) -> TopGen.create(ruleSetFile, specific, randomGenerator, tgSetting, dataset.getNesislDataset(), wls.isLearningWithCrossEntropy());
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, TopGenSettings.create(tgSetting));
 
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet);
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    private void runREGENT(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RuleSet ruleSet, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
+    private void runREGENT(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         String algName = "REGENT";
         if (arg.length < 5) {
             throw new IllegalStateException("Need more arguments. To run REGENT use 'REGENT   #ofRepeats  datasetFile  weightLearningSettingsFile RegentSetting'");
@@ -279,66 +315,15 @@ public class Main {
 
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
 
-        File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
         File settingFile = new File(arg[4]);
         RegentSetting regentSetting = RegentSetting.create(settingFile, randomGenerator);
 
-        Initable<Regent> initialize = () -> Regent.create(ruleFile, specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting, dataset, wls.isLearningWithCrossEntropy());
+        RuleSetInitable<Regent> initialize = (ruleSetFile) -> Regent.create(ruleSetFile, specific, randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting, dataset.getNesislDataset(), wls.isLearningWithCrossEntropy());
         Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, RegentSetting.create(regentSetting), new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
         //Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet);
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
 
-    /* not updated
-    private void runBackprop(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        if (arg.length < 6) {
-            throw new IllegalStateException("Need more arguments. To run backprop only on KBANN use 'backprop   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile   '");
-        }
-        if (arg.length > 6) {
-            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
-        }
-
-        String algName = "backprop";
-        File ruleFile = new File(arg[4]);
-        File settingFile = new File(arg[5]);
-        KBANNSettings kbannSettings = new KBANNSettings(randomGenerator, 1.0, true);
-
-        List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
-
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
-        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
-
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, fakeNumberTheoryComplexityTodo);
-    }
-    */
-    /* not updated
-    private void runFullyConnected(String[] arg, int numberOfRepeats, Dataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
-        if (arg.length < 6) {
-            throw new IllegalStateException("Need more arguments. To run backpropagation on fully connected KBANN's network with edges only between adjacent layers  use 'fullyConnected   #ofRepeats  datasetFile weightLearningSettingsFile  ruleFile   '");
-        }
-        if (arg.length > 6) {
-            throw new UnsupportedOperationException("Specific rules are not implemented yet. (None parser nor KBANN inner usage of specific rules are implemented.");
-        }
-
-        String algName = "fullyConnected";
-        File ruleFile = new File(arg[4]);
-        File settingFile = new File(arg[5]);
-        KBANNSettings kbannSettings = new KBANNSettings(randomGenerator, 1.0, true, true);
-
-        List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
-
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
-        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
-        Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
-
-        Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfFolds);
-
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, fakeNumberTheoryComplexityTodo);
-    }
-    */
 }

@@ -4,6 +4,7 @@ import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by EL on 8.9.2016.
@@ -83,15 +84,15 @@ public class RuleSet {
     // this does not parse real datasets
     private static Implication retrieveBody(String rule) {
         String body = rule.split("=>")[0];
-        if(body.trim().length() < 1){
+        if (body.trim().length() < 1) {
             return Implication.create(new ArrayList<>());
         }
         return Implication.create(Arrays.asList(body.split("and"))
                         .stream()
                         .map(literal -> {
                             String[] splitted = literal.split("=");
-                            String attribute = splitted[0].replace("(","").trim();
-                            String value = splitted[1].replace(")","").trim();
+                            String attribute = splitted[0].replace("(", "").trim();
+                            String value = splitted[1].replace(")", "").trim();
                             return Antecedent.create(attribute, value);
                         })
                         .collect(Collectors.toList())
@@ -104,11 +105,11 @@ public class RuleSet {
         return rule.substring(start + 1, end).trim();
     }
 
-    public String getTheory(){
+    public String getTheory() {
         return RuleSetToTheory.create(this).getTheory();
     }
 
-    public boolean isBinaryClassClassification(){
+    public boolean isBinaryClassClassification() {
         return 2 == rules.stream()
                 .map(rule -> rule.getHead())
                 .collect(Collectors.toSet())
@@ -116,9 +117,9 @@ public class RuleSet {
 
                 ||
                 1 == rules.stream()
-                .map(rule -> rule.getHead())
-                .collect(Collectors.toSet())
-                .size() ;
+                        .map(rule -> rule.getHead())
+                        .collect(Collectors.toSet())
+                        .size();
 
         /*return 1 == rules.stream()
                 .map(rule -> rule.getHead())
@@ -141,13 +142,27 @@ public class RuleSet {
     public RuleSet replaceRule(int selectedRule, Rule trimmedRule) {
         List<Rule> trimmedRules = new ArrayList<>(rules);
         trimmedRules.remove(selectedRule);
-        trimmedRules.add(selectedRule,trimmedRule);
+        trimmedRules.add(selectedRule, trimmedRule);
         return RuleSet.create(trimmedRules);
     }
 
-    public int getComplexity(){
+    /**
+     * Some kind of "old" way how to compute complexity.... Here the complexity equals to the number of implications in the rule set.
+     *
+     * @return
+     */
+    public int getComplexity() {
         return rules.stream()
                 .mapToInt(rule -> rule.getNumberOfImplications())
                 .sum();
+    }
+
+    public RuleSet removeRule(int ruleIdx) {
+        return create(
+                IntStream.range(0, getNumberOfRules())
+                        .filter(idx -> ruleIdx != idx)
+                        .mapToObj(idx -> rules.get(idx))
+                        .map(rule -> rule.getCopy())
+                        .collect(Collectors.toList()));
     }
 }

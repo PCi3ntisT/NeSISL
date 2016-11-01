@@ -31,7 +31,7 @@ public interface Dataset {
      * Returns train data only.
      * @return
      */
-    public List<Map<Fact,Value>> getRawData();
+    public List<Map<Fact,Value>> getTrainRawData();
 
     public List<Map<Fact,Value>> getRawTestData();
 

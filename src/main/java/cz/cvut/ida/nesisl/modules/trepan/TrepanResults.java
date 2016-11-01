@@ -65,15 +65,37 @@ public class TrepanResults {
     public static TrepanResults create(File tree, File fidelity,File accuracyFile) {
         //System.out.println("trepan disabled");
         //return null;
-        long finalNumberOfInnerNodes = getNumberOfNodes(tree);
+        long finalNumberOfInnerNodes = getNumberOfInnerNodes(tree);
         long treeRuleSetComplexity = getTreeRuleSetComplexity(tree);
         return retrieveValuesFromFidelityAndAccuracy(finalNumberOfInnerNodes, fidelity, accuracyFile, treeRuleSetComplexity);
     }
 
+    /**
+     * in this setting it computes description length (# of symbols needed to write down the decision tree)
+     * @param tree
+     * @return
+     */
     private static long getTreeRuleSetComplexity(File tree) {
         DotTree dotTree = DotTreeReader.getDefault().create(tree);
         long complexity = MofNTreeRuleSetComplexity.getDefault().compute(dotTree);
         return complexity;
+    }
+
+    private static long getNumberOfLeaves(File tree) {
+        Long numberOfLeaves = 0l;
+        try (BufferedReader br = new BufferedReader(new FileReader(tree))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if(describesLeaves(line)){
+                    numberOfLeaves++;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return numberOfLeaves;
     }
 
     // does not take in account possibility of validation set in the result ;)
@@ -129,7 +151,7 @@ public class TrepanResults {
         return new TrepanResults(finalNumberOfInnerNodes,trepanTrainAcc,trepanTestAcc,trainFidelity,testFidelity,networkTrainAcc,networkTestAcc,treeRuleSetComplexity);
     }
 
-    private static long getNumberOfNodes(File tree) {
+    private static long getNumberOfInnerNodes(File tree) {
         Long numberOfInnerNodes = 0l;
         try (BufferedReader br = new BufferedReader(new FileReader(tree))) {
             String line;
@@ -148,6 +170,12 @@ public class TrepanResults {
 
     private static boolean describesInnerNode(String line) {
         return line.contains("shape=box");
+    }
+
+    private static boolean describesLeaves(String line) {
+        return line.contains("]")
+                && line.contains("[")
+                && !line.contains("shape=box");
     }
 
 }

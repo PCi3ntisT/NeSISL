@@ -46,8 +46,8 @@ public class ExperimentResult {
     private Double trepanTrainFidelity;
     private Double trepanTrainAcc;
     private Double trepanTestAcc;
-    private Long treeRuleSetComplexity;
-    private double ruleSetComplexity;
+    private Long mOfNDecisionTreeDescriptionLength;
+    private Long ruleSetDescriptionLength;
     private double testRuleSetAccuracy;
     private double trainRuleSetAccuracy;
 
@@ -166,7 +166,7 @@ public class ExperimentResult {
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
 
         this.setNumberOfHiddenNodes(network.getNumberOfHiddenNodes());
-        this.setRuleSetComplexity(ruleSetComplexity);
+        this.setRuleSetDescriptionLength(ruleSetComplexity);
         this.setTrainRuleSetAccuracy(trainRuleSetAccuracy);
         this.setTestRuleSetAccuracy(testRuleSetAccuracy);
     }
@@ -212,7 +212,7 @@ public class ExperimentResult {
         process.add(new Pair<>("time", () -> results.stream().mapToDouble(e -> e.getRunningTime())));
         //process.add(new Pair<>("threshold", () -> results.stream().mapToDouble(e -> e.getThreshold())));
 
-        process.add(new Pair<>("ruleSetComplexity", () -> results.stream().mapToDouble(e -> e.getRuleSetComplexity())));
+        process.add(new Pair<>("ruleSetDescriptionLength", () -> results.stream().mapToDouble(e -> e.getRuleSetDescriptionLength())));
         process.add(new Pair<>("trainRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTrainRuleSetAccuracy())));
         process.add(new Pair<>("testRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTestRuleSetAccuracy())));
 
@@ -222,7 +222,7 @@ public class ExperimentResult {
             process.add(new Pair<>("trepanTrainFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTrainFidelity())));
             process.add(new Pair<>("trepanTestFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTestFidelity())));
             process.add(new Pair<>("trepanNumberOfInnerNodes", () -> results.stream().mapToDouble(e -> e.getTrepanNumberOfInnerNodes())));
-            process.add(new Pair<>("treeRuleSetComplexity", () -> results.stream().mapToDouble(e -> e.getTreeRuleSetComplexity())));
+            process.add(new Pair<>("mOfNDecisionTreeDescriptionLength", () -> results.stream().mapToDouble(e -> e.getmOfNDecisionTreeDescriptionLength())));
         }
 
         process.forEach(pair -> appendContent(pair.getLeft(), pair.getRight(), writer));
@@ -297,8 +297,9 @@ public class ExperimentResult {
         this.setTrepanTestAcc(trepan.getTrepanTestAccuracy());
         this.setTrepanTrainFidelity(trepan.getTrainFidelity());
         this.setTrepanTestFidelity(trepan.getTestFidelity());
+
         this.setTrepanNumberOfInnerNodes(trepan.getNumberOfInnerNodes());
-        this.setTreeRuleSetComplexity(trepan.getTreeRuleSetComplexity());
+        this.setmOfNDecisionTreeDescriptionLength(trepan.getTreeRuleSetComplexity());
     }
 
     public void setTrepanNumberOfInnerNodes(Long trepanNumberOfInnerNodes) {
@@ -341,20 +342,20 @@ public class ExperimentResult {
         return trepanTestAcc;
     }
 
-    public void setTreeRuleSetComplexity(Long treeRuleSetComplexity) {
-        this.treeRuleSetComplexity = treeRuleSetComplexity;
+    public void setmOfNDecisionTreeDescriptionLength(Long mOfNDecisionTreeDescriptionLength) {
+        this.mOfNDecisionTreeDescriptionLength = mOfNDecisionTreeDescriptionLength;
     }
 
-    public Long getTreeRuleSetComplexity() {
-        return treeRuleSetComplexity;
+    public Long getmOfNDecisionTreeDescriptionLength() {
+        return mOfNDecisionTreeDescriptionLength;
     }
 
-    public double getRuleSetComplexity() {
-        return ruleSetComplexity;
+    public Long getRuleSetDescriptionLength() {
+        return ruleSetDescriptionLength;
     }
 
-    public void setRuleSetComplexity(double ruleSetComplexity) {
-        this.ruleSetComplexity = ruleSetComplexity;
+    public void setRuleSetDescriptionLength(Long ruleSetDescriptionLength) {
+        this.ruleSetDescriptionLength = ruleSetDescriptionLength;
     }
 
     public void setTestRuleSetAccuracy(double testRuleSetAccuracy) {

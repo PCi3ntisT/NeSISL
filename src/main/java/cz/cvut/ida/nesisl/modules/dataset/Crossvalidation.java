@@ -30,14 +30,14 @@ public class Crossvalidation {
     public Dataset nextSplit() {
         synchronized (datasets) {
             Dataset selected = datasets.get(fold);
-            List<Map<Fact, Value>> test = selected.getRawData();
+            List<Map<Fact, Value>> test = selected.getTrainRawData();
 
             List<Map<Fact, Value>> others = new ArrayList<>();
             for (int îdx = 0; îdx < datasets.size(); îdx++) {
                 if (fold == îdx) {
                     continue;
                 }
-                others.addAll(datasets.get(îdx).getRawData());
+                others.addAll(datasets.get(îdx).getTrainRawData());
             }
 
             Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile(),selected.getClassAttribute());
@@ -48,14 +48,14 @@ public class Crossvalidation {
 
     public Dataset getDataset(int testFoldIdx) {
             Dataset selected = datasets.get(testFoldIdx);
-            List<Map<Fact, Value>> test = selected.getRawData();
+            List<Map<Fact, Value>> test = selected.getTrainRawData();
 
             List<Map<Fact, Value>> others = new ArrayList<>();
             for (int îdx = 0; îdx < datasets.size(); îdx++) {
                 if (testFoldIdx == îdx) {
                     continue;
                 }
-                others.addAll(datasets.get(îdx).getRawData());
+                others.addAll(datasets.get(îdx).getTrainRawData());
             }
 
             Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile(),selected.getClassAttribute());
@@ -95,7 +95,7 @@ public class Crossvalidation {
     private static List<List<Map<Fact, Value>>> splitAccordingToResults(Dataset dataset) {
         synchronized (dataset) {
             return dataset
-                    .getRawData()
+                    .getTrainRawData()
                     .stream()
                     .collect(Collectors.groupingBy(e -> dataset.cannonicalOutput(e), Collectors.toCollection(ArrayList::new)))
                     .values()

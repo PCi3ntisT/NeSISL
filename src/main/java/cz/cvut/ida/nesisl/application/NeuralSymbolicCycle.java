@@ -74,13 +74,13 @@ public class NeuralSymbolicCycle {
         System.out.println(theory);
 
         RuleAccuracy acc = RuleAccuracy.create(ruleSet);
-        System.out.println(acc.computeTrainAccuracy(nesislDataset.getRawData(), nesislDataset));
-        System.out.println(acc.numberOfConsistentClassifications(nesislDataset.getRawData(), nesislDataset));
+        System.out.println(acc.computeTrainAccuracy(nesislDataset.getTrainRawData(), nesislDataset));
+        System.out.println(acc.numberOfConsistentClassifications(nesislDataset.getTrainRawData(), nesislDataset));
 
         Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
         RuleAccuracy relabeledAcc = RuleAccuracy.create(ruleSet);
-        System.out.println(relabeledAcc.computeTrainAccuracy(relabeled.getRawData(), relabeled));
-        System.out.println(relabeledAcc.numberOfConsistentClassifications(relabeled.getRawData(), relabeled));
+        System.out.println(relabeledAcc.computeTrainAccuracy(relabeled.getTrainRawData(), relabeled));
+        System.out.println(relabeledAcc.numberOfConsistentClassifications(relabeled.getTrainRawData(), relabeled));
 
         File file = Tools.storeToTemporaryFile(theory);
         Main main = new Main();

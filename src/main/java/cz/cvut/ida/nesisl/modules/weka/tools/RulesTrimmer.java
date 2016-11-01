@@ -104,6 +104,11 @@ public class RulesTrimmer {
                 return ruleSet;
             }
         }
+        for (int idx = ruleSet.getRules().size() - 2; idx >= 0; idx--) {
+            if(ruleSet.getRules().get(idx).getNumberOfImplications() <= 0){
+                ruleSet = ruleSet.removeRule(idx);
+            }
+        }
         return ruleSet;
     }
 }
