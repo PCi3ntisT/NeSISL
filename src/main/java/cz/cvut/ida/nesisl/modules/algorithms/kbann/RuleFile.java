@@ -19,6 +19,7 @@ public class RuleFile {
     public static final String OUTPUT_FACTS_HEADER = "OUTPUT FACTS";
     public static final String RULES = "RULES";
 
+    public static final String N_TRUE = "n-true";
     public static final String UNCHANGABLE_RULE = "::-";
     public static final String CHANGABLE_RULE = ":-";
     public static final String RULE_ENDING_TOKEN = "."; // this should be used in the parser but is not
@@ -185,7 +186,7 @@ public class RuleFile {
             wrapper.getRules().put(head, new HashSet<>());
         }
 
-        if(body.trim().equals(".")){
+        if (body.trim().equals(".")) {
             // awful hack because of malformed (zero rule) theories.
             return wrapper;
         }
@@ -261,8 +262,8 @@ public class RuleFile {
         }
         Literal literal = wrapper.getFactory().getLiteral(splitted[0].trim());
 
-        System.out.println(line);
-        System.out.println(literal);
+        //System.out.println(line);
+        //System.out.println(literal);
         if (literal.getFact().getFact().length() < DatasetImpl.CLASS_TOKEN.length()
                 || !literal.getFact().getFact().substring(0, DatasetImpl.CLASS_TOKEN.length()).equals(DatasetImpl.CLASS_TOKEN.length())) {
             addIntermediateIfNeeded(literal.getFact(), wrapper);
@@ -332,13 +333,13 @@ public class RuleFile {
         String trimmed = ruleBody.trim();
 
         String[] splitted;
-        if (trimmed.contains("n-true ")){
-            int start = trimmed.indexOf("n-true");
+        if (trimmed.contains(N_TRUE + " ")) {
+            int start = trimmed.indexOf(N_TRUE);
             String tripped = trimmed.substring(start);
             start = tripped.indexOf("(");
             int end = trimmed.indexOf(")");
-            splitted = tripped.substring(start+1,end).split(ANTECEDENTS_DELIMITER);
-        }else{
+            splitted = tripped.substring(start + 1, end).split(ANTECEDENTS_DELIMITER);
+        } else {
             splitted = trimmed.split(ANTECEDENTS_DELIMITER);
         }
 
@@ -348,10 +349,10 @@ public class RuleFile {
     }
 
     private String retrieveProposition(String token) {
-        if(Pattern.matches(NOT_TOKEN + "\\(.+\\)", token)){
-            token = token.substring((NOT_TOKEN + "(").length(),token.length()-1);
+        if (Pattern.matches(NOT_TOKEN + "\\(.+\\)", token)) {
+            token = token.substring((NOT_TOKEN + "(").length(), token.length() - 1);
         }
-        return token.replaceAll("\\s+","");
+        return token.replaceAll("\\s+", "");
     }
 
 }

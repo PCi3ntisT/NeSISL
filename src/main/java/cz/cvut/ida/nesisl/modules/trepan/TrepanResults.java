@@ -17,9 +17,10 @@ public class TrepanResults {
     private final Double testFidelity;
     private final Double networkTrainAccuracy;
     private final Double networkTestAccuracy;
-    private final Long treeRuleSetComplexity;
+    private final Long mOfNDecisionTreeDescriptionLength;
+    private final File treeFile;
 
-    private TrepanResults(Long numberOfInnerNodes, Double trpanTrainAccuracy, Double trepanTestAccuracy, Double trainFidelity, Double testFidelity, Double networkTrainAcc, Double networkTestAcc,Long treeRuleSetComplexity) {
+    private TrepanResults(Long numberOfInnerNodes, Double trpanTrainAccuracy, Double trepanTestAccuracy, Double trainFidelity, Double testFidelity, Double networkTrainAcc, Double networkTestAcc, Long mOfNDecisionTreeDescriptionLength, File tree) {
         this.numberOfInnerNodes = numberOfInnerNodes;
         this.trpanTrainAccuracy = trpanTrainAccuracy;
         this.trepanTestAccuracy = trepanTestAccuracy;
@@ -27,7 +28,8 @@ public class TrepanResults {
         this.testFidelity = testFidelity;
         this.networkTrainAccuracy = networkTrainAcc;
         this.networkTestAccuracy = networkTestAcc;
-        this.treeRuleSetComplexity = treeRuleSetComplexity;
+        this.mOfNDecisionTreeDescriptionLength = mOfNDecisionTreeDescriptionLength;
+        this.treeFile = tree;
     }
 
     public Double getNetworkTrainAccuracy() {
@@ -58,8 +60,12 @@ public class TrepanResults {
         return testFidelity;
     }
 
-    public Long getTreeRuleSetComplexity() {
-        return treeRuleSetComplexity;
+    public Long getMofNDecisionTreeDescriptionLength() {
+        return mOfNDecisionTreeDescriptionLength;
+    }
+
+    public File getTreeFile() {
+        return treeFile;
     }
 
     public static TrepanResults create(File tree, File fidelity,File accuracyFile) {
@@ -67,7 +73,7 @@ public class TrepanResults {
         //return null;
         long finalNumberOfInnerNodes = getNumberOfInnerNodes(tree);
         long treeRuleSetComplexity = getTreeRuleSetComplexity(tree);
-        return retrieveValuesFromFidelityAndAccuracy(finalNumberOfInnerNodes, fidelity, accuracyFile, treeRuleSetComplexity);
+        return retrieveValuesFromFidelityAndAccuracy(finalNumberOfInnerNodes, fidelity, accuracyFile, treeRuleSetComplexity,tree);
     }
 
     /**
@@ -99,7 +105,7 @@ public class TrepanResults {
     }
 
     // does not take in account possibility of validation set in the result ;)
-    private static TrepanResults retrieveValuesFromFidelityAndAccuracy(long finalNumberOfInnerNodes, File fidelity, File accuracyFile, Long treeRuleSetComplexity) {
+    private static TrepanResults retrieveValuesFromFidelityAndAccuracy(long finalNumberOfInnerNodes, File fidelity, File accuracyFile, Long mOfNDecisionTreeDescriptionLength, File tree) {
         Double trepanTrainAcc = 0.0;
         Double trepanTestAcc = 0.0;
         Double trainFidelity = 0.0;
@@ -148,7 +154,7 @@ public class TrepanResults {
             e.printStackTrace();
         }
 
-        return new TrepanResults(finalNumberOfInnerNodes,trepanTrainAcc,trepanTestAcc,trainFidelity,testFidelity,networkTrainAcc,networkTestAcc,treeRuleSetComplexity);
+        return new TrepanResults(finalNumberOfInnerNodes,trepanTrainAcc,trepanTestAcc,trainFidelity,testFidelity,networkTrainAcc,networkTestAcc,mOfNDecisionTreeDescriptionLength,tree);
     }
 
     private static long getNumberOfInnerNodes(File tree) {

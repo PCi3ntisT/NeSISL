@@ -50,6 +50,7 @@ public class ExperimentResult {
     private Long ruleSetDescriptionLength;
     private double testRuleSetAccuracy;
     private double trainRuleSetAccuracy;
+    private File mofNDecisionTreeFile;
 
 
     public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
@@ -60,6 +61,18 @@ public class ExperimentResult {
                 learningAlg + File.separator +
                 Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
                 Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
+                learningAlg + "_" + numberOfRepeats;
+    }
+
+    public ExperimentResult(int numberOfRepeats, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls, int cycleNumber) {
+        this.datasetFile = datasetFile;
+        this.numberOfRepeats = numberOfRepeats;
+        this.learningAlg = learningAlg;
+        this.myAdress = datasetFile.getAbsoluteFile().getParent() + File.separator +
+                learningAlg + File.separator +
+                Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
+                Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
+                cycleNumber + File.separator +
                 learningAlg + "_" + numberOfRepeats;
     }
 
@@ -176,14 +189,33 @@ public class ExperimentResult {
         networkToLatexAndBuild(finalNetwork, "final");
     }
 
+
+    public static void storeCyclesResult(List<List<ExperimentResult>> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
+        long min = results.stream()
+                .mapToLong(list -> list.size())
+                .min().orElse(0);
+
+        for (int elementIdx = 0; elementIdx < min; elementIdx++) {
+            final int finalElementIdx = elementIdx;
+            List<ExperimentResult> resultsFromGroup = results.stream()
+                    .map(list -> list.get(finalElementIdx))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            storeResults(resultsFromGroup, learningAlg, datasetFile, structureLearningSetting, wls, "results" + elementIdx);
+        }
+    }
+
     public static void storeResults(List<ExperimentResult> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls) {
+        storeResults(results,learningAlg,datasetFile,structureLearningSetting,wls,"results");
+    }
+
+    public static void storeResults(List<ExperimentResult> results, String learningAlg, File datasetFile, File structureLearningSetting, WeightLearningSetting wls,String resultsFileName) {
         results.forEach(ExperimentResult::exportSavedNetworksToTex);
 
         String experimentsFile = datasetFile.getAbsoluteFile().getParent() + File.separator +
                 learningAlg + File.separator +
                 Tools.retrieveParentFolderName(structureLearningSetting) + File.separator +
                 Tools.retrieveParentFolderName(wls.getFile()) + File.separator +
-                "results.txt";
+                resultsFileName +".txt";
 
         File expFile = new File(experimentsFile);
         if (!expFile.getParentFile().exists()) {
@@ -222,7 +254,7 @@ public class ExperimentResult {
             process.add(new Pair<>("trepanTrainFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTrainFidelity())));
             process.add(new Pair<>("trepanTestFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTestFidelity())));
             process.add(new Pair<>("trepanNumberOfInnerNodes", () -> results.stream().mapToDouble(e -> e.getTrepanNumberOfInnerNodes())));
-            process.add(new Pair<>("mOfNDecisionTreeDescriptionLength", () -> results.stream().mapToDouble(e -> e.getmOfNDecisionTreeDescriptionLength())));
+            process.add(new Pair<>("mOfNDecisionTreeDescriptionLength", () -> results.stream().mapToDouble(e -> e.getMofNDecisionTreeDescriptionLength())));
         }
 
         process.forEach(pair -> appendContent(pair.getLeft(), pair.getRight(), writer));
@@ -286,9 +318,9 @@ public class ExperimentResult {
         return myAdress;
     }
 
-    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan,long ruleSetComplexity, double trainRuleSetAccuracy,double testRuleSetAccuracy) {
+    public void addExperiment(NeuralNetwork learnedNetwork, long start, long end, Dataset dataset, TrepanResults trepan, long ruleSetDescriptionLength, double trainRuleSetAccuracy, double testRuleSetAccuracy) {
         //addExperiment(learnedNetwork, start, end, dataset);
-        addExperiment(learnedNetwork, start, end, dataset, ruleSetComplexity, trainRuleSetAccuracy,testRuleSetAccuracy);
+        addExperiment(learnedNetwork, start, end, dataset, ruleSetDescriptionLength, trainRuleSetAccuracy, testRuleSetAccuracy);
 
         this.setTrainAccuracy(trepan.getNetworkTrainAccuracy());
         this.setAccuracy(trepan.getNetworkTestAccuracy());
@@ -299,7 +331,8 @@ public class ExperimentResult {
         this.setTrepanTestFidelity(trepan.getTestFidelity());
 
         this.setTrepanNumberOfInnerNodes(trepan.getNumberOfInnerNodes());
-        this.setmOfNDecisionTreeDescriptionLength(trepan.getTreeRuleSetComplexity());
+        this.setMofNDecisionTreeDescriptionLength(trepan.getMofNDecisionTreeDescriptionLength());
+        this.setMofNDecisionTreeFile(trepan.getTreeFile());
     }
 
     public void setTrepanNumberOfInnerNodes(Long trepanNumberOfInnerNodes) {
@@ -342,11 +375,11 @@ public class ExperimentResult {
         return trepanTestAcc;
     }
 
-    public void setmOfNDecisionTreeDescriptionLength(Long mOfNDecisionTreeDescriptionLength) {
+    public void setMofNDecisionTreeDescriptionLength(Long mOfNDecisionTreeDescriptionLength) {
         this.mOfNDecisionTreeDescriptionLength = mOfNDecisionTreeDescriptionLength;
     }
 
-    public Long getmOfNDecisionTreeDescriptionLength() {
+    public Long getMofNDecisionTreeDescriptionLength() {
         return mOfNDecisionTreeDescriptionLength;
     }
 
@@ -372,5 +405,13 @@ public class ExperimentResult {
 
     public double getTrainRuleSetAccuracy() {
         return trainRuleSetAccuracy;
+    }
+
+    public void setMofNDecisionTreeFile(File mofNDecisionTreeFile) {
+        this.mofNDecisionTreeFile = mofNDecisionTreeFile;
+    }
+
+    public File getMofNDecisionTreeFile() {
+        return mofNDecisionTreeFile;
     }
 }

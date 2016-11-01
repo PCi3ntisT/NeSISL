@@ -48,7 +48,7 @@ public class RealDataExperiments {
           //      "voting",
             //    "wine"/**/
 
-                "wine"
+                "monks1"
                 //"lenses",
 
                 //"cnf200-7"
@@ -75,7 +75,8 @@ public class RealDataExperiments {
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
                 //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});

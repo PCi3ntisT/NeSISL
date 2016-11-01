@@ -91,7 +91,7 @@ public class KBANNRule {
     }
 
     public String readRule(){
-        StringBuilder sb = new StringBuilder(head.getFact() + " :- ");
+        StringBuilder sb = new StringBuilder(head.getFact() + " " + RuleFile.CHANGABLE_RULE + " ");
         body.forEach(literal -> sb.append(literal.getFact().getFact() + ", "));
         sb.append(".");
         return sb.toString();

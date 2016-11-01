@@ -29,6 +29,7 @@ import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
 import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
+import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSetDescriptionLengthFactor;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
 import weka.core.Instances;
@@ -51,7 +52,7 @@ public class Main {
     // general setting; TREPAN_RUN is needed to be true if you want to run the whole NSL cycle
     public static final boolean TREPAN_RUN = true;
 
-    private static final double percentualAccuracyOfOriginalDataset = 0.7;
+    public static final double percentualAccuracyOfOriginalDataset = 0.7;
 
 
     // settings for random generator
@@ -60,7 +61,7 @@ public class Main {
     private static final Integer SEED = 13;
 
     //
-    private static final String CYCLE_TOKEN = "-cycle";
+    public static final String CYCLE_TOKEN = "-cycle";
 
     public static void main(String arg[]) throws FileNotFoundException {
         Arrays.stream(arg).forEach(e -> System.out.println(e + "\t"));
@@ -88,10 +89,8 @@ public class Main {
             numberOfSingleCycles = Tools.parseInt(arg[1], "The second argument (number of single cycle repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
             String[] swap = new String[arg.length - 2];
             final String[] finalArg = arg;
-            IntStream.rangeClosed(2, arg.length).forEach(idx -> swap[idx] = finalArg[idx]);
+            IntStream.rangeClosed(2, arg.length-1).forEach(idx -> swap[idx-2] = finalArg[idx]);
             arg = swap;
-
-            throw new UnsupportedOperationException("TODO");
         }
 
 
@@ -117,35 +116,50 @@ public class Main {
             wls = WeightLearningSetting.turnOffCrossentropyLearning(wls);
         }
 
-
-        System.out.println("zmenit backprop na SGD");
-
-        Main main = new Main();
-        switch (arg[0]) {
-            case "CasCor":
-                main.runCasCor(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
-                break;
-            case "DNC":
-                main.runDNC(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
-                break;
-            case "KBANN":
-                main.runKBANN(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
-                break;
-            case "TopGen":
-                main.runTopGen(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
-                break;
-            case "REGENT":
-                main.runREGENT(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
-                break;
-            //case "backprop":
-            //    main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
-            //    break;
-            //case "fullyConnected":
-            //    main.runFullyConnected(arg, numberOfRepeats, dataset, wls, randomGenerator);
-            //    break;
-            default:
-                System.out.println("Unknown algorithm '" + arg[0] + "'.");
-                break;
+        if(singleCycle){
+            MultipleCycles cycles = new MultipleCycles();
+            switch (arg[0]) {
+                case "KBANN":
+                    cycles.runKBANN(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "TopGen":
+                    cycles.runTopGen(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "REGENT":
+                    cycles.runREGENT(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                default:
+                    System.out.println("Unknown algorithm '" + arg[0] + "'.");
+                    break;
+            }
+        }else {
+            Main main = new Main();
+            switch (arg[0]) {
+                case "CasCor":
+                    main.runCasCor(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "DNC":
+                    main.runDNC(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "KBANN":
+                    main.runKBANN(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "TopGen":
+                    main.runTopGen(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                case "REGENT":
+                    main.runREGENT(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
+                    break;
+                //case "backprop":
+                //    main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                //    break;
+                //case "fullyConnected":
+                //    main.runFullyConnected(arg, numberOfRepeats, dataset, wls, randomGenerator);
+                //    break;
+                default:
+                    System.out.println("Unknown algorithm '" + arg[0] + "'.");
+                    break;
+            }
         }
     }
 
@@ -167,9 +181,6 @@ public class Main {
                     System.out.println("\n\n--------- fold " + idx + ":\t rule set learning\n\n");
                     RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
 
-                    System.out.println(ruleSet.getTheory());
-                    System.out.println(ruleSet.getComplexity());
-
                     // popripade nejaky trimmer nebo relabelling
                     // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
                     // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
@@ -177,8 +188,6 @@ public class Main {
                     System.out.println("\n\n--------- fold " + idx + ":\t ruleset trimming\n\n");
                     ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
 
-                    System.out.println(ruleSet.getTheory());
-                    System.out.println(ruleSet.getComplexity());
                     File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
                     /* end of rule mining and trimming */
 
@@ -194,13 +203,9 @@ public class Main {
                     NeuralNetwork learnedNetwork = learn.learn(alg, nesislDataset);
                     long end = System.currentTimeMillis();
 
-                    /*
-                    Tools.printEvaluation(learnedNetwork, dataset);
-                    System.out.println("\t" + learnedNetwork.getClassifier().getThreshold());
-                    */
 
 
-                    long ruleSetComplexity = (null == ruleSet) ? 0 : ruleSet.getComplexity();
+                    long ruleSetDescriptionLength = (null == ruleSet) ? 0 : RuleSetDescriptionLengthFactor.getDefault().computeDescriptionLength(ruleSet);
                     double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
                     double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
@@ -208,9 +213,9 @@ public class Main {
                     if (TREPAN_RUN) {
                         System.out.println("\n\n--------- fold " + idx + ":\t TREPAN learning \n\n");
                         TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
-                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetComplexity, trainRuleAcc, testRuleAcc);
+                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
                     } else {
-                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetComplexity, trainRuleAcc, testRuleAcc);
+                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
                     }
 
                     // storing initial ruleSet
@@ -239,7 +244,6 @@ public class Main {
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls);
     }
-
 
     private void runDNC(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
         if (arg.length < 5) {

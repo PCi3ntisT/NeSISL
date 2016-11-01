@@ -138,14 +138,32 @@ public class Trepan {
     }
 
     private String attributesMapping() {
+        return attributesMapping(learnedNetwork, false);
+    }
+
+    /**
+     * If includeClasses is true, then returns "class   bits    0 0 1   0 1 0   ...\n class bits    classs==1   class==2 ...". Otherwise returns only the first row.
+     *
+     * @param network
+     * @param includeClasses
+     * @return
+     */
+    public static String attributesMapping(NeuralNetwork network, boolean includeClasses) {
         StringBuilder sb = new StringBuilder();
-        sb.append("class\t " + learnedNetwork.getNumberOfOutputNodes() + " \t");
-        for (int idx = 0; idx < learnedNetwork.getOutputNodes().size(); idx++) {
+        sb.append("class\t " + network.getNumberOfOutputNodes() + " \t");
+        for (int idx = 0; idx < network.getOutputNodes().size(); idx++) {
             String version = "";
-            for (int outputs = 0; outputs < learnedNetwork.getOutputNodes().size(); outputs++) {
+            for (int outputs = 0; outputs < network.getOutputNodes().size(); outputs++) {
                 version += (outputs == idx) ? "1 " : "0 ";
             }
             sb.append(version + "\t");
+        }
+
+        if (includeClasses) {
+            sb.append("\nclass\t " + network.getNumberOfOutputNodes() + " \t");
+            for (int idx = 0; idx < network.getOutputNodes().size(); idx++) {
+                sb.append(network.getOutputNodes().get(idx).getName() + "\t");
+            }
         }
         return sb.toString();
     }
