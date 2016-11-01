@@ -62,17 +62,17 @@ public class RealDataExperiments {
             String wlsFolder = "-0-0-0-0-0-0-0-0-0";
             String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + wlsFolder + File.separator + "wlsSetting.txt";
             String KBANNinput = folder + "theory";
-            String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized": ""); //Nominalized";//Nominalized";
+            String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized" : ""); //Nominalized";//Nominalized";
             data = folder + "data";
 
             System.out.println(folder);
             System.out.println(data);
 
-            String cascorSetting = "." + File.separator + "experiments" + File.separator  + "settings" + File.separator + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
-            String dncSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
-            String regentSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
+            String cascorSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
+            String dncSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
+            String regentSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
-            String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" +File.separator +  "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
+            String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
                 Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});

@@ -180,7 +180,7 @@ public class TopGen implements NeuralNetworkOwner {
         network = addNode(node, isFalsePositive, network, kbannSetting, randomGenerator);
 
         double learningRate = previousLearningRate * tgSettings.getLearningRateDecay();
-        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold(),wls.isLearningWithCrossEntropy(), random);
+        WeightLearningSetting updatedWls = new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), learningRate, wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold(),wls.isLearningWithCrossEntropy(), wls.getRandom());
 
         network = Backpropagation.feedforwardBackpropagation(network, dataset, updatedWls);
         double error = Tools.computeAverageSquaredTrainTotalErrorPlusEdgePenalty(network, dataset, wls);

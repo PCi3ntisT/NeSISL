@@ -85,7 +85,7 @@ public class MainJRipOnWholeData {
         Dataset nesislDataset = datasetsPair.getLeft();
         Instances wekaDataset = datasetsPair.getRight();
 
-        if(nesislDataset.getOutputFactOrder().size() < 2 && wls.isLearningWithCrossEntropy()){
+        if (nesislDataset.getOutputFactOrder().size() < 2 && wls.isLearningWithCrossEntropy()) {
             wls = WeightLearningSetting.turnOffCrossentropyLearning(wls);
         }
 
