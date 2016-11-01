@@ -100,10 +100,11 @@ public class Main {
         File wlsFile = Tools.retrieveFile(arg[3], "The fourth/sixth argument (weightLearningSettingFile) does not exist.\nArgument input instead '" + arg[3] + "'.");
 
         // turning off regularization (appendix)
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile,randomGenerator.getRandom());
         if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
+
 
 
         // TODO: add parameter for reading normalization

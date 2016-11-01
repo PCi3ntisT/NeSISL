@@ -86,7 +86,10 @@ public class OldMain {
             System.out.println("Argument input instead '" + arg[3] + "'.");
             System.exit(0);
         }
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+
+
+        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile, randomGenerator.getRandom());
         if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
@@ -96,7 +99,6 @@ public class OldMain {
 
         boolean normalize = true;
         Dataset dataset = DatasetImpl.parseAndGetDataset(datasetFile, normalize);
-        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         OldMain main = new OldMain();
         switch (arg[0]) {

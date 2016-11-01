@@ -4,6 +4,7 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.*;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by EL on 13.2.2016.
@@ -30,8 +31,9 @@ public class WeightLearningSetting {
     private final Double penaltyEpsilon;
     private final File file;
     private final Boolean crossEntropy;
+    private final Random random;
 
-    public WeightLearningSetting(File file, Double epsilonConvergent, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold, boolean crossEntropy) {
+    public WeightLearningSetting(File file, Double epsilonConvergent, Double learningRate, Double momentumAlpha, Long epochLimit, Integer shortTimeWindow, Integer longTimeWindow, Double penaltyEpsilon, Double slfThreshold, boolean crossEntropy, Random random) {
         this.epsilonConvergent = epsilonConvergent;
         this.learningRate = learningRate;
         this.momentumAlpha = momentumAlpha;
@@ -42,9 +44,10 @@ public class WeightLearningSetting {
         this.slfThreshold = slfThreshold;
         this.file = file;
         this.crossEntropy = crossEntropy;
+        this.random = random;
     }
 
-    public static WeightLearningSetting parse(File file) {
+    public static WeightLearningSetting parse(File file, Random random) {
         Double learningRate = null;
         Double epsilonDifference = null;
         Long epochLimit = null;
@@ -109,7 +112,11 @@ public class WeightLearningSetting {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new WeightLearningSetting(file, epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold, crossEntropy);
+        return new WeightLearningSetting(file, epsilonDifference, learningRate, momentumAlpha, epochLimit, shortTimeWindow, longTimeWindow, penaltyEpsilon, slfThreshold, crossEntropy, random);
+    }
+
+    public Random getRandom() {
+        return random;
     }
 
     public Double getEpsilonConvergent() {
@@ -166,12 +173,12 @@ public class WeightLearningSetting {
 
     public static WeightLearningSetting turnOffRegularization(WeightLearningSetting wls) {
         System.out.println("Turning off regularization parameters.");
-        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d, -1.0d, wls.isLearningWithCrossEntropy());
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), 0.0d, -1.0d, wls.isLearningWithCrossEntropy(), wls.getRandom());
     }
 
     public static WeightLearningSetting turnOffCrossentropyLearning(WeightLearningSetting wls) {
         System.out.println("Turning off crossentropy learning since there are only two classses.");
-        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold(), false);
+        return new WeightLearningSetting(wls.getFile(), wls.getEpsilonConvergent(), wls.getLearningRate(), wls.getMomentumAlpha(), wls.getEpochLimit(), wls.getShortTimeWindow(), wls.getLongTimeWindow(), wls.getPenaltyEpsilon(), wls.getSLFThreshold(), false, wls.getRandom());
     }
 
     public boolean isLearningWithCrossEntropy() {

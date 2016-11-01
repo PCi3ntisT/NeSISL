@@ -12,10 +12,7 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 /**
@@ -43,8 +40,11 @@ public class Backpropagation {
         // todo vypocet derivace asi trochu upravit
 
         while (wls.canContinueBackpropagation(iteration, errors)) {
-            // TODO permutate for stochastic gradient descent
-            for (Sample sample : dataset.getTrainData(network)) {
+            List<Sample> data = new ArrayList<>(dataset.getTrainData(network));
+            // SGD by default
+            Collections.shuffle(data, wls.getRandom());
+
+            for (Sample sample : data) {
                 Pair<List<Double>, Results> resultDiff = Tools.computeErrorResults(network, sample.getInput(), sample.getOutput());
                 Map<Edge, Double> currentDeltas = updateWeights(network, resultDiff.getLeft(), resultDiff.getRight(), wls, numberOfLayersToBeLearned, previousDeltas.get(sample));
                 previousDeltas.put(sample, currentDeltas);

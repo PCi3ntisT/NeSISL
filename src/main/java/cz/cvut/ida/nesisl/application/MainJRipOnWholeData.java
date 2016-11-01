@@ -72,7 +72,7 @@ public class MainJRipOnWholeData {
         File wlsFile = Tools.retrieveFile(arg[3], "The fourth argument (weightLearningSettingFile) does not exist.\nArgument input instead '" + arg[3] + "'.");
 
         // vypinani regularizace (appendix)
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile, randomGenerator.getRandom());
         if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }

@@ -51,7 +51,9 @@ public class NeuralSymbolicCycle {
             System.out.println("Argument input instead '" + arg[3] + "'.");
             System.exit(0);
         }
-        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile);
+
+        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
+        WeightLearningSetting wls = WeightLearningSetting.parse(wlsFile, randomGenerator.getRandom());
         if (!"SLSF".equals(arg[0])) {
             wls = WeightLearningSetting.turnOffRegularization(wls);
         }
@@ -59,7 +61,6 @@ public class NeuralSymbolicCycle {
 
         // TODO NACITANI NORMALIZACE ZAJISTIT :) & zkontrolovat
         boolean normalize = true;
-        RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(simga, mu, seed);
 
         Pair<Dataset, Instances> datasetsPair = DatasetImpl.parseAndGetDatasets(datasetFile, normalize);
 
