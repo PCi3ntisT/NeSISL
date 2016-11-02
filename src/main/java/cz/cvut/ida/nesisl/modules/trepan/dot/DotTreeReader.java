@@ -58,6 +58,9 @@ public class DotTreeReader {
                     DotNode node = pair.getLeft();
                     String label = pair.getRight();
                     labels.put(node, label);
+                    if (null == root) {
+                        root = node;
+                    }
                 }
             }
         } catch (FileNotFoundException e) {

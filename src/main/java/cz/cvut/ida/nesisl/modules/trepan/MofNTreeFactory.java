@@ -37,6 +37,13 @@ public class MofNTreeFactory {
         for (int idx = 2; idx < vectors.length; idx++) { // from 1 since the zeroth element is "class" and the first is number of bits
             classesMapping.put(vectors[idx].replaceAll("\\s+", ""), classes[idx]);
         }
+
+        if(classesMapping.keySet().size() <= 2){ // binary problem, thus "true" and "false" should be inside
+            classesMapping = new HashMap<>();
+            classesMapping.put("false","false");
+            classesMapping.put("true","true");
+        }
+
         return classesMapping;
     }
 
@@ -55,7 +62,9 @@ public class MofNTreeFactory {
             antecedents = RuleFile.NOT_TOKEN + "(" + antecedents + ")";
         }
 
-        String head = (classesMapping.keySet().size() > 2) ? classesMapping.get(tree.getLabels().get(node).trim()) : tree.getLabels().get(node).trim();
+        String head = (classesMapping.keySet().size() > 2)
+                ? classesMapping.get(tree.getLabels().get(node).trim())
+                : tree.getLabels().get(node).trim();
         if ("false".equals(head)) {// since this problem is binary and we are only interested in positive results, aren't we?
             return "";
         } else if ("true".equals(head)) { // also, binary problem, but positive class

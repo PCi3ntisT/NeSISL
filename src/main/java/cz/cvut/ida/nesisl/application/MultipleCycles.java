@@ -143,7 +143,7 @@ public class MultipleCycles {
                     double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
                     double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
-                    List<ExperimentResult> resultsList  = neuralSybolicCycle(initialize, learn, algName, crossval, settingFile, wls, idx, nesislDataset, ruleSet, ruleFile, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                    List<ExperimentResult> resultsList = neuralSybolicCycle(initialize, learn, algName, crossval, settingFile, wls, idx, nesislDataset, ruleSet, ruleFile, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
 
                     System.out.println("\n\n--------- fold " + idx + ":\t ending iteration\n\n");
 
@@ -156,18 +156,18 @@ public class MultipleCycles {
         for (int cycleNumber = 0; cycleNumber < numberOfCycles; cycleNumber++) {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls, cycleNumber);
 
-            System.out.println("\n\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t network initialization\n\n");
+            System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t network initialization\n");
             NeuralNetworkOwner alg = initialize.initialize(ruleFile);
             currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
-            System.out.println("\n\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t structure & weight learning\n\n");
+            System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t structure & weight learning\n");
             long start = System.currentTimeMillis();
             NeuralNetwork learnedNetwork = learn.learn(alg, nesislDataset);
             long end = System.currentTimeMillis();
 
-            System.out.println("\n\n--------- fold " + idx +", cycle " + cycleNumber + ":\t result storing & TREPAN learning\n\n");
+            System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t result storing & TREPAN learning\n\n");
             if (Main.TREPAN_RUN) {
-                System.out.println("\n\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t TREPAN learning \n\n");
+                System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t TREPAN learning \n");
                 TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
                 currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
             } else {
@@ -180,12 +180,12 @@ public class MultipleCycles {
             Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
 
             // computing & forwarding parameters for next cycle
-            trainRuleAcc = currentResult.getTrainRuleSetAccuracy();
-            testRuleAcc = currentResult.getTestRuleSetAccuracy();
+            trainRuleAcc = currentResult.getTrepanTrainAcc();
+            testRuleAcc = currentResult.getTrepanTestAcc();
             ruleSetDescriptionLength = currentResult.getMofNDecisionTreeDescriptionLength();
 
             DotTree tree = DotTreeReader.getDefault().create(currentResult.getMofNDecisionTreeFile());
-            ruleFile = Tools.storeToTemporaryFile(MofNTreeFactory.getDefault().getTheory(tree,learnedNetwork));
+            ruleFile = Tools.storeToTemporaryFile(MofNTreeFactory.getDefault().getTheory(tree, learnedNetwork));
 
             result.add(currentResult);
         }

@@ -61,19 +61,19 @@ public class SingleCycle {
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
                 .mapToObj(idx -> {
-                    System.out.println("\n\n--------- fold " + idx + ":\t dataset extraction\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t dataset extraction\n");
 
                     Dataset nesislDataset = crossval.getDataset(idx);
                     Instances wekaDataset = crossval.getTrainWekaDataset(nesislDataset);
 
-                    System.out.println("\n\n--------- fold " + idx + ":\t rule set learning\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t rule set learning\n");
                     RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
 
                     // popripade nejaky trimmer nebo relabelling
                     // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
                     // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
                     // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
-                    System.out.println("\n\n--------- fold " + idx + ":\t ruleset trimming\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t ruleset trimming\n");
                     ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
 
                     File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
@@ -82,11 +82,11 @@ public class SingleCycle {
 
                     ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls);
 
-                    System.out.println("\n\n--------- fold " + idx + ":\t network initialization\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t network initialization\n");
                     NeuralNetworkOwner alg = initialize.initialize(ruleFile);
                     currentResult.setInitNetwork(alg.getNeuralNetwork().getCopy());
 
-                    System.out.println("\n\n--------- fold " + idx + ":\t structure & weight learning\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t structure & weight learning\n");
                     long start = System.currentTimeMillis();
                     NeuralNetwork learnedNetwork = learn.learn(alg, nesislDataset);
                     long end = System.currentTimeMillis();
@@ -97,9 +97,9 @@ public class SingleCycle {
                     double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
                     double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
-                    System.out.println("\n\n--------- fold " + idx + ":\t result storing & TREPAN learning\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t result storing & TREPAN learning\n");
                     if (Main.TREPAN_RUN) {
-                        System.out.println("\n\n--------- fold " + idx + ":\t TREPAN learning \n\n");
+                        System.out.println("\n--------- fold " + idx + ":\t TREPAN learning \n");
                         TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
                         currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
                     } else {
@@ -111,7 +111,7 @@ public class SingleCycle {
                     Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
 
 
-                    System.out.println("\n\n--------- fold " + idx + ":\t ending iteration\n\n");
+                    System.out.println("\n--------- fold " + idx + ":\t ending iteration\n");
                     return currentResult;
                 }).collect(Collectors.toCollection(ArrayList::new));
     }
