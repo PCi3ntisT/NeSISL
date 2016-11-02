@@ -43,13 +43,14 @@ import java.util.stream.IntStream;
  */
 public class MultipleCycles {
 
-    private final int NUMBER_OF_CYCLES = 10;
+    private final int numberOfCycles;
 
-    public MultipleCycles() {
-        System.out.println("\nrunning cycle with settings:\nNUMBER_OF_CYCLES:\t" + NUMBER_OF_CYCLES + "\n");
+    public MultipleCycles(int numberOfSingleCycles) {
+        this.numberOfCycles = numberOfSingleCycles;
+
+        System.out.println("\nrunning cycle with settings:\nnumberOfCycles:\t" + numberOfCycles + "\n");
 
         System.out.println("number of cycles should be parametrized as it is in MAIN, not as it is here given by hardcoding");
-
     }
 
     // awful recopy :(
@@ -152,7 +153,7 @@ public class MultipleCycles {
 
     private List<ExperimentResult> neuralSybolicCycle(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, int idx, Dataset nesislDataset, RuleSet ruleSet, File ruleFile, long ruleSetDescriptionLength, double trainRuleAcc, double testRuleAcc) {
         List<ExperimentResult> result = new ArrayList<>();
-        for (int cycleNumber = 0; cycleNumber < NUMBER_OF_CYCLES; cycleNumber++) {
+        for (int cycleNumber = 0; cycleNumber < numberOfCycles; cycleNumber++) {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls, cycleNumber);
 
             System.out.println("\n\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t network initialization\n\n");
