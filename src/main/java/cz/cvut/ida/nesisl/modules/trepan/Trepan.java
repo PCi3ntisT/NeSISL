@@ -22,7 +22,9 @@ import java.util.stream.IntStream;
 public class Trepan {
 
     // path to trepan executables !!!! (currently hardcoded)
-    private String trepanExe = (System.getProperty("os.name").contains("Windows")) ? "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe" : "/mnt/storage-brno3-cerit/home/svatoma1/trepan/TrepanWin.exe";
+    private String trepanExe = (System.getProperty("os.name").contains("Windows"))
+            ? "H:\\skola\\phd\\propositional_NSI\\TrepanWin\\TrepanWin.exe"
+            : "/mnt/storage-brno6/home/svatoma1/trepan/TrepanWin.exe";
 
 
     private final NeuralNetwork learnedNetwork;
@@ -71,10 +73,13 @@ public class Trepan {
             // grid
             builder = new ProcessBuilder("wine", trepanExe, folderName + "acc.cmd");//, ">", folderName  + "trepan.acc");
         }
+        System.out.println("original directory\t" + builder.directory());
         builder = builder.directory(folder);
         //builder = builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        builder = builder.redirectError(ProcessBuilder.Redirect.INHERIT);
         builder = builder.redirectOutput(new File(folderName + "trepan.acc"));
         Process process = null;
+        System.out.println("starting directory\t" + builder.directory());
         try {
             process = builder.start();
         } catch (IOException e) {

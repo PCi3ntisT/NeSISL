@@ -3,6 +3,7 @@ package main.java.cz.cvut.ida.nesisl.modules.dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
+import main.java.cz.cvut.ida.nesisl.application.Main;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 
 import java.io.File;
@@ -68,12 +69,15 @@ public class Crossvalidation {
 
     public static Crossvalidation createStratified(Dataset dataset, RandomGeneratorImpl randomGenerator, Integer numberOfFolds) {
         synchronized (dataset) {
+            System.out.println("creating different random generator for crossvalidation splits (with seed 187372 in order to be consistent with earlier setting fold by fold) - change in the future");
+            randomGenerator = new RandomGeneratorImpl(Main.SIGMA,Main.MU,187372);
             List<List<Map<Fact, Value>>> folds = new ArrayList<>();
             IntStream.range(0,numberOfFolds).forEach(i -> folds.add(new ArrayList<>()));
             List<List<Map<Fact, Value>>> splitted = splitAccordingToResults(dataset);
+            final RandomGeneratorImpl finalRandomGenerator = randomGenerator;
             splitted.forEach(group -> {
                 if (!group.isEmpty()) {
-                    Collections.shuffle(group, randomGenerator.getRandom());
+                    Collections.shuffle(group, finalRandomGenerator.getRandom());
                     int idx = 0;
                     for (Map<Fact,Value> sample : group){
                         folds.get(idx % folds.size()).add(sample);

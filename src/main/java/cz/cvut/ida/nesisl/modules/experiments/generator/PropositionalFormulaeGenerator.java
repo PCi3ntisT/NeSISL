@@ -32,9 +32,10 @@ public class PropositionalFormulaeGenerator {
         selectedOperators.add(Operator.OR);
         selectedOperators.add(Operator.XOR);
         //l.add(Operator.IMPLICATION);
-        PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(7, 6, 4, selectedOperators);
-        File target = new File("." + File.separator + "experiments" + File.separator + "artificial");
-        prop.generateAndStoreToFolder(target, 11000, 0.2);
+        PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(10, 5, 4, selectedOperators);
+        File target = new File("." + File.separator + "experiments" + File.separator + "artificial_long2");
+        target.mkdirs();
+        prop.generateAndStoreToFolder(target, 3000, 0.4);
     }
 
     public PropositionalFormulaeGenerator(int numberOfAtoms, int maximalNumberOfFormulasInFormula, int maximalDepth, List<Operator> operators) {

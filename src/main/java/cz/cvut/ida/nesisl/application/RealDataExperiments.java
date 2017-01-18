@@ -48,7 +48,7 @@ public class RealDataExperiments {
           //      "voting",
             //    "wine"/**/
 
-                "monks1"
+                "cnf20-7"
                 //"lenses",
 
                 //"cnf200-7"
@@ -70,13 +70,13 @@ public class RealDataExperiments {
 
             String cascorSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
             String dncSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
-            String regentSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
+            String regentSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "REGENT" + File.separator + "-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0-0" + File.separator + "REGENTSetting.txt";
 
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, wls, KBANNsetting});
-                //Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
                 //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
@@ -84,7 +84,7 @@ public class RealDataExperiments {
                 //Main.main(new String[]{"DNC", numberOfRepeats, data, wls, dncSetting});
                 //Main.main(new String[]{"TopGen", numberOfRepeats, data, wls, tgSetting});
 
-                //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, KBANNinput, regentSetting});
+                //Main.main(new String[]{"REGENT", numberOfRepeats, data, wls, regentSetting});
 
 
             } catch (FileNotFoundException e) {

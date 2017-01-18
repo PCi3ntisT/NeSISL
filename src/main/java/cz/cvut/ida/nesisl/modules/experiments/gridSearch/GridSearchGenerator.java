@@ -51,7 +51,7 @@ public class GridSearchGenerator {
         Map<String, List<String>> map = new HashMap<>();
         map.put(CascadeCorrelationSetting.POOL_SIZE_LIMIT_TOKEN, orderedList("4")); //"1", "4", "8"));
         map.put(CascadeCorrelationSetting.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //, "0.3"));
-        map.put(CascadeCorrelationSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("30")); // 50
+        map.put(CascadeCorrelationSetting.HIDDEN_NODE_LIMIT_TOKEN, orderedList("15")); // 50
         map.put(CascadeCorrelationSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("15")); //"10", "20"));
         map.put(CascadeCorrelationSetting.LONG_TIME_WINDOW_TOKEN, orderedList("45")); //"30", "60"));
         map.put(CascadeCorrelationSetting.CANDIDATE_ITERATION_LEARNING_LIMIT_TOKEN, orderedList("2500"));
@@ -68,7 +68,7 @@ public class GridSearchGenerator {
         map.put(RegentSetting.CROSSOVER_CHILDREN_TOKEN, orderedList("20")); //"10", "20", "50"));
         map.put(RegentSetting.ELITES_TOKEN, orderedList("1")); //"1", "2"));
         map.put(RegentSetting.EDGE_WEIGHT_CROSSOVER_LIMIT_TOKEN, orderedList("0.2"));
-        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("340"));
+        map.put(RegentSetting.FITNESS_LIMIT_TOKEN, orderedList("600"));
         map.put(RegentSetting.NODE_DELETION_PROBABILITY_TOKEN, orderedList("0.5"));
 
         map.put(RegentSetting.SHORT_TIME_WINDOW_TOKEN, orderedList("5"));
@@ -97,14 +97,14 @@ public class GridSearchGenerator {
         map.put(TopGenSettings.EPSILON_LIMIT_TOKEN, orderedList("0.1")); //"0.01", "0.1", "0.3"));
         map.put(TopGenSettings.OMEGA_TOKEN, orderedList("4.0")); //"2.0", "4.0", "6.0"));
         map.put(TopGenSettings.SUCCESSORS_GENERATED_LIMIT_TOKEN, orderedList("5")); //"5", "10", "25"));
-        map.put(TopGenSettings.OPEN_LIST_LIMIT_TOKEN, orderedList("30")); //"30", "65", "100"));
+        map.put(TopGenSettings.OPEN_LIST_LIMIT_TOKEN, orderedList("50")); //"30", "65", "100"));
         map.put(TopGenSettings.SHORT_TIME_WINDOW_TOKEN, orderedList("5")); //"10", "20"));
         map.put(TopGenSettings.LONG_TIME_WINDOW_TOKEN, orderedList("15")); //"30", "60"));
         map.put(TopGenSettings.EPSILON_CONVERGENT_TOKEN, orderedList("0.1")); //"0.001", "0.01", "0.1", "0.3"));
         map.put(TopGenSettings.LEARNING_RATE_DECAY_TOKEN, orderedList("0.3"));//0.1","0.3", "0.5", "0.7","0.9","1")); //"0.1", "0.5", "0.8"));
         map.put(TopGenSettings.NODE_ACTIVATION_THRESHOLD_TOKEN, orderedList("0.15"));//"0.15"));
         map.put(TopGenSettings.PERTURBATION_TOKEN, orderedList("0.3")); //"2.0", "4.0", "6.0"));
-        map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("100"));//30","50","100"));
+        map.put(TopGenSettings.NODE_SEARCH_LIMIT, orderedList("300"));//30","50","100"));
         map.put(TopGenSettings.INNER_CROSSVALIDATION_RATIO, orderedList("2"));//,"1","2","3","10"));
         return new GridSearchGenerator(map, new File(folder),settingName);
     }

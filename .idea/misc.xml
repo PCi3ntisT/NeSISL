@@ -32,6 +32,9 @@
     <entry_points version="2.0" />
   </component>
   <component name="IdProvider" IDEtalkID="23F02E45B33F757565A1ED5CD2383A62" />
+  <component name="ParserProjectConfiguration">
+    <class-path />
+  </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
     <OptionsSetting value="true" id="Remove" />

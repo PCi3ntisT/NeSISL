@@ -1,45 +1,14 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
-import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
-import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DynamicNodeCreation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
-import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiCrossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.NeuralNetworkOwner;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.RuleSetInitable;
-import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentResult;
-import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
-import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
-import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
-import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSetDescriptionLengthFactor;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import weka.core.Instances;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
@@ -52,16 +21,18 @@ public class Main {
     // general setting; TREPAN_RUN is needed to be true if you want to run the whole NSL cycle
     public static final boolean TREPAN_RUN = true;
 
-    public static final double percentualAccuracyOfOriginalDataset = 0.7;
+    public static double percentualAccuracyOfOriginalDataset = 1.0; // 1.0
 
 
     // settings for random generator
-    private static final Double SIGMA = 1d;
-    private static final Double MU = 0.0d;
-    private static final Integer SEED = 13;
+    public static final Double SIGMA = 1d;
+    public static final Double MU = 0.0d;
+    private static Integer SEED = 13;
 
 
     public static final String CYCLE_TOKEN = "-cycle";
+    public static final String SEED_TOKEN = "-seed";
+    public static final String PERCENTUAL_TRIM_TOKEN = "-trimAcc";
 
     public static void main(String arg[]) throws FileNotFoundException {
         writeInfo(arg);
@@ -71,13 +42,23 @@ public class Main {
             System.exit(0);
         }
 
+        if(SEED_TOKEN.equals(arg[0])){
+            SEED = Tools.parseInt(arg[1], "The second argument (seed) must be integer.\nArgument input instead '" + arg[1] + "'.");
+            arg = eraseTwoFirstFromArgs(arg);
+        }
+
+        if(PERCENTUAL_TRIM_TOKEN.equals(arg[0])){
+            percentualAccuracyOfOriginalDataset = Tools.parseDouble(arg[1], "The second argument (percentage trim) must be double.\nArgument input instead '" + arg[1] + "'.");
+            arg = eraseTwoFirstFromArgs(arg);
+        }
+
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(SIGMA, MU, SEED);
 
         int numberOfSingleCycles = 0;
         boolean singleCycle = CYCLE_TOKEN.equals(arg[0]);
         if (singleCycle) {
             numberOfSingleCycles = Tools.parseInt(arg[1], "The second argument (number of single cycle repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
-            arg = eraseCyclesFromArgs(arg);
+            arg = eraseTwoFirstFromArgs(arg);
         }
 
         int numberOfRepeats = Tools.parseInt(arg[1], "The second/fourth argument (number of repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
@@ -109,12 +90,11 @@ public class Main {
         System.out.println();
     }
 
-    private static String[] eraseCyclesFromArgs(String[] arg) {
+    private static String[] eraseTwoFirstFromArgs(String[] arg) {
         String[] swap = new String[arg.length - 2];
         final String[] finalArg = arg;
         IntStream.rangeClosed(2, arg.length - 1).forEach(idx -> swap[idx-2] = finalArg[idx]);
-        arg = swap;
-        return arg;
+        return swap;
     }
 
     private static WeightLearningSetting parseAndAdjustWLS(String anObject, WeightLearningSetting parse, MultiRepresentationDataset multiRepre) {

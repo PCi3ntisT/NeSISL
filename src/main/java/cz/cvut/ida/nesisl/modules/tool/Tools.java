@@ -383,4 +383,14 @@ public class Tools {
         }
         return file;
     }
+
+    public static double parseDouble(String input,String  errorMsg) {
+        try {
+            return Double.valueOf(input);
+        } catch (Exception ex) {
+            System.out.println(errorMsg);
+            System.exit(-1);
+        }
+        return -1;
+    }
 }
