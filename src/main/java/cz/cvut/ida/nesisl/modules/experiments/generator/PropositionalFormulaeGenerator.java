@@ -35,7 +35,7 @@ public class PropositionalFormulaeGenerator {
         PropositionalFormulaeGenerator prop = new PropositionalFormulaeGenerator(10, 5, 4, selectedOperators);
         File target = new File("." + File.separator + "experiments" + File.separator + "artificial_long2");
         target.mkdirs();
-        prop.generateAndStoreToFolder(target, 3000, 0.4);
+        prop.generateAndStoreToFolder(target, 10000, 0.4);
     }
 
     public PropositionalFormulaeGenerator(int numberOfAtoms, int maximalNumberOfFormulasInFormula, int maximalDepth, List<Operator> operators) {
@@ -176,7 +176,20 @@ public class PropositionalFormulaeGenerator {
     }
 
     private Long convertAndRetrieveCNF(File file) {
-        ProcessBuilder builder = new ProcessBuilder("python", ".." + File.separator + "PBL-master" + File.separator + "include" + File.separator + "convertor.py", file.getAbsolutePath());
+        // for computer
+        String path = ".." + File.separator + "PBL-master" + File.separator + "include" + File.separator + "convertor.py";
+        // for grid
+        /*path = File.separator + "mnt" + File.separator +
+                "storage" + File.separator +
+                "brno6" + File.separator +
+                "home" + File.separator +
+                "svatoma1" + File.separator +
+                "PBL-master" + File.separator +
+                "include" + File.separator +
+                "convertor.py";
+        */
+
+        ProcessBuilder builder = new ProcessBuilder("python", path, file.getAbsolutePath());
         Process process = null;
         try {
             builder = builder.redirectOutput(ProcessBuilder.Redirect.INHERIT);

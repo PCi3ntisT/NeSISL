@@ -48,25 +48,41 @@ public class RealDataExperiments {
           //      "voting",
             //    "wine"/**/
 
-                "cnf20-7"
+                //"cnf20-7"
                 //"lenses",
 
                 //"cnf200-7"
+
+                "cnf1-10",
+                "cnf2-10",
+                "cnf6-10",
+                "cnf8-10",
+                "cnf15-10",
+                "cnf18-10",
+                "cnf20-10",
+                "cnf32-10",
+                "cnf36-10"
         };
+        //zkontrolovat jestli si drzi dataset samplz fakt jako list samplu nebo jako mnozinu - mel by byt list
 
         Arrays.stream(domains).forEach(domain -> {
 
-            String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
+            //String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
+            String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
             String folder = experimentFolder + domain + File.separator;
             String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "-0-0" + File.separator + "kbannSetting.txt";
             String wlsFolder = "-0-0-0-0-0-0-0-0-0";
             String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + wlsFolder + File.separator + "wlsSetting.txt";
             String KBANNinput = folder + "theory";
             String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized" : ""); //Nominalized";//Nominalized";
-            data = folder + "data";
+            data = folder + "crossvalidationData";
+            String backgroundData = folder + "backgroundKnowledgeLearnerData";
 
             System.out.println(folder);
             System.out.println(data);
+
+            System.out.println(data);
+            System.out.println(backgroundData);
 
             String cascorSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "CasCor" + File.separator + "-0-0-0-0-0-0" + File.separator + "cascorSetting.txt";
             String dncSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "DNC" + File.separator + "-0-0-0-0-0" + File.separator + "DNCSetting.txt";
@@ -75,8 +91,11 @@ public class RealDataExperiments {
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
             try {
-                //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, wls, KBANNsetting});
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, wls, KBANNsetting});
+                Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                //Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+
+
+                // old parameters
                 //Main.main(new String[]{"backprop", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"fullyConnected", numberOfRepeats, data, wls, KBANNinput, KBANNsetting});
                 //Main.main(new String[]{"CasCor", numberOfRepeats, data, wls, cascorSetting});
