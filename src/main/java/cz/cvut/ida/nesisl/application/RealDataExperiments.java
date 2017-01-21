@@ -53,14 +53,14 @@ public class RealDataExperiments {
 
                 //"cnf200-7"
 
-                "cnf1-10",
+                /*"cnf1-10",
                 "cnf2-10",
                 "cnf6-10",
                 "cnf8-10",
                 "cnf15-10",
                 "cnf18-10",
                 "cnf20-10",
-                "cnf32-10",
+                "cnf32-10",*/
                 "cnf36-10"
         };
         //zkontrolovat jestli si drzi dataset samplz fakt jako list samplu nebo jako mnozinu - mel by byt list
@@ -90,8 +90,14 @@ public class RealDataExperiments {
 
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
+            System.out.println("nekde je tu chyba ze kdyz je binarni klasifikace tak to obcas spatne prohodi vystupni tridy nez maji byt");
+
             try {
-                Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                // running check
+                //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
+
+                //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
                 //Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
 
 

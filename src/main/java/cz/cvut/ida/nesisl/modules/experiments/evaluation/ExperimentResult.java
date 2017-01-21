@@ -325,7 +325,7 @@ public class ExperimentResult {
         this.setTrainAccuracy(trepan.getNetworkTrainAccuracy());
         this.setAccuracy(trepan.getNetworkTestAccuracy());
 
-        this.setTrepanTrainAcc(trepan.getTrpanTrainAccuracy());
+        this.setTrepanTrainAcc(trepan.getTrepanTrainAccuracy());
         this.setTrepanTestAcc(trepan.getTrepanTestAccuracy());
         this.setTrepanTrainFidelity(trepan.getTrainFidelity());
         this.setTrepanTestFidelity(trepan.getTestFidelity());

@@ -27,12 +27,16 @@ public class KBANN implements NeuralNetworkOwner {
     private NeuralNetwork network;
     private final KBANNSettings settings;
 
-
     public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings, boolean softmaxOutputs) {
-        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs);
+        return create(rawRuleFile, dataset, specific, kbannSettings, softmaxOutputs, true);
     }
 
-    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs) {
+
+    public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings, boolean softmaxOutputs, boolean pertrubateNetwork) {
+        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs, pertrubateNetwork);
+    }
+
+    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs, boolean pertrubateNetwork) {
         this.settings = settings;
         NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs);
         networkConstruction = addSpecificNodes(specific, networkConstruction);
@@ -40,8 +44,10 @@ public class KBANN implements NeuralNetworkOwner {
         if (settings.isEdgesBetweenAdjacentLayersOnly()) {
             networkConstruction = removeEdgesBetweenNonAdjacentLayers(networkConstruction);
         }
-        networkConstruction = fillUnbiased(networkConstruction, settings.getRandomGenerator());
-        networkConstruction = perturbeNetworkConnection(networkConstruction, settings);
+        networkConstruction = fillUnbiased(networkConstruction, (pertrubateNetwork) ? settings.getRandomGenerator() : null);
+        if(pertrubateNetwork) {
+            networkConstruction = perturbeNetworkConnection(networkConstruction, settings);
+        }
         this.network = networkConstruction;
     }
 
@@ -51,7 +57,7 @@ public class KBANN implements NeuralNetworkOwner {
 
         nodes.stream()
                 .filter(n -> !network.getIncomingForwardEdges(n).contains(new Edge(network.getBias(), n, Edge.Type.FORWARD)))
-                .forEach(n -> network.addEdgeStateful(new Edge(network.getBias(), n, Edge.Type.FORWARD), randomGenerator.nextDouble()));
+                .forEach(n -> network.addEdgeStateful(new Edge(network.getBias(), n, Edge.Type.FORWARD), (null == randomGenerator) ? 0 : randomGenerator.nextDouble()));
 
         return network;
     }

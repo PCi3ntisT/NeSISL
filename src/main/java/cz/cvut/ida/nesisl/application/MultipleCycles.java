@@ -200,9 +200,9 @@ public class MultipleCycles {
         return ruleSet;
     }
 
-    public static RuleSet mineAndTrimmeRuleSet(Dataset nesislDataset, Instances wekaDataset) {
+    public static RuleSet mineAndTrimmeRuleSetStatefullyDatasetConsistency(Dataset nesislDataset, Instances wekaDataset) {
         RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
-
+        nesi
         // popripade nejaky trimmer nebo relabelling
         // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
         // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();

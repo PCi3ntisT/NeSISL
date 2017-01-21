@@ -44,7 +44,7 @@ public class TrepanResults {
         return numberOfInnerNodes;
     }
 
-    public Double getTrpanTrainAccuracy() {
+    public Double getTrepanTrainAccuracy() {
         return trpanTrainAccuracy;
     }
 
