@@ -50,9 +50,18 @@ public class RuleAccuracy {
         for (Rule rule : ruleSet.getRules()) {
             for (Implication implication : rule.getImplications()) {
                 if (isConsistent(sample, implication)) {
+                    /*System.out.println(rule.toString());
+                    //System.out.println(sample);
+                    System.out.println(sample.get(new Fact("17==g")));
+                    System.out.println("class\t" + sample.get(new Fact("class==-")) + "\t" + sample.get(new Fact("class==+")));
+                    System.out.println("tady ta metoda areSameClasses je spatne, dava ocividne furt true");
+                    */
+
                     if (areSameClasses(sample, rule.getHead(), nesislDataset)) {
+                        //System.out.println("\ttrue");
                         return true;
                     } else {
+                        //System.out.println("\tfalse");
                         /*List<Fact> list = sample.keySet().stream().collect(Collectors.toList());
                         list.sort((f1, f2) -> f1.getFact().compareTo(f2.getFact()));
                         System.out.println("fail");
@@ -77,11 +86,19 @@ public class RuleAccuracy {
     private boolean areSameClasses(Map<Fact, Value> sample, String head, Dataset nesislDataset) {
         ClassAttribute target = nesislDataset.getClassAttribute();
         if (target.isBinary()) {
+            Fact outputFact = new Fact(DatasetImpl.CLASS_TOKEN + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + target.getPositiveClass());
+
+            if (target.getPositiveClass().equals(head)) {
+                return sample.get(outputFact).isOne();
+            } else {
+                return sample.get(outputFact).isZero();
+            }
+            /* old version
             if (target.getPositiveClass().equals(head)) {
                 return sample.get(new Fact(DatasetImpl.CLASS_TOKEN)).isOne();
             } else {
                 return sample.get(new Fact(DatasetImpl.CLASS_TOKEN)).isZero();
-            }
+            }*/
         } else {
             return sample.get(new Fact(DatasetImpl.CLASS_TOKEN + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + head)).isOne();
         }

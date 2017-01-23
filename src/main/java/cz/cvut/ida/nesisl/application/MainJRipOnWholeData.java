@@ -90,7 +90,7 @@ public class MainJRipOnWholeData {
         }
 
         // TODO upravit nastaveni
-        RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+        RuleSet ruleSet = WekaJRip.create(wekaDataset,nesislDataset).getRuleSet();
 
 
         System.out.println(ruleSet.getTheory());

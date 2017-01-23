@@ -161,18 +161,24 @@ public class MultipleCycles {
             long end = System.currentTimeMillis();
 
             System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t result storing & TREPAN learning\n\n");
+            TrepanResults trepan;
             if (Main.TREPAN_RUN) {
                 System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t TREPAN learning \n");
-                TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
+                trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
                 currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
             } else {
                 currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
             }
 
-
-            // storing initial ruleSet
-            Tools.storeToFile(ruleSet.getTheory(), currentResult.getMyAdress() + File.separator + "initialTheory");
-            Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
+            if(0 == cycleNumber) {
+                // storing initial ruleSet
+                Tools.storeToFile(ruleSet.getTheory(), currentResult.getMyAdress() + File.separator + "initialTheory");
+                Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
+            }else if(Main.TREPAN_RUN){
+                DotTree tree = DotTreeReader.getDefault().create(trepan.getTreeFile());
+                Tools.storeToFile(MofNTreeFactory.getDefault().getTheory(tree, currentResult.getFinalNetwork()), currentResult.getMyAdress() + File.separator + "initialTheory_" + cycleNumber);
+                currentResult.setRuleSetDescriptionLength(currentResult.getMofNDecisionTreeDescriptionLength());
+            }
 
             // computing & forwarding parameters for next cycle
             trainRuleAcc = currentResult.getTrepanTrainAcc();
@@ -189,7 +195,7 @@ public class MultipleCycles {
 
     public static RuleSet mineAndTrimmeRuleSet(int idx, Dataset nesislDataset, Instances wekaDataset) {
         System.out.println("\n\n--------- fold " + idx + ":\t rule set learning\n\n");
-        RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+        RuleSet ruleSet = WekaJRip.create(wekaDataset,nesislDataset).getRuleSet();
 
         // popripade nejaky trimmer nebo relabelling
         // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
@@ -200,9 +206,13 @@ public class MultipleCycles {
         return ruleSet;
     }
 
-    public static RuleSet mineAndTrimmeRuleSetStatefullyDatasetConsistency(Dataset nesislDataset, Instances wekaDataset) {
-        RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
-        nesi
+    public static RuleSet mineAndTrimmeRule(Dataset nesislDataset, Instances wekaDataset) {
+        RuleSet ruleSet = WekaJRip.create(wekaDataset,nesislDataset).getRuleSet();
+
+        // do not solve the consistency here
+        //nesislDataset.makeConsistentStatefully(ruleSet);
+
+
         // popripade nejaky trimmer nebo relabelling
         // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
         // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();

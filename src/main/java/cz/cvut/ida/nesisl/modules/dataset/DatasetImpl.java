@@ -13,6 +13,8 @@ import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.*;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Triple;
+import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Rule;
+import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
@@ -47,7 +49,7 @@ public class DatasetImpl implements Dataset {
 
     private List<Double> cachedTrainNodeOutputAverage;
 
-    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> trainSamples, File originalFile,ClassAttribute classAttribute) {
+    public DatasetImpl(List<Fact> inputFacts, List<Fact> outputFacts, List<Map<Fact, Value>> trainSamples, File originalFile, ClassAttribute classAttribute) {
         this.inputFacts = new ArrayList<>(inputFacts);
         this.outputFacts = new ArrayList<>(outputFacts);
         this.trainSamples = new ArrayList<>(trainSamples);
@@ -56,7 +58,7 @@ public class DatasetImpl implements Dataset {
         this.classAttribute = classAttribute;
     }
 
-    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData, File originalFile,ClassAttribute classAttribute) {
+    public DatasetImpl(List<Fact> inputFactOrder, List<Fact> outputFactOrder, List<Map<Fact, Value>> trainData, List<Map<Fact, Value>> nodeTrainData, File originalFile, ClassAttribute classAttribute) {
         this.inputFacts = new ArrayList<>(inputFactOrder);
         this.outputFacts = new ArrayList<>(outputFactOrder);
         this.trainSamples = new ArrayList<>(trainData);
@@ -142,6 +144,53 @@ public class DatasetImpl implements Dataset {
     }
 
     @Override
+    public void makeConsistentStatefully(RuleSet ruleSet) {
+        // todo remove this nonsense like method
+        if (!ruleSet.isBinaryClassClassification() || ruleSet.getNumberOfRules() < 1) {
+            return;
+        }
+        System.out.println("jeste ale musi byt splneno ze bude v zapisu binarniho problemu {0,1} jako moznosti, nebo ne???");
+        System.out.println("furt je tam chzba :(");
+        Rule firstRule = ruleSet.getRules().get(0);
+        String target = firstRule.getHead();
+        boolean relabel = !classAttribute.getPositiveClass().equals(target);
+        System.out.println(classAttribute.getPositiveClass() + "\t" + target + "\t\t" + relabel);
+        if (relabel) {
+            synchronized (this) {
+                Set<Map<Fact, Value>> all = new HashSet<>();
+                all.addAll(nodeTrainSamples);
+                all.addAll(trainSamples);
+
+                Fact output = outputFacts.get(0);
+                all.forEach(map -> {
+                    map.put(output,(map.get(output).isZero()) ? Value.create("1") : Value.create("0"));
+                });
+
+                cachedInputOrder = null;
+                cachedOutputOrder = null;
+                cachedTrainNode = null;
+                cachedTrainNodeInputOrder = null;
+                cachedOutputAverage = null;
+                cachedTrainNodeOutputAverage = null;
+                cachedSamples = null;
+                cachedTrainNodeOutputOrder = null;
+            }
+        }
+    }
+
+    @Override
+    public boolean isBinaryClassification() {
+        //return outputFacts.size() <= 2;
+        return classAttribute.isBinary();
+    }
+
+    @Override
+    public boolean isOutputFact(Fact head) {
+        return outputFacts.contains(head);
+    }
+
+
+    @Override
     public List<Sample> getTestData(NeuralNetwork network) {
         return getNodeTrainData(network.getInputFactOrder(), network.getOutputFactOrder(), network);
     }
@@ -205,8 +254,8 @@ public class DatasetImpl implements Dataset {
 
     public static Dataset stratifiedSplit(Dataset dataset, RandomGenerator randomGenerator, int numberOfFolds) {
         synchronized (dataset) {
-            if(1 == numberOfFolds){
-                return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), dataset.getTrainRawData(), dataset.getTrainRawData(), dataset.getOriginalFile(),dataset.getClassAttribute());
+            if (1 == numberOfFolds) {
+                return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), dataset.getTrainRawData(), dataset.getTrainRawData(), dataset.getOriginalFile(), dataset.getClassAttribute());
             }
 
             List<Map<Fact, Value>> trainData = new ArrayList<>();
@@ -227,7 +276,7 @@ public class DatasetImpl implements Dataset {
                     nodeTrainData.addAll(group.subList(border, group.size()));
                 }
             });
-            return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile(),dataset.getClassAttribute());
+            return new DatasetImpl(dataset.getInputFactOrder(), dataset.getOutputFactOrder(), trainData, nodeTrainData, dataset.getOriginalFile(), dataset.getClassAttribute());
         }
     }
 
@@ -328,12 +377,12 @@ public class DatasetImpl implements Dataset {
         List<AttributeProprety> attributes = triple.getK();
         List<List<String>> examples = triple.getT();
 
-        Map<Map<Fact, Value>,String> map = new HashMap<>();
+        Map<Map<Fact, Value>, String> map = new HashMap<>();
 
         //Dataset nesislDataset = createNesislDataset(ambigious, attributes, examples, file, normalize);
         List<Fact> inputFacts = generateInputFacts(ambigious, attributes);
-        List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only)
-        Pair<List<Map<Fact, Value>>,Map<Map<Fact, Value>,List<String>>> pair = reformateDataWithMapping(inputFacts, outputFacts, examples, attributes, ambigious, normalize);
+        List<Fact> outputFacts = generateOutputFacts(attributes); // for one class only (predicting values of one attribute only), but it is tailored by positive class
+        Pair<List<Map<Fact, Value>>, Map<Map<Fact, Value>, List<String>>> pair = reformateDataWithMapping(inputFacts, outputFacts, examples, attributes, ambigious, normalize);
         ClassAttribute classAttribute = (ClassAttribute) attributes.stream()
                 .filter(attribute -> attribute instanceof ClassAttribute).toArray()[0];
         List<Map<Fact, Value>> reformatedExamples = pair.getLeft();
@@ -342,7 +391,7 @@ public class DatasetImpl implements Dataset {
 
         //Instances wekaDataset = createWekaDataset(ambigious, attributes, examples, file, normalize);
 
-        return MultiRepresentationDataset.create(attributes,examples,file,normalize,nesislDataset,mappingExampleToString,ambigious);
+        return MultiRepresentationDataset.create(attributes, examples, file, normalize, nesislDataset, mappingExampleToString, ambigious);
     }
 
     public static Instances createWekaDataset(List<Pair<String, Set<String>>> ambigious, List<AttributeProprety> attributes, List<List<String>> examples, File file, boolean normalize) {
@@ -360,14 +409,14 @@ public class DatasetImpl implements Dataset {
         return data;
     }
 
-    private static String generateWekaHead(List<AttributeProprety> attributes){
+    private static String generateWekaHead(List<AttributeProprety> attributes) {
         StringBuilder sb = new StringBuilder();
         sb.append(Instances.ARFF_RELATION + "\tdata\n");
         sb.append(attributesToString(attributes));
         return sb.toString();
     }
 
-    private static String generateWekaData(List<AttributeProprety> attributes, List<List<String>> examples, boolean normalize){
+    private static String generateWekaData(List<AttributeProprety> attributes, List<List<String>> examples, boolean normalize) {
         StringBuilder sb = new StringBuilder();
         sb.append(Instances.ARFF_DATA + "\n");
         sb.append(examplesToString(attributes, examples, normalize));
@@ -413,7 +462,7 @@ public class DatasetImpl implements Dataset {
                             }
                         });
                 sample.append(example.get(finalClassIdx));
-                sb.append(sample.toString()+ "\n");
+                sb.append(sample.toString() + "\n");
             }
         });
 
@@ -450,7 +499,7 @@ public class DatasetImpl implements Dataset {
     }
 
     private static String valuesToString(AttributeProprety attribute) {
-        System.out.println(attribute);
+        //System.out.println(attribute);
         // leaving out unkwnown value
         StringBuilder sb = new StringBuilder();
         Stream<String> stream = Stream.empty();
@@ -462,7 +511,7 @@ public class DatasetImpl implements Dataset {
         stream.filter(value -> !UNKNOWN_VALUE.equals(value))
                 .forEach(value -> sb.append(value + ","));
 
-        System.out.println(sb.toString());
+        //System.out.println(sb.toString());
 
         return sb.toString().substring(0, sb.length() - 1);
     }
@@ -541,26 +590,26 @@ public class DatasetImpl implements Dataset {
     }
 
     private static List<Map<Fact, Value>> reformateData(List<Fact> inputFacts, List<Fact> outputFacts, List<List<String>> examples, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambigious, boolean normalize) {
-                return reformateDataWithMapping(inputFacts, outputFacts, examples, attributes, ambigious, normalize)
-                        .getLeft();
+        return reformateDataWithMapping(inputFacts, outputFacts, examples, attributes, ambigious, normalize)
+                .getLeft();
     }
 
-    private static Pair<List<Map<Fact, Value>>,Map<Map<Fact, Value>,List<String>>> reformateDataWithMapping(List<Fact> inputFacts, List<Fact> outputFacts, List<List<String>> examples, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambigious, boolean normalize) {
+    private static Pair<List<Map<Fact, Value>>, Map<Map<Fact, Value>, List<String>>> reformateDataWithMapping(List<Fact> inputFacts, List<Fact> outputFacts, List<List<String>> examples, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambigious, boolean normalize) {
         Map<String, Fact> inputs = new HashMap<>();
         Map<String, Fact> outputs = new HashMap<>();
         inputFacts.stream().forEach(fact -> inputs.put(fact.getFact(), fact));
         outputFacts.stream().forEach(fact -> outputs.put(fact.getFact(), fact));
         Map<Map<Fact, Value>, List<String>> mapping = new HashMap<>();
-        List<Map<Fact,Value>> samples = new ArrayList<>();
+        List<Map<Fact, Value>> samples = new ArrayList<>();
 
         examples.stream()
                 .forEach(example -> {
                     Map<Fact, Value> sample = reformateExample(inputs, outputs, example, attributes, ambigious, normalize);
                     samples.add(sample);
-                    mapping.put(sample,example);
+                    mapping.put(sample, example);
                 });
 
-        return new Pair<>(samples,mapping);
+        return new Pair<>(samples, mapping);
     }
 
     private static Map<Fact, Value> reformateExample(Map<String, Fact> inputs, Map<String, Fact> outputs, List<String> example, List<AttributeProprety> attributes, List<Pair<String, Set<String>>> ambiguous, boolean normalize) {
@@ -577,7 +626,7 @@ public class DatasetImpl implements Dataset {
             if (attribute instanceof ClassAttribute) {
                 ClassAttribute target = (ClassAttribute) attribute;
                 if (target.isBinary()) {
-                    Fact fact = outputs.get(CLASS_TOKEN);
+                    Fact fact = outputs.get(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + target.getPositiveClass());
                     String value = (exampleValue.equals(target.getPositiveClass())) ? "1" : "0";
                     sample.put(fact, Value.create(value));
                 } else {
@@ -586,7 +635,6 @@ public class DatasetImpl implements Dataset {
                         sample.put(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value), Value.create((value.equals(finalExampleValue1)) ? "1" : "0"));
                     });
                 }
-
             } else if (attribute instanceof NominalAttribute) {
                 NominalAttribute nominal = (NominalAttribute) attribute;
                 if (ambiguousValues.contains(exampleValue)) {
@@ -668,7 +716,7 @@ public class DatasetImpl implements Dataset {
         List<Fact> facts = new ArrayList<>();
 
         if (target.isBinary()) {
-            facts.add(new Fact(CLASS_TOKEN));
+            facts.add(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + target.getPositiveClass()));
         } else {
             target.getValues().forEach(value -> facts.add(new Fact(CLASS_TOKEN + ATTRIBUTE_VALUE_DELIMITER + value)));
         }
@@ -808,5 +856,7 @@ public class DatasetImpl implements Dataset {
         }
         return list;
     }
+
+
 
 }

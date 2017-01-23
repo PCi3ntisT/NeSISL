@@ -61,14 +61,15 @@ public class RealDataExperiments {
                 "cnf18-10",
                 "cnf20-10",
                 "cnf32-10",*/
-                "cnf36-10"
+                //"cnf36-10"
+                "promotor"
         };
         //zkontrolovat jestli si drzi dataset samplz fakt jako list samplu nebo jako mnozinu - mel by byt list
 
         Arrays.stream(domains).forEach(domain -> {
 
-            //String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
-            String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
+            String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
+            //String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
             String folder = experimentFolder + domain + File.separator;
             String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "-0-0" + File.separator + "kbannSetting.txt";
             String wlsFolder = "-0-0-0-0-0-0-0-0-0";
@@ -77,6 +78,8 @@ public class RealDataExperiments {
             String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized" : ""); //Nominalized";//Nominalized";
             data = folder + "crossvalidationData";
             String backgroundData = folder + "backgroundKnowledgeLearnerData";
+            data = folder + "data";
+
 
             System.out.println(folder);
             System.out.println(data);
@@ -95,6 +98,8 @@ public class RealDataExperiments {
             try {
                 // running check
                 //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+
+                //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
                 Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
 
                 //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});

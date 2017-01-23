@@ -3,6 +3,7 @@ package main.java.cz.cvut.ida.nesisl.api.data;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
+import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 
 import java.io.File;
 import java.util.List;
@@ -38,4 +39,16 @@ public interface Dataset {
     public ClassAttribute getClassAttribute();
 
     public String cannonicalOutput(Map<Fact, Value> sample);
+
+    /**
+     * Be aware, this method statefully relabeles classes in binary classification if they are crippled (opposite to the ruleset first rule).
+     *
+     * It would be nice correct this hack by another way.
+     * @param ruleSet
+     */
+    void makeConsistentStatefully(RuleSet ruleSet);
+
+    public boolean isBinaryClassification();
+
+    public boolean isOutputFact(Fact head);
 }

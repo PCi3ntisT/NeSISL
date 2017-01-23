@@ -90,19 +90,22 @@ public class Main {
         MultiRepresentationDataset backgroundMultiRepre = DatasetImpl.parseMultiRepresentationDataset(backgroundKnowledgeDatasetFile, normalize);
         WeightLearningSetting wls = parseAndAdjustWLS(arg[0], WeightLearningSetting.parse(wlsFile, randomGenerator.getRandom()), multiRepre);
 
-
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(backgroundMultiRepre, randomGenerator, 1);
         Instances backgroundKnowledgeTrainData = crossval.getTestWekaDataset(backgroundMultiRepre.getNesislDataset());
-        RuleSet ruleSet = MultipleCycles.mineAndTrimmeRuleSetStatefullyDatasetConsistency(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+        RuleSet ruleSet = MultipleCycles.mineAndTrimmeRule(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
         File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
         /* end of rule mining and trimming */
 
+        System.out.println("theory\n" + ruleSet.getTheory());
+
         System.out.println("todo dynamically fixed ANNs structure");
+
+        System.out.println(multiRepre.getNesislDataset().getClassAttribute());
 
         if(RUN_RULE_EXTRACTION_CORRECTION) {
             crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, 1);
             backgroundKnowledgeTrainData = crossval.getTestWekaDataset(multiRepre.getNesislDataset());
-            ruleSet = MultipleCycles.mineAndTrimmeRuleSetStatefullyDatasetConsistency(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+            ruleSet = MultipleCycles.mineAndTrimmeRule(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
             ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
             runRuleExtractionCorrection(arg,  wls, multiRepre, ruleSet, ruleFile);
         }else if (singleCycle) {

@@ -4,6 +4,7 @@ package main.java.cz.cvut.ida.nesisl.modules.trepan;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.RuleFile;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
+import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotNode;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTree;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTreeTools;
@@ -24,7 +25,7 @@ public class MofNTreeFactory {
 
     public String getTheory(DotTree tree, NeuralNetwork neuralNetwork) {
         Map<String, String> classesMapping = constructVectorClassesMapping(neuralNetwork);
-        return processNode(tree.getRoot(), tree, new NodeFactory(), null, true, classesMapping);
+        return processNode(tree.getRoot(), tree, new NodeFactory(), classesMapping, new ArrayList<>());
     }
 
     private Map<String, String> constructVectorClassesMapping(NeuralNetwork neuralNetwork) {
@@ -47,19 +48,24 @@ public class MofNTreeFactory {
         return classesMapping;
     }
 
-    private String processNode(DotNode node, DotTree tree, NodeFactory nodeFactory, String ancestor, boolean ancestorWasRight, Map<String, String> classesMapping) {
+    private String processNode(DotNode node, DotTree tree, NodeFactory nodeFactory,  Map<String, String> classesMapping, List<Pair<String,Boolean>> ancestors) {
         if (DotTreeTools.getDefault().isTerminal(node, tree)) {
-            return processTerminal(node, tree, ancestor, ancestorWasRight, classesMapping);
+            return processTerminal(node, tree, classesMapping, ancestors);
         }
-        return processIntermediate(node, tree, nodeFactory, ancestor, ancestorWasRight, classesMapping);
+        return processIntermediate(node, tree, nodeFactory, classesMapping, ancestors);
     }
 
-    private String processTerminal(DotNode node, DotTree tree, String ancestor, boolean ancestorWasRight, Map<String, String> classesMapping) {
-        String antecedents = ancestor;
-        if (null == ancestor) {
-            antecedents = "";
-        } else if (!ancestorWasRight) {
-            antecedents = RuleFile.NOT_TOKEN + "(" + antecedents + ")";
+    private String processTerminal(DotNode node, DotTree tree, Map<String, String> classesMapping, List<Pair<String, Boolean>> ancestors) {
+        String antecedents = "";
+        for(Pair<String,Boolean> ancestor : ancestors){
+            if(!antecedents.equals("")){
+                antecedents += ",";
+            }
+            if(ancestor.getRight()){
+                antecedents += ancestor.getLeft();
+            }else{
+                antecedents += RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET + ancestor.getLeft() + RuleFile.NOT_TOKEN_CLOSING_BRACKET;
+            }
         }
 
         String head = (classesMapping.keySet().size() > 2)
@@ -74,29 +80,42 @@ public class MofNTreeFactory {
         return head + " " + RuleFile.CHANGABLE_RULE + " " + antecedents + " " + RuleFile.RULE_ENDING_TOKEN;
     }
 
-    private String processIntermediate(DotNode node, DotTree tree, NodeFactory nodeFactory, String ancestor, boolean ancestorWasRight, Map<String, String> classesMapping) {
+    private String processIntermediate(DotNode node, DotTree tree, NodeFactory nodeFactory, Map<String, String> classesMapping, List<Pair<String, Boolean>> ancestors) {
         StringBuilder sb = new StringBuilder();
         String currentNode = nodeFactory.getNextNode();
 
-        if (!ancestorWasRight && null != ancestor) {
-            ancestor = RuleFile.NOT_TOKEN + "(" + ancestor + ")";
+        String ruleAntecedents = "";
+        for(Pair<String,Boolean> ancestor : ancestors){
+            if(!ruleAntecedents.equals("")){
+                ruleAntecedents += ",";
+            }
+            if(ancestor.getRight()){
+                ruleAntecedents += ancestor.getLeft();
+            }else{
+                ruleAntecedents += RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET + ancestor.getLeft() + RuleFile.NOT_TOKEN_CLOSING_BRACKET;
+            }
         }
 
         String mOfN = createMofNRule(node, tree, nodeFactory, sb);
 
         String antecedents;
-        if (null != ancestor) {
+        if (!"".equals(ruleAntecedents)) {
             String interMezzo = nodeFactory.getNextNode();
             sb.append(interMezzo + " " + RuleFile.CHANGABLE_RULE + " " + mOfN + RuleFile.RULE_ENDING_TOKEN).append("\n");
-            antecedents = ancestor + RuleFile.ANTECEDENTS_DELIMITER + interMezzo;
+            antecedents = ruleAntecedents + RuleFile.ANTECEDENTS_DELIMITER + interMezzo;
         } else {
             antecedents = mOfN;
         }
 
         sb.append(currentNode + " " + RuleFile.CHANGABLE_RULE + " " + antecedents + RuleFile.RULE_ENDING_TOKEN).append("\n");
 
-        sb.append(processNode(tree.getEdges().get(node).get(0), tree, nodeFactory, currentNode, true, classesMapping)).append("\n");
-        sb.append(processNode(tree.getEdges().get(node).get(1), tree, nodeFactory, currentNode, false, classesMapping)).append("\n");
+        List<Pair<String, Boolean>> current = ancestors;
+        List<Pair<String,Boolean>> leftBranch = new ArrayList<>(ancestors);
+        leftBranch.add(new Pair<>(currentNode, true));
+        sb.append(processNode(tree.getEdges().get(node).get(0), tree, nodeFactory,  classesMapping,leftBranch)).append("\n");
+        List<Pair<String,Boolean>> rightBranch = new ArrayList<>(ancestors);
+        rightBranch.add(new Pair<>(currentNode, false));
+        sb.append(processNode(tree.getEdges().get(node).get(1), tree, nodeFactory,  classesMapping,rightBranch)).append("\n");
         return sb.toString();
     }
 

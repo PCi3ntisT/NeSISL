@@ -1,5 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.modules.weka;
 
+import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import weka.classifiers.rules.JRip;
 import weka.core.Instances;
@@ -20,7 +22,7 @@ public class WekaJRip {
         return ruleSet;
     }
 
-    public static WekaJRip create(Instances dataset) {
+    public static WekaJRip create(Instances dataset,Dataset nesislDataset) {
         JRip jrip = new JRip();
         String[] args = new String[]{};//{"-F","10"};
         System.out.println("TODO add parameters to JRIP");
@@ -42,7 +44,7 @@ public class WekaJRip {
 
         System.out.println(jrip.toString());
 
-        RuleSet ruleSet = RuleSet.create(jrip.toString());
+        RuleSet ruleSet = RuleSet.create(jrip.toString(),nesislDataset);
         return new WekaJRip(ruleSet);
     }
 

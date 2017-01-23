@@ -62,4 +62,15 @@ public class ClassAttribute implements AttributeProprety {
     public String getPositiveClass() {
         return positiveClass;
     }
+
+    @Override
+    public String toString() {
+        return "ClassAttribute{" +
+                "order=" + order +
+                ", orderWithComments=" + orderWithComments +
+                ", values=" + values +
+                ", binary=" + binary +
+                ", positiveClass='" + positiveClass + '\'' +
+                '}';
+    }
 }

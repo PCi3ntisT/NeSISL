@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.modules.weka.rules;
 
 import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.RuleFile;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,11 +34,11 @@ public class RuleSetToTheory {
                 " => 16=mrMackie (262.0/5.0)\n"
                 ;*/
 
-        RuleSet ruleSet = RuleSet.create(input);
+        /*RuleSet ruleSet = RuleSet.create(input);
 
         System.out.println("\n" + ruleSet + "\n");
 
-        System.out.println(ruleSet.getTheory());
+        System.out.println(ruleSet.getTheory());*/
 
     }
 
@@ -67,13 +68,21 @@ public class RuleSetToTheory {
             Rule firstRule = ruleSet.getRules().get(0);
 
             if (0 == firstRule.getNumberOfImplications()) {
-                theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                theory.append(createRule(generateTargetClass(firstRule.getHead(),ruleSet.getClassAttribute()),
                         new ArrayList<>(),
                         true) + "\n");
             } else {
                 Implication implication = ruleSet.getRules().get(0).getImplications().get(0);
-                theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                theory.append(createRule(generateTargetClass(firstRule.getHead(),ruleSet.getClassAttribute()),
                         convertImplication(implication),
+                        true) + "\n");
+
+            }
+            if(!firstRule.getHead().equals(ruleSet.getClassAttribute().getPositiveClass())){
+                ArrayList<String> negatedAnotherClass = new ArrayList<>();
+                negatedAnotherClass.add(RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET +generateTargetClass(firstRule.getHead(),ruleSet.getClassAttribute()) + RuleFile.NOT_TOKEN_CLOSING_BRACKET);
+                theory.append(createRule(generateTargetClass(ruleSet.getClassAttribute().getPositiveClass(), ruleSet.getClassAttribute()),
+                        negatedAnotherClass,
                         true) + "\n");
             }
 
@@ -109,17 +118,36 @@ public class RuleSetToTheory {
 
                                 // ending case
                                 if (ruleSet.isBinaryClassClassification()) {
-                                    theory.append(createRule(output, new ArrayList<>(), true) + "\n");
+                                    theory.append(createRule(generateTargetClass(output,ruleSet.getClassAttribute()), new ArrayList<>(), true) + "\n");
+                                    if(!output.equals(ruleSet.getClassAttribute().getPositiveClass())){
+                                        ArrayList<String> negatedAnotherClass = new ArrayList<>();
+                                        negatedAnotherClass.add(RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET +generateTargetClass(output,ruleSet.getClassAttribute()) + RuleFile.NOT_TOKEN_CLOSING_BRACKET);
+                                        theory.append(createRule(generateTargetClass(ruleSet.getClassAttribute().getPositiveClass(), ruleSet.getClassAttribute()),
+                                                negatedAnotherClass,
+                                                true) + "\n");
+                                    }
                                 } else {
-                                    theory.append(createRule(generateTargetClass(output), createNotAntecedents(before), true) + "\n");
+                                    theory.append(createRule(generateTargetClass(output,ruleSet.getClassAttribute()), createNotAntecedents(before), true) + "\n");
                                 }
+
+
                             } else if (1 == impliedBy.size()) {
                                 if (ruleSet.isBinaryClassClassification()) {
-                                    theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                                    String outputHead = generateTargetClass(targetImplicatorSet.getHead(),ruleSet.getClassAttribute());
+                                    theory.append(createRule(outputHead,
                                             appendLists(createNotAntecedents(before),
                                                     convertImplication(impliedBy.iterator().next())),
                                             true) + "\n");
-                                    before.add(DatasetImpl.CLASS_TOKEN);
+                                    before.add(outputHead);
+
+                                    if(!output.equals(ruleSet.getClassAttribute().getPositiveClass())){
+                                        ArrayList<String> negatedAnotherClass = new ArrayList<>();
+                                        negatedAnotherClass.add(RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET +generateTargetClass(output,ruleSet.getClassAttribute()) + RuleFile.NOT_TOKEN_CLOSING_BRACKET);
+                                        theory.append(createRule(generateTargetClass(ruleSet.getClassAttribute().getPositiveClass(), ruleSet.getClassAttribute()),
+                                                negatedAnotherClass,
+                                                true) + "\n");
+                                    }
+
                                 } else {
                                     String supportingConcept = "forClass" + output;
                                     theory.append(createRule(supportingConcept,
@@ -128,19 +156,28 @@ public class RuleSetToTheory {
                                             true) + "\n");
                                     List<String> targetAntecedents = new ArrayList<>();
                                     targetAntecedents.add(supportingConcept);
-                                    theory.append(createRule(generateTargetClass(output), targetAntecedents, true) + "\n");
+                                    theory.append(createRule(generateTargetClass(output,ruleSet.getClassAttribute()), targetAntecedents, true) + "\n");
                                     before.add(supportingConcept);
                                 }
                             } else if (impliedBy.size() > 1) {
                                 if (ruleSet.isBinaryClassClassification()) {
+                                    String outputHead = generateTargetClass(targetImplicatorSet.getHead(),ruleSet.getClassAttribute());
                                     impliedBy.stream()
                                             .forEach(rule ->
-                                                            theory.append(createRule(DatasetImpl.CLASS_TOKEN,
+                                                            theory.append(createRule(outputHead,
                                                                     appendLists(createNotAntecedents(before),
                                                                             convertImplication(rule)),
                                                                     true) + "\n")
                                             );
-                                    before.add(DatasetImpl.CLASS_TOKEN);
+                                    before.add(outputHead);
+                                    if(!output.equals(ruleSet.getClassAttribute().getPositiveClass())){
+                                        ArrayList<String> negatedAnotherClass = new ArrayList<>();
+                                        negatedAnotherClass.add(RuleFile.NOT_TOKEN + RuleFile.NOT_TOKEN_OPENING_BRACKET +generateTargetClass(output,ruleSet.getClassAttribute()) + RuleFile.NOT_TOKEN_CLOSING_BRACKET);
+                                        theory.append(createRule(generateTargetClass(ruleSet.getClassAttribute().getPositiveClass(), ruleSet.getClassAttribute()),
+                                                negatedAnotherClass,
+                                                true) + "\n");
+                                    }
+
                                 } else {
                                     String supportingConcept = "forClass" + output;
                                     impliedBy.stream()
@@ -152,7 +189,7 @@ public class RuleSetToTheory {
                                             );
                                     List<String> targetAntecedents = new ArrayList<>();
                                     targetAntecedents.add(supportingConcept);
-                                    theory.append(createRule(generateTargetClass(output), targetAntecedents, true) + "\n");
+                                    theory.append(createRule(generateTargetClass(output,ruleSet.getClassAttribute()), targetAntecedents, true) + "\n");
                                     before.add(supportingConcept);
                                 }
                             }
@@ -177,7 +214,22 @@ public class RuleSetToTheory {
                 .collect(Collectors.toList());
     }
 
-    private static String generateTargetClass(String target) {
+    /**
+     * really not a nice hack :( hardcoded, you cannot use "hopefullyNonClassAttribute" as a name for intermediate conclusion
+     * @param target
+     * @param classAttribute
+     * @return
+     */
+    private static String generateTargetClass(String target,ClassAttribute classAttribute) {
+        if(classAttribute.isBinary()){
+            //System.out.println(target + "\t" + classAttribute.getPositiveClass());
+
+            if(classAttribute.getPositiveClass().equals(target)){
+                return DatasetImpl.CLASS_TOKEN + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + target;
+            }else{
+                return "hopefullyNonClassAttribute" + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + target;
+            }
+        }
         return DatasetImpl.CLASS_TOKEN + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + target;
     }
 

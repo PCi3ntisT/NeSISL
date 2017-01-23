@@ -24,6 +24,8 @@ public class RuleFile {
     public static final String CHANGABLE_RULE = ":-";
     public static final String RULE_ENDING_TOKEN = "."; // this should be used in the parser but is not
     public static final String NOT_TOKEN = "not"; // this should be used in the parser but is not
+    public static final String NOT_TOKEN_OPENING_BRACKET = "(";
+    public static final String NOT_TOKEN_CLOSING_BRACKET = ")";
     public static final String ANTECEDENTS_DELIMITER = ",";
 
     public Rules preprocessRules() {
@@ -79,7 +81,7 @@ public class RuleFile {
         RuleCreationWrapper wrapper = new RuleCreationWrapper();
         wrapper.getInputFacts().addAll(dataset.getInputFactOrder());
         wrapper.getConclusionFacts().addAll(dataset.getOutputFactOrder());
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+       try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
             ReadingState state = null;
             boolean change = false;
@@ -261,6 +263,7 @@ public class RuleFile {
             throw new IllegalStateException("This line violates rule notation.");
         }
         Literal literal = wrapper.getFactory().getLiteral(splitted[0].trim());
+
 
         //System.out.println(line);
         //System.out.println(literal);

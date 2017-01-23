@@ -33,12 +33,12 @@ public class KBANN implements NeuralNetworkOwner {
 
 
     public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings, boolean softmaxOutputs, boolean pertrubateNetwork) {
-        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs, pertrubateNetwork);
+        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs, pertrubateNetwork,dataset);
     }
 
-    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs, boolean pertrubateNetwork) {
+    public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs, boolean pertrubateNetwork, Dataset dataset) {
         this.settings = settings;
-        NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs);
+        NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs,dataset);
         networkConstruction = addSpecificNodes(specific, networkConstruction);
         networkConstruction = addFullyConnectionToAdjacentLayers(networkConstruction);
         if (settings.isEdgesBetweenAdjacentLayersOnly()) {
@@ -105,12 +105,14 @@ public class KBANN implements NeuralNetworkOwner {
         return network;
     }
 
-    private NeuralNetwork constructNetwork(RuleFile ruleFile, boolean areSoftmaxOutputs) {
+    private NeuralNetwork constructNetwork(RuleFile ruleFile, boolean areSoftmaxOutputs, Dataset dataset) {
         Map<Fact, Node> map = new HashMap<>();
         Rules rules = ruleFile.preprocessRules();
 
         List<Node> inputNodes = createInputNodes(rules, map);
         List<Node> outputNodes = createOutputNodes(rules, map, areSoftmaxOutputs);
+
+
 
         NeuralNetwork network = new NeuralNetworkImpl(inputNodes,
                 outputNodes,
@@ -119,27 +121,28 @@ public class KBANN implements NeuralNetworkOwner {
         );
 
         network = createNodeStructure(map, rules, network);
-        network = createEdgeStructure(map, rules, network);
+        network = createEdgeStructure(map, rules, network,dataset);
 
         return network;
     }
 
 
-    private NeuralNetwork createEdgeStructure(Map<Fact, Node> map, Rules rules, NeuralNetwork network) {
+    private NeuralNetwork createEdgeStructure(Map<Fact, Node> map, Rules rules, NeuralNetwork network, Dataset dataset) {
         rules.getFinalRules().forEach(rule -> {
             //System.out.println("implying\t" + rule.getHead());
+            //System.out.println(rule.toString());
             switch (rule.getType()) {
                 case CONJUNCTION:
                     //System.out.println("con");
-                    addConjunctionRuleToNetwork(rule, map, network);
+                    addConjunctionRuleToNetwork(rule, map, network,dataset);
                     break;
                 case DISJUNCTION:
                     //System.out.println("dis");
-                    addDisjunctionRuleToNetwork(rule, map, network);
+                    addDisjunctionRuleToNetwork(rule, map, network,dataset);
                     break;
                 case N_TRUE:
                     //System.out.println("n");
-                    addNTrueRuleToNetwork(rule, map, network);
+                    addNTrueRuleToNetwork(rule, map, network,dataset);
                     break;
                 default:
                     throw new IllegalStateException();
@@ -148,7 +151,7 @@ public class KBANN implements NeuralNetworkOwner {
         return network;
     }
 
-    private void addNTrueRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {
+    private void addNTrueRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network, Dataset dataset) {
         Node target = map.get(rule.getHead());
         target.setModifiability(rule.isModifiable());
         rule.getBody().forEach(literal -> {
@@ -159,10 +162,10 @@ public class KBANN implements NeuralNetworkOwner {
         });
         Node bias = network.getBias();
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
-        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * (rule.getNTrue() * settings.getOmega() - 1) / 2);
+        network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * (rule.getNTrue() * settings.getOmega() - 1) / 2.0);
     }
 
-    private void addDisjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {
+    private void addDisjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network, Dataset dataset) {
         Node target = map.get(rule.getHead());
         target.setModifiability(rule.isModifiable());
         rule.getBody().forEach(literal -> {
@@ -176,7 +179,7 @@ public class KBANN implements NeuralNetworkOwner {
         network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * settings.getOmega() / 2);
     }
 
-    private void addConjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network) {
+    private void addConjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network, Dataset dataset) {
         Node target = map.get(rule.getHead());
         target.setModifiability(rule.isModifiable());
         rule.getBody().forEach(literal -> {
@@ -189,7 +192,7 @@ public class KBANN implements NeuralNetworkOwner {
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
         network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()),
                 -1 *
-                        (rule.getBody().stream().filter(l -> l.isPositive()).count() - 1 / 2) *
+                        (rule.getBody().stream().filter(l -> l.isPositive()).count() - 1 / 2.0) *
                         settings.getOmega());
     }
 

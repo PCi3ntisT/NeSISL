@@ -1,6 +1,8 @@
 package main.java.cz.cvut.ida.nesisl.modules.weka.rules;
 
+import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -12,10 +14,13 @@ import java.util.stream.IntStream;
 public class RuleSet {
 
     private final List<Rule> rules;
+    private final ClassAttribute classAttribute;
 
-    private RuleSet(List<Rule> rules) {
+    private RuleSet(List<Rule> rules, ClassAttribute classAttribute) {
         this.rules = rules;
+        this.classAttribute = classAttribute;
     }
+
 
     public List<Rule> getRules() {
         return Collections.unmodifiableList(rules);
@@ -24,7 +29,7 @@ public class RuleSet {
     public RuleSet getCopy() {
         return create(rules.stream()
                 .map(rule -> rule.getCopy())
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList()),getClassAttribute());
     }
 
     public RuleSet addRule(Rule rule) {
@@ -41,16 +46,16 @@ public class RuleSet {
         return rules.size();
     }
 
-    public static RuleSet create() {
-        return new RuleSet(new ArrayList<>());
+    public static RuleSet create(ClassAttribute classAttribute) {
+        return new RuleSet(new ArrayList<>(), classAttribute);
     }
 
-    public static RuleSet create(List<Rule> rules) {
-        return new RuleSet(rules);
+    public static RuleSet create(List<Rule> rules, ClassAttribute classAttribute) {
+        return new RuleSet(rules,classAttribute);
     }
 
-    public static RuleSet create(String wekaOutput) {
-        RuleSet result = RuleSet.create();
+    public static RuleSet create(String wekaOutput, Dataset nesisDataset) {
+        RuleSet result = RuleSet.create(nesisDataset.getClassAttribute());
         String[] splitted = wekaOutput.split("\n");
 
         String lastTarget = null;
@@ -132,6 +137,10 @@ public class RuleSet {
                 */
     }
 
+    public ClassAttribute getClassAttribute(){
+        return this.classAttribute;
+    }
+
     @Override
     public String toString() {
         return "RuleSet{" +
@@ -143,7 +152,7 @@ public class RuleSet {
         List<Rule> trimmedRules = new ArrayList<>(rules);
         trimmedRules.remove(selectedRule);
         trimmedRules.add(selectedRule, trimmedRule);
-        return RuleSet.create(trimmedRules);
+        return RuleSet.create(trimmedRules,getClassAttribute());
     }
 
     /**
@@ -163,6 +172,6 @@ public class RuleSet {
                         .filter(idx -> ruleIdx != idx)
                         .mapToObj(idx -> rules.get(idx))
                         .map(rule -> rule.getCopy())
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()),getClassAttribute());
     }
 }
