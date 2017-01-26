@@ -6,9 +6,20 @@ package main.java.cz.cvut.ida.nesisl.api.logic;
 public class Fact {
 
     private final String fact;
+    private boolean isBoolean;
+
+    /**
+     * awfull statefullnes of the boolean (whether it is boolean or not)
+     * @param fact
+     * @param isBoolean
+     */
+    public Fact(String fact, boolean isBoolean) {
+        this.fact = fact;
+        this.isBoolean = isBoolean;
+    }
 
     public Fact(String fact) {
-        this.fact = fact;
+        this(fact, false);
     }
 
     public String getFact() {
@@ -36,9 +47,21 @@ public class Fact {
     public String toString() {
         return "Fact{" +
                 "fact='" + fact + '\'' +
+                ", isBoolean=" + isBoolean +
                 '}';
     }
 
+    public boolean isBoolean() {
+        return isBoolean;
+    }
+
+    /**
+     * awfull statefullnes
+     * @param isBoolean
+     */
+    public void setBoolean(boolean isBoolean) {
+        this.isBoolean = isBoolean;
+    }
 }
 
 

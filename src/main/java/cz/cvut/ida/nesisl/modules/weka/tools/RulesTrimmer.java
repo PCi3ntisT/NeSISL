@@ -43,7 +43,7 @@ public class RulesTrimmer {
                 ArrayList<Rule> ruleList = new ArrayList<>();
                 ruleList.add(Rule.create(rule.getHead(), new ArrayList<>()));
                 ruleList.add(ruleSet.getRules().get(1).getCopy());
-                return new RulesTrimmer(RuleSet.create(ruleList,ruleSet.getClassAttribute()));
+                return new RulesTrimmer(RuleSet.create(ruleList,ruleSet.getClassAttribute(),ruleSet.getNetworkInputs()));
             } else {
                 List<Implication> implications = new ArrayList<>();
                 Rule rule = ruleSet.getRules().get(0);
@@ -51,7 +51,7 @@ public class RulesTrimmer {
                 ArrayList<Rule> ruleList = new ArrayList<>();
                 ruleList.add(Rule.create(rule.getHead(), implications));
                 ruleList.add(ruleSet.getRules().get(1).getCopy());
-                return new RulesTrimmer(RuleSet.create(ruleList,ruleSet.getClassAttribute()));
+                return new RulesTrimmer(RuleSet.create(ruleList,ruleSet.getClassAttribute(),ruleSet.getNetworkInputs()));
             }
         }
 
@@ -87,7 +87,7 @@ public class RulesTrimmer {
 
             System.out.println("rule trimmed");
 
-            return new RulesTrimmer(RuleSet.create(result,ruleSet.getClassAttribute()));
+            return new RulesTrimmer(RuleSet.create(result,ruleSet.getClassAttribute(),ruleSet.getNetworkInputs()));
         }
         throw new IllegalStateException("There is nothing to remove.");
     }

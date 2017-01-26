@@ -206,9 +206,14 @@ public class Trepan {
 
     private String formatedData(List<Sample> data, String what) {
         Set<Integer> booleans = new HashSet<>();
+        Map<String,Fact> booleansFactsSet = new HashMap<>();
+        dataset.getInputFactOrder().forEach(fact -> booleansFactsSet.put(fact.getFact(),fact));
         IntStream.range(0, learnedNetwork.getInputNodes().size())
                 .forEach(idx -> {
-                    if (isFactBoolean(learnedNetwork.getInputFactOrder().get(idx))) {
+                    Fact networkFact = learnedNetwork.getInputFactOrder().get(idx);
+                    Fact booleanFact = booleansFactsSet.get(networkFact.getFact());
+                    // thats really not nice stateful hack :(
+                    if (isFactBoolean(booleanFact)) {
                         booleans.add(idx);
                     }
                 });
@@ -254,9 +259,12 @@ public class Trepan {
 
     private String attributes() {
         StringBuilder sb = new StringBuilder();
+        Map<String,Fact> datasetFacts = new HashMap<>();
+        dataset.getInputFactOrder().forEach(fact -> datasetFacts.put(fact.getFact(),fact));
         learnedNetwork.getInputFactOrder()
                 .forEach(fact -> {
-                    sb.append(fact.getFact() + "\t" + (isFactBoolean(fact) ? "B" : "R") + "\n");
+                    Fact datasetFact = datasetFacts.get(fact.getFact());
+                    sb.append(fact.getFact() + "\t" + (isFactBoolean(datasetFact) ? "B" : "R") + "\n");
                 });
 
         /*learnedNetwork.getOutputFactOrder()
@@ -282,7 +290,8 @@ public class Trepan {
     }
 
     private boolean isFactBoolean(Fact fact) {
-        return fact.getFact().contains(DatasetImpl.ATTRIBUTE_VALUE_DELIMITER);
+        return fact.getFact().contains(DatasetImpl.ATTRIBUTE_VALUE_DELIMITER)
+                || fact.isBoolean();
     }
 
     private String network() {

@@ -63,4 +63,6 @@ public class NodeFactory {
     public static List<Node> generateNodes(List<Fact> facts, ActivationFunction activationFunction) {
         return facts.stream().map(fact -> create(activationFunction, fact)).collect(Collectors.toCollection(ArrayList::new));
     }
+
+
 }

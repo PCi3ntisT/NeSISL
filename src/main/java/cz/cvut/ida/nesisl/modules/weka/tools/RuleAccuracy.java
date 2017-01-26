@@ -4,6 +4,7 @@ import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.BinaryAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Antecedent;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.Implication;
@@ -49,7 +50,7 @@ public class RuleAccuracy {
     public boolean isConsistent(Map<Fact, Value> sample, Dataset nesislDataset, RuleSet ruleSet) {
         for (Rule rule : ruleSet.getRules()) {
             for (Implication implication : rule.getImplications()) {
-                if (isConsistent(sample, implication)) {
+                if (isImplicationConsistent(sample, implication)) {
                     /*System.out.println(rule.toString());
                     //System.out.println(sample);
                     System.out.println(sample.get(new Fact("17==g")));
@@ -72,6 +73,10 @@ public class RuleAccuracy {
                         implication.getBody().forEach(ante -> System.out.println(ante.getAttribute()+"=="+ante.getValue()));
                         System.out.println("==>\t" + rule.getHead());
                         */
+
+                        System.out.println(sample);
+                        System.out.println(rule);
+
                         return false;
                     }
                 }
@@ -104,10 +109,18 @@ public class RuleAccuracy {
         }
     }
 
-    public boolean isConsistent(Map<Fact, Value> sample, Implication implication) {
+    public boolean isImplicationConsistent(Map<Fact, Value> sample, Implication implication) {
         for (Antecedent antecedent : implication.getBody()) {
             Fact fact = new Fact(antecedent.getAttribute() + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + antecedent.getValue());
-            if (!sample.get(fact).isOne()) {
+            if(!sample.containsKey(fact)){
+                // awfuly added feature because of binary classes
+                fact = new Fact(antecedent.getAttribute());
+                if (sample.get(fact).isOne() && !BinaryAttribute.isValueTrue(antecedent.getValue())){
+                    return false;
+                }else if(sample.get(fact).isZero() && BinaryAttribute.isValueTrue(antecedent.getValue())){
+                    return false;
+                }
+            }else if(!sample.get(fact).isOne()) {
                 return false;
             }
         }

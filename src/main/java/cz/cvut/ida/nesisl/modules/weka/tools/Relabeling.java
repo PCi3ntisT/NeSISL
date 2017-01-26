@@ -49,7 +49,7 @@ public class Relabeling {
         HashMap<Fact, Value> relabeled = new HashMap<>(sample);
         for (Rule rule : ruleSet.getRules()) {
             for (Implication implication : rule.getImplications()) {
-                if (accuracy.isConsistent(sample, implication)) {
+                if (accuracy.isImplicationConsistent(sample, implication)) {
                     String targetName = DatasetImpl.CLASS_TOKEN + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + rule.getHead();
                     double val = 1.0;
 

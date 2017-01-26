@@ -1,8 +1,11 @@
 package main.java.cz.cvut.ida.nesisl.modules.weka.rules;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
+import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
+import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,10 +18,16 @@ public class RuleSet {
 
     private final List<Rule> rules;
     private final ClassAttribute classAttribute;
+    private final Set<Fact> networkInputs;
 
-    private RuleSet(List<Rule> rules, ClassAttribute classAttribute) {
+    private RuleSet(List<Rule> rules, ClassAttribute classAttribute, NeuralNetwork network) {
+        this(rules, classAttribute, network.getInputFactOrder().stream().collect(Collectors.toSet()));
+    }
+
+    private RuleSet(List<Rule> rules, ClassAttribute classAttribute, Set<Fact> networkInputs) {
         this.rules = rules;
         this.classAttribute = classAttribute;
+        this.networkInputs = Collections.unmodifiableSet(networkInputs);
     }
 
 
@@ -29,7 +38,9 @@ public class RuleSet {
     public RuleSet getCopy() {
         return create(rules.stream()
                 .map(rule -> rule.getCopy())
-                .collect(Collectors.toList()),getClassAttribute());
+                .collect(Collectors.toList())
+                , getClassAttribute()
+                , networkInputs);
     }
 
     public RuleSet addRule(Rule rule) {
@@ -46,16 +57,16 @@ public class RuleSet {
         return rules.size();
     }
 
-    public static RuleSet create(ClassAttribute classAttribute) {
-        return new RuleSet(new ArrayList<>(), classAttribute);
+    public static RuleSet create(ClassAttribute classAttribute, Set<Fact> networkInputs) {
+        return new RuleSet(new ArrayList<>(), classAttribute, networkInputs);
     }
 
-    public static RuleSet create(List<Rule> rules, ClassAttribute classAttribute) {
-        return new RuleSet(rules,classAttribute);
+    public static RuleSet create(List<Rule> rules, ClassAttribute classAttribute, Set<Fact> networkInputs) {
+        return new RuleSet(rules, classAttribute, networkInputs);
     }
 
     public static RuleSet create(String wekaOutput, Dataset nesisDataset) {
-        RuleSet result = RuleSet.create(nesisDataset.getClassAttribute());
+        RuleSet result = RuleSet.create(nesisDataset.getClassAttribute(), nesisDataset.getInputFactOrder().stream().collect(Collectors.toSet()));
         String[] splitted = wekaOutput.split("\n");
 
         String lastTarget = null;
@@ -137,7 +148,7 @@ public class RuleSet {
                 */
     }
 
-    public ClassAttribute getClassAttribute(){
+    public ClassAttribute getClassAttribute() {
         return this.classAttribute;
     }
 
@@ -152,7 +163,7 @@ public class RuleSet {
         List<Rule> trimmedRules = new ArrayList<>(rules);
         trimmedRules.remove(selectedRule);
         trimmedRules.add(selectedRule, trimmedRule);
-        return RuleSet.create(trimmedRules,getClassAttribute());
+        return RuleSet.create(trimmedRules, getClassAttribute(), networkInputs);
     }
 
     /**
@@ -172,6 +183,20 @@ public class RuleSet {
                         .filter(idx -> ruleIdx != idx)
                         .mapToObj(idx -> rules.get(idx))
                         .map(rule -> rule.getCopy())
-                        .collect(Collectors.toList()),getClassAttribute());
+                        .collect(Collectors.toList()), getClassAttribute()
+                , networkInputs);
+    }
+
+    public boolean isBinary(Antecedent antecedent) {
+        Fact nominalFact = new Fact(antecedent.getAttribute() + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + antecedent.getValue());
+        Fact binaryFact = new Fact(antecedent.getAttribute());
+        /*
+        whops, this will not work for real data, will it?
+         */
+        return !networkInputs.contains(nominalFact) && networkInputs.contains(binaryFact);
+    }
+
+    public Set<Fact> getNetworkInputs() {
+        return networkInputs;
     }
 }

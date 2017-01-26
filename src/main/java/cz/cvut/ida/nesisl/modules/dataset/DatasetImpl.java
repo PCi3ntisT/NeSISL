@@ -163,7 +163,7 @@ public class DatasetImpl implements Dataset {
 
                 Fact output = outputFacts.get(0);
                 all.forEach(map -> {
-                    map.put(output,(map.get(output).isZero()) ? Value.create("1") : Value.create("0"));
+                    map.put(output, (map.get(output).isZero()) ? Value.create("1") : Value.create("0"));
                 });
 
                 cachedInputOrder = null;
@@ -318,6 +318,7 @@ public class DatasetImpl implements Dataset {
 
     public static final String REAL_ATTRIBUTE_TOKEN = "real";
     public static final String NOMINAL_ATTRIBUTE_TOKEN = "nominal";
+    public static final String BINARY_ATTRIBUTE_TOKEN = "binary";
     public static final String CLASS_TOKEN = "class";
     public static final String COMMENT_ATTRIBUTE_TOKEN = "comment";
 
@@ -486,8 +487,10 @@ public class DatasetImpl implements Dataset {
         attributes.forEach(attribute -> {
             if (attribute instanceof NominalAttribute) {
                 sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
-            } else if (attribute instanceof NominalAttribute) {
-                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t" + REAL_ATTRIBUTE_TOKEN);
+            } else if (attribute instanceof RealAttribute) {
+                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t" + REAL_ATTRIBUTE_TOKEN + "\n");
+            } else if (attribute instanceof BinaryAttribute) {
+                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
             }
         });
         attributes.forEach(attribute -> {
@@ -505,6 +508,8 @@ public class DatasetImpl implements Dataset {
         Stream<String> stream = Stream.empty();
         if (attribute instanceof NominalAttribute) {
             stream = ((NominalAttribute) attribute).getValues().stream();
+        } else if (attribute instanceof BinaryAttribute) {
+            stream = ((BinaryAttribute) attribute).getValues().stream();
         } else if (attribute instanceof ClassAttribute) {
             stream = ((ClassAttribute) attribute).getValues().stream();
         }
@@ -650,15 +655,19 @@ public class DatasetImpl implements Dataset {
                     });
                 }
 
-            } else {
-                if (attribute instanceof RealAttribute) {
-                    RealAttribute real = (RealAttribute) attribute;
-                    Double value = formateNumber(exampleValue, normalize, real);
-                    Fact fact = inputs.get(real.getOrder());
-                    sample.put(fact, Value.create(value + ""));
+            } else if (attribute instanceof RealAttribute) {
+                RealAttribute real = (RealAttribute) attribute;
+                Double value = formateNumber(exampleValue, normalize, real);
+                Fact fact = inputs.get(real.getOrder() + "");
+                sample.put(fact, Value.create(value + ""));
 
-                } else if (attribute instanceof CommentAttribute) {
-                }
+            } else if (attribute instanceof BinaryAttribute) {
+                BinaryAttribute binary = (BinaryAttribute) attribute;
+                Fact fact = inputs.get(binary.getOrder() + "");
+                fact.setBoolean(true);
+                sample.put(fact, Value.create("" + ((binary.isTrue(exampleValue)) ? "1" : "0")));
+            } else if (attribute instanceof CommentAttribute) {
+
             }
         }
         return sample;
@@ -690,6 +699,11 @@ public class DatasetImpl implements Dataset {
                 }
                 final int finalIdx = idx;
                 values.forEach(value -> facts.add(new Fact(finalIdx + ATTRIBUTE_VALUE_DELIMITER + value)));
+                idx++;
+            } else if (attribute instanceof BinaryAttribute) {
+                BinaryAttribute binary = (BinaryAttribute) attributes.get(idxWithComments);
+                final int finalIdx = idx;
+                facts.add(new Fact(finalIdx + ""));
                 idx++;
             }
         }
@@ -856,7 +870,6 @@ public class DatasetImpl implements Dataset {
         }
         return list;
     }
-
 
 
 }

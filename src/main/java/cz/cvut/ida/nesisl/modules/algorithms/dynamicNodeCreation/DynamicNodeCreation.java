@@ -121,7 +121,7 @@ public class DynamicNodeCreation implements NeuralNetworkOwner {
 
     public static NeuralNetwork constructNetwork(List<Fact> inputFactOrder, List<Fact> outputFactOrder, MissingValues missingValues, RandomGenerator randomGenerator,boolean softmaxOutputs) {
         List<Node> inputs = NodeFactory.generateNodes(inputFactOrder, Identity.getFunction());
-        // automatci creation of softmax when multiclass classification
+        // automatic creation of softmax when multiclass classification
         ActivationFunction outputFce = (softmaxOutputs) ? SoftMax.getFunction() : Sigmoid.getFunction();
         List<Node> output = NodeFactory.generateNodes(outputFactOrder, outputFce);
         NeuralNetwork network = new NeuralNetworkImpl(inputs, output, missingValues,softmaxOutputs);

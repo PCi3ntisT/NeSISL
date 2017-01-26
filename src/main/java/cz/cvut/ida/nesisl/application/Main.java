@@ -30,7 +30,7 @@ public class Main {
     public static double percentualAccuracyOfOriginalDataset = 1.0; // 1.0
 
     // settings for random generator
-    public static final Double SIGMA = 1d;
+    public static final Double SIGMA = 1d; // normally 1
 
 
     public static final Double MU = 0.0d;
@@ -73,8 +73,8 @@ public class Main {
         RandomGeneratorImpl randomGenerator = new RandomGeneratorImpl(SIGMA, MU, SEED);
 
         int numberOfSingleCycles = 0;
-        boolean singleCycle = CYCLE_TOKEN.equals(arg[0]);
-        if (singleCycle) {
+        boolean multipleCycles = CYCLE_TOKEN.equals(arg[0]);
+        if (multipleCycles) {
             numberOfSingleCycles = Tools.parseInt(arg[1], "The second argument (number of single cycle repeats) must be integer.\nArgument input instead '" + arg[1] + "'.");
             arg = eraseTwoFirstFromArgs(arg);
         }
@@ -98,17 +98,13 @@ public class Main {
 
         System.out.println("theory\n" + ruleSet.getTheory());
 
-        System.out.println("todo dynamically fixed ANNs structure");
-
-        System.out.println(multiRepre.getNesislDataset().getClassAttribute());
-
         if(RUN_RULE_EXTRACTION_CORRECTION) {
             crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, 1);
             backgroundKnowledgeTrainData = crossval.getTestWekaDataset(multiRepre.getNesislDataset());
             ruleSet = MultipleCycles.mineAndTrimmeRule(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
             ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
             runRuleExtractionCorrection(arg,  wls, multiRepre, ruleSet, ruleFile);
-        }else if (singleCycle) {
+        }else if (multipleCycles) {
             runMultipleCycles(arg, randomGenerator, numberOfSingleCycles, numberOfRepeats, wls, multiRepre, ruleSet, ruleFile);
         } else {
             runOneTransit(arg, randomGenerator, numberOfRepeats, wls, multiRepre, ruleSet, ruleFile);
@@ -174,6 +170,10 @@ public class Main {
             case "REGENT":
                 single.runREGENT(arg, numberOfRepeats, multiRepre, wls, randomGenerator, ruleSet, ruleFile);
                 break;
+            case "PYRAMID":
+                single.runPYRAMID(arg, numberOfRepeats, multiRepre, wls, randomGenerator, ruleSet, ruleFile);
+                break;
+
             //case "backprop":
             //    main.runBackprop(arg, numberOfRepeats, dataset, wls, randomGenerator);
             //    break;

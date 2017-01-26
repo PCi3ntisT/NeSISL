@@ -112,8 +112,6 @@ public class KBANN implements NeuralNetworkOwner {
         List<Node> inputNodes = createInputNodes(rules, map);
         List<Node> outputNodes = createOutputNodes(rules, map, areSoftmaxOutputs);
 
-
-
         NeuralNetwork network = new NeuralNetworkImpl(inputNodes,
                 outputNodes,
                 new MissingValueKBANN(),

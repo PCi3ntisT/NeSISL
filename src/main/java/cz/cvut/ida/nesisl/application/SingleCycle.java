@@ -26,12 +26,10 @@ import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
 import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
-import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSetDescriptionLengthFactor;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import weka.core.Instances;
+import main.java.cz.cvut.ida.nesisl.modules.algorithms.pyramid.Pyramid;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -150,6 +148,23 @@ public class SingleCycle {
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,null,null);
     }
 
+    public void runPYRAMID(String[] arg, int numberOfRepeats, MultiRepresentationDataset multiRepre, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) {
+        if (arg.length < 6) {
+            throw new IllegalStateException("Need more arguments. To run PYRAMID use 'PYRAMID   #ofRepeats  datasetFile   backgroundData  weightLearningSettingsFile #ofHiddenLayers'");
+        }
+        String algName = "PYRAMID";
+
+        final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
+        int numberOfHiddenLayers = Integer.parseInt(arg[5]);
+
+        RuleSetInitable<Pyramid> initialize = (ruleSetFile) -> Pyramid.create(multiRepre.getNesislDataset().getInputFactOrder(), multiRepre.getNesislDataset().getOutputFactOrder(), randomGenerator, new MissingValueKBANN(), wls.isLearningWithCrossEntropy(),numberOfHiddenLayers);
+        Learnable learn = (dnc, learningDataset) -> ((Pyramid) dnc).learn(learningDataset, finalWls);
+
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, numberOfRepeats);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), finalWls,null,null);
+    }
+
+
     public void runKBANN(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) throws FileNotFoundException {
         if (arg.length < 6) {
             throw new IllegalStateException("Need more arguments. To run KBANN use 'KBANN   #ofRepeats  datasetFile backgroundData weightLearningSettingsFile  KBANNsetting    [ruleSpecificFile]'");
@@ -217,4 +232,7 @@ public class SingleCycle {
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
         runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
     }
+
+
+
 }

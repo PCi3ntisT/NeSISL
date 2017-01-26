@@ -62,14 +62,15 @@ public class RealDataExperiments {
                 "cnf20-10",
                 "cnf32-10",*/
                 //"cnf36-10"
-                "promotor"
+                //"promotor"
+                "cnf6-10"
         };
         //zkontrolovat jestli si drzi dataset samplz fakt jako list samplu nebo jako mnozinu - mel by byt list
 
         Arrays.stream(domains).forEach(domain -> {
 
-            String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
-            //String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
+            //String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
+            String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
             String folder = experimentFolder + domain + File.separator;
             String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "-0-0" + File.separator + "kbannSetting.txt";
             String wlsFolder = "-0-0-0-0-0-0-0-0-0";
@@ -78,7 +79,7 @@ public class RealDataExperiments {
             String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized" : ""); //Nominalized";//Nominalized";
             data = folder + "crossvalidationData";
             String backgroundData = folder + "backgroundKnowledgeLearnerData";
-            data = folder + "data";
+            //data = folder + "data";
 
 
             System.out.println(folder);
@@ -93,14 +94,20 @@ public class RealDataExperiments {
 
             String tgSetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "TopGen" + File.separator + "-1-0-0-0-0-1-2-0-0-0-1-0" + File.separator + "TopGenSetting.txt";
 
-            System.out.println("nekde je tu chyba ze kdyz je binarni klasifikace tak to obcas spatne prohodi vystupni tridy nez maji byt");
+            System.out.println("pridat majority class do texu");
+            System.out.println("generovani samplu pro JRip + weka + pipeline");
+            System.out.println("nacitani atributu - aby to bralo tak jak jsou nahore za nominal (pokud budou, ze to zaroven bude brat total ordering podle toho; defaultne to bude brat loww, middle, high)");
+
 
             try {
                 // running check
                 //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
 
                 //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
-                Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
+
+                //Main.main(new String[]{Main.RULE_EXTRACTION_CHECKER,"KBANN", numberOfRepeats, data, data, wls, KBANNsetting});
+                Main.main(new String[]{"-seed","8","-trimAcc","1.1","PYRAMID", "10", data, data, wls, KBANNsetting});
+                //Main.main(new String[]{"PYRAMID", numberOfRepeats, data, data, wls, "5"});
 
                 //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
                 //Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});

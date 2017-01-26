@@ -51,6 +51,9 @@ public class AttributePropertyFactory {
             case DatasetImpl.NOMINAL_ATTRIBUTE_TOKEN:
                 attribute = new NominalAttribute(order,orderWithComments);
                 break;
+            case DatasetImpl.BINARY_ATTRIBUTE_TOKEN:
+                attribute = new BinaryAttribute(order,orderWithComments);
+                break;
             default:
                 break;
         }

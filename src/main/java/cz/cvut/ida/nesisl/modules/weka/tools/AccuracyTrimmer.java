@@ -38,7 +38,7 @@ public class AccuracyTrimmer {
         System.out.println("Original ruleset of description length " + RuleSetDescriptionLengthFactor.getDefault().computeDescriptionLength(ruleSet) + " and accuracy " + originalAccuracy + ".");
 
         if(percentualAccuracyOfOriginalDataset >= 0.9999999999){
-            System.out.println("Nothing trimmed since the the wanted decrease in accuracy is less than 10^-10.");
+            System.out.println("Nothing trimmed since the wanted decrease in accuracy is less than 10^-10.");
             return result;
         }
 
