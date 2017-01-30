@@ -74,6 +74,20 @@ public class MultiRepresentationDataset {
                 new ArrayList<>(ambigious));
     }
 
+    public MultiRepresentationDataset getShallowCopyWithoutSamples() {
+        return new MultiRepresentationDataset(new ArrayList<>(attributes),
+                new ArrayList<>(),
+                datasetFile,
+                normalize,
+                new DatasetImpl(nesislDataset.getInputFactOrder(),
+                        nesislDataset.getOutputFactOrder(),
+                        new ArrayList<>(),
+                        datasetFile,
+                        nesislDataset.getClassAttribute()),
+                new HashMap<>(),
+                new ArrayList<>(ambigious));
+    }
+
     public void addTrainSample(List<String> valueRepresentation, Map<Fact, Value> sample) {
         examples.add(valueRepresentation);
         mappingExampleToString.put(sample,valueRepresentation);

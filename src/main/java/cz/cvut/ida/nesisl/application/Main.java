@@ -56,6 +56,8 @@ public class Main {
      *      -trepanCheck    // to just check TREPAN behavior, or
      *          //sequence of
      *          [-extractor (JRIP|TREPAN)]
+     *          [-JRipPerturbation doublePsi]
+     *          [-JRipResampling doublePercentageOfAmountOfTrainSet]
      *          [-seed randomSeedLong]
      *          [-trimAcc double]
      *          [-cycle #ofCyclesInteger]   // multiple cycles if is present, otherwise single cycle
@@ -95,7 +97,7 @@ public class Main {
         }
 
         if (JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN.equals(arg[0])) {
-            SamplePerturbator.percentageOfPerturbationHappening = Tools.parseDouble(arg[1], "The argument (JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN) must be double.\nArgument input instead '" + arg[1] + "'.");
+            SamplePerturbator.psiOfPerturbationHappening = Tools.parseDouble(arg[1], "The argument (JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN) must be double.\nArgument input instead '" + arg[1] + "'.");
             arg = eraseTwoFirstFromArgs(arg);
         }
 

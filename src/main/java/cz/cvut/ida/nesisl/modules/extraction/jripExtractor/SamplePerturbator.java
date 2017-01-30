@@ -22,8 +22,8 @@ public class SamplePerturbator {
     private final NeuralNetwork learnedNetwork;
     private final MultiRepresentationDataset originalDataset;
     private final int originalFold;
-    public static double percentageOfResampling = 2.0d; // 1.0 2.0
-    public static double percentageOfPerturbationHappening = 0.3;
+    public static double percentageOfResampling = 1.0d; // 1.0 2.0
+    public static double psiOfPerturbationHappening = 0.25;
     private final Map<Pair<AttributeProprety, String>, Fact> factory = new HashMap<>();
 
     public SamplePerturbator(NeuralNetwork learnedNetwork, MultiRepresentationDataset dataset, int originalFold, RandomGenerator randomGenerator) {
@@ -52,9 +52,11 @@ public class SamplePerturbator {
      * @return
      */
     public MultiRepresentationDataset run() {
-        MultiRepresentationDataset extendedDataset = originalDataset.getCopy();
+
         List<Map<Fact, Value>> samples = originalDataset.getNesislDataset().getTrainRawData();
-        IntStream.range(0, (int) (percentageOfResampling * extendedDataset.getNesislDataset().getNumberOfTrainData()))
+
+        MultiRepresentationDataset extendedDataset = originalDataset.getShallowCopyWithoutSamples();
+        IntStream.range(0, (int) ((percentageOfResampling / 100)* extendedDataset.getNesislDataset().getNumberOfTrainData()))
                 .forEach(idx -> {
                     //pick randomly
                     int randomIdx = randomGenerator.getRandom().nextInt(samples.size());
@@ -63,12 +65,18 @@ public class SamplePerturbator {
                     //System.out.println(sampleRepresentation);
 
                     //perturbateAndLabel
-                    Pair<List<String>, Map<Fact, Value>> perturbated = perturbateAndLabel(sampleRepresentation, sample);
+                    Pair<List<String>, Map<Fact, Value>> perturbated = perturbateAndLabel(sampleRepresentation, sample, true);
                     //System.out.println("ex\t" + extendedDataset);
                     //System.out.println("ex\t" + perturbated);
 
                     // insert into extended
                     extendedDataset.addTrainSample(perturbated.getLeft(), perturbated.getRight());
+
+
+                    // insert also original sample, just relabeled according to the network
+                    Pair<List<String>, Map<Fact, Value>> relabeled = relabel(sampleRepresentation, sample);
+                    extendedDataset.addTrainSample(relabeled.getLeft(), relabeled.getRight());
+
                 });
 
         /*System.out.println("original");
@@ -83,7 +91,11 @@ public class SamplePerturbator {
         return extendedDataset;
     }
 
-    private Pair<List<String>, Map<Fact, Value>> perturbateAndLabel(List<String> sampleRepresentation, Map<Fact, Value> sample) {
+    private Pair<List<String>, Map<Fact, Value>> relabel(List<String> sampleRepresentation, Map<Fact, Value> sample) {
+      return perturbateAndLabel(new ArrayList<>(sampleRepresentation),new HashMap(sample),false);
+    }
+
+    private Pair<List<String>, Map<Fact, Value>> perturbateAndLabel(List<String> sampleRepresentation, Map<Fact, Value> sample, boolean perturbate) {
         /*System.out.println(sample);
         System.out.println(sampleRepresentation);*/
 
@@ -95,9 +107,9 @@ public class SamplePerturbator {
                     if (attribute instanceof ClassAttribute) {
                         // do nothing now
                     } else if (attribute instanceof NominalAttribute) {
-                        perturbateNominalAttributeStateful(list, map, attribute, sampleRepresentation, sample);
+                        perturbateNominalAttributeStateful(list, map, attribute, sampleRepresentation, sample, perturbate);
                     } else if (attribute instanceof BinaryAttribute) {
-                        perturbateBinaryAttributeStateful(sample, list, map, attribute);
+                        perturbateBinaryAttributeStateful(sample, list, map, attribute, perturbate);
                     } else if (attribute instanceof RealAttribute) {
                         System.out.println("real attributes are not fully supported");
                         throw new NotImplementedException();
@@ -140,7 +152,7 @@ public class SamplePerturbator {
         return new Pair<>(finalList, map);
     }
 
-    private void perturbateNominalAttributeStateful(Map<Integer, String> list, Map<Fact, Value> map, AttributeProprety attribute, List<String> sampleRepresentation, Map<Fact, Value> sample) {
+    private void perturbateNominalAttributeStateful(Map<Integer, String> list, Map<Fact, Value> map, AttributeProprety attribute, List<String> sampleRepresentation, Map<Fact, Value> sample,boolean perturbate) {
         NominalAttribute nominal = (NominalAttribute) attribute;
         Fact trueOne = null;
         String trueValue = null;
@@ -154,7 +166,7 @@ public class SamplePerturbator {
             }
         }
         List<String> minorOrder = new ArrayList<>(nominal.getValues());
-        boolean perturbate = perturbate();
+        perturbate = perturbate && perturbate();
         if (null == trueOne && perturbate) {
             trueValue = minorOrder.get(randomGenerator.getRandom().nextInt(minorOrder.size()));
         } else if (nominal.isOrdered() && perturbate) {
@@ -183,12 +195,12 @@ public class SamplePerturbator {
         }
     }
 
-    private void perturbateBinaryAttributeStateful(Map<Fact, Value> sample, Map<Integer, String> list, Map<Fact, Value> map, AttributeProprety attribute) {
+    private void perturbateBinaryAttributeStateful(Map<Fact, Value> sample, Map<Integer, String> list, Map<Fact, Value> map, AttributeProprety attribute, boolean perturbate) {
         BinaryAttribute binary = (BinaryAttribute) attribute;
         Fact fact = getFact(binary, null);
         fact.setBoolean(true);
         String value = binary.isTrue(sample.get(fact).getValue() + "") ? "1" : "0";
-        if (perturbate()) {
+        if (perturbate && perturbate()) {
             value = "1".equals(value) ? "0" : "1";
         }
         map.put(fact, Value.create(value));
@@ -215,7 +227,7 @@ public class SamplePerturbator {
     }
 
     private boolean perturbate() {
-        return randomGenerator.getRandom().nextDouble() < percentageOfPerturbationHappening;
+        return randomGenerator.getRandom().nextDouble() < psiOfPerturbationHappening;
     }
 
 }
