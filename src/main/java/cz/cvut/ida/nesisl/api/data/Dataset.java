@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.api.data;
 
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 
@@ -51,4 +52,10 @@ public interface Dataset {
     public boolean isBinaryClassification();
 
     public boolean isOutputFact(Fact head);
+
+    public Dataset getCopy();
+
+    public long getNumberOfTrainData();
+
+    public void addTrainSampleStateful(Map<Fact, Value> sample);
 }

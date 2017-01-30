@@ -1,17 +1,16 @@
 package main.java.cz.cvut.ida.nesisl.modules.experiments.gridSearch;
 
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.dynamicNodeCreation.DNCSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANNSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.RegentSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

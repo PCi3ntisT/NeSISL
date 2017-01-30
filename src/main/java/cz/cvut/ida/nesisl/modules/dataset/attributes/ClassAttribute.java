@@ -16,6 +16,7 @@ public class ClassAttribute implements AttributeProprety {
     private final boolean binary;
     private final String positiveClass;
 
+
     public ClassAttribute(Integer order, Integer orderWithComments, List<String> values) {
         this.order = order;
         this.orderWithComments = orderWithComments;
@@ -72,5 +73,20 @@ public class ClassAttribute implements AttributeProprety {
                 ", binary=" + binary +
                 ", positiveClass='" + positiveClass + '\'' +
                 '}';
+    }
+
+    /**
+     * works only of biary class properly
+     * @return
+     */
+    public String getNegativeClass() {
+        if(isBinary()){
+            for (String outputClass: getValues()){
+                if(!outputClass.equals(positiveClass)){
+                    return outputClass;
+                }
+            }
+        }
+        return null;
     }
 }

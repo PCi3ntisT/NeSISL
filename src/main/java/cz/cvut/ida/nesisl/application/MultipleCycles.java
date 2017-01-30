@@ -3,13 +3,15 @@ package main.java.cz.cvut.ida.nesisl.application;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.jripExtractor.JRipExtraction;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANNSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.Regent;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.RegentSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGen;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiCrossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
@@ -19,17 +21,15 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentRes
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.MofNTreeFactory;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTree;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTreeReader;
-import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.MofNTreeFactory;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.Trepan;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.TrepanResults;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.dot.DotTree;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.dot.DotTreeReader;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSetDescriptionLengthFactor;
-import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import weka.core.Instances;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -73,7 +73,7 @@ public class MultipleCycles {
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile, randomGenerator);
     }
 
     public void runTopGen(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) throws FileNotFoundException {
@@ -94,7 +94,7 @@ public class MultipleCycles {
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, TopGenSettings.create(tgSetting));
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile, randomGenerator);
     }
 
     public void runREGENT(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) throws FileNotFoundException {
@@ -116,15 +116,15 @@ public class MultipleCycles {
         Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, RegentSetting.create(regentSetting), new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile,randomGenerator);
     }
 
-    private void runAndStoreCycles(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile) {
-        List<List<ExperimentResult>> results = runCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSet, ruleFile);
+    private void runAndStoreCycles(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile, RandomGeneratorImpl randomGenerator) {
+        List<List<ExperimentResult>> results = runCycles(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSet, ruleFile, randomGenerator);
         ExperimentResult.storeCyclesResult(results, algName, crossval.getOriginalFile(), settingFile, wls);
     }
 
-    private List<List<ExperimentResult>> runCycles(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile) {
+    private List<List<ExperimentResult>> runCycles(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile, RandomGenerator randomGenerator) {
         System.out.println(numberOfRepeats);
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
@@ -138,7 +138,7 @@ public class MultipleCycles {
                     double trainRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
                     double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
-                    List<ExperimentResult> resultsList = neuralSybolicCycle(initialize, learn, algName, crossval, settingFile, wls, idx, nesislDataset, ruleSet, ruleFile, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                    List<ExperimentResult> resultsList = neuralSybolicCycle(initialize, learn, algName, crossval, settingFile, wls, idx, nesislDataset, ruleSet, ruleFile, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc,randomGenerator);
 
                     System.out.println("\n\n--------- fold " + idx + ":\t ending iteration\n\n");
 
@@ -146,7 +146,7 @@ public class MultipleCycles {
                 }).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    private List<ExperimentResult> neuralSybolicCycle(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, int idx, Dataset nesislDataset, RuleSet ruleSet, File ruleFile, long ruleSetDescriptionLength, double trainRuleAcc, double testRuleAcc) {
+    private List<ExperimentResult> neuralSybolicCycle(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, int idx, Dataset nesislDataset, RuleSet ruleSet, File ruleFile, long ruleSetDescriptionLength, double trainRuleAcc, double testRuleAcc, RandomGenerator randomGenerator) {
         List<ExperimentResult> result = new ArrayList<>();
         for (int cycleNumber = 0; cycleNumber < numberOfCycles; cycleNumber++) {
             ExperimentResult currentResult = new ExperimentResult(idx, algName, crossval.getOriginalFile(), settingFile, wls, cycleNumber);
@@ -161,23 +161,28 @@ public class MultipleCycles {
             long end = System.currentTimeMillis();
 
             System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t result storing & TREPAN learning\n\n");
-            TrepanResults trepan;
-            if (Main.TREPAN_RUN) {
-                System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t TREPAN learning \n");
-                trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
-                currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
-            } else {
-                currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+            TrepanResults trepan = null;
+
+            switch (Main.RULE_EXTRACTOR) {
+                case TREPAN:
+                    System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t TREPAN learning \n");
+                    trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
+                    currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                    break;
+                case JRIP:
+                    System.out.println("\n--------- fold " + idx + ", cycle " + cycleNumber + ":\t JRip learning \n");
+                    MultiRepresentationDataset multi = crossval.getMultiRepresentationDataset(idx);
+                    TrepanResults jrip = JRipExtraction.create(learnedNetwork, multi, idx, randomGenerator).run();
+                    currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, jrip, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                    break;
+                default:
+                    currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
             }
 
             if(0 == cycleNumber) {
                 // storing initial ruleSet
                 Tools.storeToFile(ruleSet.getTheory(), currentResult.getMyAdress() + File.separator + "initialTheory");
                 Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
-            }else if(Main.TREPAN_RUN){
-                DotTree tree = DotTreeReader.getDefault().create(trepan.getTreeFile());
-                Tools.storeToFile(MofNTreeFactory.getDefault().getTheory(tree, currentResult.getFinalNetwork()), currentResult.getMyAdress() + File.separator + "initialTheory_" + cycleNumber);
-                currentResult.setRuleSetDescriptionLength(currentResult.getMofNDecisionTreeDescriptionLength());
             }
 
             // computing & forwarding parameters for next cycle
@@ -185,40 +190,11 @@ public class MultipleCycles {
             testRuleAcc = currentResult.getTrepanTestAcc();
             ruleSetDescriptionLength = currentResult.getMofNDecisionTreeDescriptionLength();
 
-            DotTree tree = DotTreeReader.getDefault().create(currentResult.getMofNDecisionTreeFile());
-            ruleFile = Tools.storeToTemporaryFile(MofNTreeFactory.getDefault().getTheory(tree, learnedNetwork));
-
             result.add(currentResult);
         }
         return result;
     }
 
-    public static RuleSet mineAndTrimmeRuleSet(int idx, Dataset nesislDataset, Instances wekaDataset) {
-        System.out.println("\n\n--------- fold " + idx + ":\t rule set learning\n\n");
-        RuleSet ruleSet = WekaJRip.create(wekaDataset,nesislDataset).getRuleSet();
 
-        // popripade nejaky trimmer nebo relabelling
-        // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-        // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-        // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
-        System.out.println("\n\n--------- fold " + idx + ":\t ruleset trimming\n\n");
-        ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(Main.percentualAccuracyOfOriginalDataset);
-        return ruleSet;
-    }
-
-    public static RuleSet mineAndTrimmeRule(Dataset nesislDataset, Instances wekaDataset) {
-        RuleSet ruleSet = WekaJRip.create(wekaDataset,nesislDataset).getRuleSet();
-
-        // do not solve the consistency here
-        //nesislDataset.makeConsistentStatefully(ruleSet);
-
-
-        // popripade nejaky trimmer nebo relabelling
-        // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-        // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-        // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
-        ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(Main.percentualAccuracyOfOriginalDataset);
-        return ruleSet;
-    }
 
 }

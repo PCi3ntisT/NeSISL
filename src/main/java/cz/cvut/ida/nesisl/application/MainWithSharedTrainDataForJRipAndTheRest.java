@@ -1,6 +1,6 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
@@ -18,7 +18,7 @@ public class MainWithSharedTrainDataForJRipAndTheRest {
 
     // numeric attributes are not possible to predict in this version
 
-    // general setting; TREPAN_RUN is needed to be true if you want to run the whole NSL cycle
+    // general setting; RULE_EXTRACTOR is needed to be true if you want to run the whole NSL cycle
     public static final boolean TREPAN_RUN = true;
 
     public static double percentualAccuracyOfOriginalDataset = 1.0; // 1.0
@@ -48,7 +48,7 @@ public class MainWithSharedTrainDataForJRipAndTheRest {
         }
 
         if(PERCENTUAL_TRIM_TOKEN.equals(arg[0])){
-            percentualAccuracyOfOriginalDataset = Tools.parseDouble(arg[1], "The second argument (percentage trim) must be double.\nArgument input instead '" + arg[1] + "'.");
+            percentualAccuracyOfOriginalDataset = Tools.parseDouble(arg[1], "The second argument (percentageOfResampling trim) must be double.\nArgument input instead '" + arg[1] + "'.");
             arg = eraseTwoFirstFromArgs(arg);
         }
 
@@ -85,7 +85,7 @@ public class MainWithSharedTrainDataForJRipAndTheRest {
         System.out.println("mu:\t" + MU);
         System.out.println("seed:\t" + SEED);
         System.out.println("percentualAccuracyOfOriginalDataset:\t" + percentualAccuracyOfOriginalDataset);
-        System.out.println("TREPAN_RUN:\t" + TREPAN_RUN);
+        System.out.println("RULE_EXTRACTOR:\t" + TREPAN_RUN);
         System.out.println("end of info");
         System.out.println();
     }

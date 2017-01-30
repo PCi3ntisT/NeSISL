@@ -1,7 +1,7 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
@@ -68,18 +68,18 @@ public class NeuralSymbolicCycle {
         Instances wekaDataset = datasetsPair.getRight();
 
         /*
-        RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
-        ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-        ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
+        RuleSet ruleSet = WekaJRip.createTest(wekaDataset).getRuleSet();
+        ruleSet = RuleTrimmer.createTest(ruleSet).getRuleSet();
+        ruleSet = RuleTrimmer.createTest(ruleSet).getRuleSet();
         String theory = ruleSet.getTheory();
         System.out.println(theory);
 
-        RuleAccuracy acc = RuleAccuracy.create(ruleSet);
+        RuleAccuracy acc = RuleAccuracy.createTest(ruleSet);
         System.out.println(acc.computeTrainAccuracy(nesislDataset.getTrainRawData(), nesislDataset));
         System.out.println(acc.numberOfConsistentClassifications(nesislDataset.getTrainRawData(), nesislDataset));
 
-        Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
-        RuleAccuracy relabeledAcc = RuleAccuracy.create(ruleSet);
+        Dataset relabeled = Relabeling.createTest(nesislDataset, ruleSet).getDataset();
+        RuleAccuracy relabeledAcc = RuleAccuracy.createTest(ruleSet);
         System.out.println(relabeledAcc.computeTrainAccuracy(relabeled.getTrainRawData(), relabeled));
         System.out.println(relabeledAcc.numberOfConsistentClassifications(relabeled.getTrainRawData(), relabeled));
 
@@ -97,8 +97,8 @@ public class NeuralSymbolicCycle {
 
         */
 
-        //RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-        //RuleSet r1 = RuleTrimmer.create(ruleSet).getRuleSet();
+        //RuleSet a1 = AntecedentsTrimmer.createTest(ruleSet).getRuleSet();
+        //RuleSet r1 = RuleTrimmer.createTest(ruleSet).getRuleSet();
 
         // todo
         // PARSERT NA FOLDy regent/topgen a mozna jeste dalsi veci

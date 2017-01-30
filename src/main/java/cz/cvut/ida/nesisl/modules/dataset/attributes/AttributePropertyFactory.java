@@ -2,6 +2,7 @@ package main.java.cz.cvut.ida.nesisl.modules.dataset.attributes;
 
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,7 +50,14 @@ public class AttributePropertyFactory {
                 attribute = new RealAttribute(order,orderWithComments);
                 break;
             case DatasetImpl.NOMINAL_ATTRIBUTE_TOKEN:
-                attribute = new NominalAttribute(order,orderWithComments);
+                start = line.indexOf("{");
+                end = line.indexOf("}");
+                List<String> defaultValuesOrder = null;
+                if( start > 0 || end > 0){
+                    values = line.substring(start + 1, end);
+                    defaultValuesOrder = Arrays.asList(values.split(DatasetImpl.CLASS_VALUES_DELIMITER));
+                }
+                attribute = new NominalAttribute(order,orderWithComments,defaultValuesOrder);
                 break;
             case DatasetImpl.BINARY_ATTRIBUTE_TOKEN:
                 attribute = new BinaryAttribute(order,orderWithComments);

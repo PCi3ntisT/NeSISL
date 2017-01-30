@@ -1,12 +1,15 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.RuleExtractor;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.jripExtractor.SamplePerturbator;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiCrossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.generator.PropositionalFormulaeGenerator;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
+import main.java.cz.cvut.ida.nesisl.modules.weka.RuleMiner;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import weka.core.Instances;
 
@@ -24,8 +27,8 @@ public class Main {
 
     // numeric attributes are not possible to predict in this version
 
-    // general setting; TREPAN_RUN is needed to be true if you want to run the whole NSL cycle
-    public static final boolean TREPAN_RUN = true;
+    // general setting; RULE_EXTRACTOR is needed to be true if you want to run the whole NSL cycle
+    public static RuleExtractor RULE_EXTRACTOR = RuleExtractor.TREPAN;
     public static boolean RUN_RULE_EXTRACTION_CORRECTION = false;
     public static double percentualAccuracyOfOriginalDataset = 1.0; // 1.0
 
@@ -42,6 +45,32 @@ public class Main {
     public static final String SEED_TOKEN = "-seed";
     public static final String PERCENTUAL_TRIM_TOKEN = "-trimAcc";
 
+    public static final String SET_EXTRACTOR_TOKEN = "-extractor";
+    public static final String JRIP_EXTRACTOR_RESAMPLING_SIZE_TOKEN = "-JRipResampling";
+    public static final String JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN = "-JRipPerturbation";
+
+    /**
+     * params
+     * either:
+     *      -generator      // to run dataset generation, or
+     *      -trepanCheck    // to just check TREPAN behavior, or
+     *          //sequence of
+     *          [-extractor (JRIP|TREPAN)]
+     *          [-seed randomSeedLong]
+     *          [-trimAcc double]
+     *          [-cycle #ofCyclesInteger]   // multiple cycles if is present, otherwise single cycle
+     *          (KBANN|TopGen|REGENT|PYRAMID|CasCor|DNC)
+     *          #ofRuns     // # of crossvalidation's folds
+     *          datasetFile
+     *          backgroundKnowledgeLearnerData
+     *          weightLearningSettingFile
+     *          structureLearningSettingFile    // if needed
+     *          ...     // TBD
+     *
+     *
+     * @param arg
+     * @throws FileNotFoundException
+     */
     public static void main(String arg[]) throws FileNotFoundException {
         writeInfo(arg);
 
@@ -60,13 +89,28 @@ public class Main {
             arg = eraseFirstFromArgs(arg);
         }
 
+        if (SET_EXTRACTOR_TOKEN.equals(arg[0])) {
+            RULE_EXTRACTOR = RuleExtractor.create(arg[1]);
+            arg = eraseTwoFirstFromArgs(arg);
+        }
+
+        if (JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN.equals(arg[0])) {
+            SamplePerturbator.percentageOfPerturbationHappening = Tools.parseDouble(arg[1], "The argument (JRIP_EXTRACTOR_PERTURBATION_PSI_TOKEN) must be double.\nArgument input instead '" + arg[1] + "'.");
+            arg = eraseTwoFirstFromArgs(arg);
+        }
+
+        if (JRIP_EXTRACTOR_RESAMPLING_SIZE_TOKEN.equals(arg[0])) {
+            SamplePerturbator.percentageOfResampling = Tools.parseDouble(arg[1], "The argument (JRIP_EXTRACTOR_RESAMPLING_SIZE_TOKEN) must be double.\nArgument input instead '" + arg[1] + "'.");
+            arg = eraseTwoFirstFromArgs(arg);
+        }
+
         if (SEED_TOKEN.equals(arg[0])) {
             SEED = Tools.parseInt(arg[1], "The second argument (seed) must be integer.\nArgument input instead '" + arg[1] + "'.");
             arg = eraseTwoFirstFromArgs(arg);
         }
 
         if (PERCENTUAL_TRIM_TOKEN.equals(arg[0])) {
-            percentualAccuracyOfOriginalDataset = Tools.parseDouble(arg[1], "The second argument (percentage trim) must be double.\nArgument input instead '" + arg[1] + "'.");
+            percentualAccuracyOfOriginalDataset = Tools.parseDouble(arg[1], "The second argument (percentageOfResampling trim) must be double.\nArgument input instead '" + arg[1] + "'.");
             arg = eraseTwoFirstFromArgs(arg);
         }
 
@@ -90,18 +134,22 @@ public class Main {
         MultiRepresentationDataset backgroundMultiRepre = DatasetImpl.parseMultiRepresentationDataset(backgroundKnowledgeDatasetFile, normalize);
         WeightLearningSetting wls = parseAndAdjustWLS(arg[0], WeightLearningSetting.parse(wlsFile, randomGenerator.getRandom()), multiRepre);
 
+        System.out.println("" + backgroundMultiRepre.getNesislDataset().getClassAttribute());
+
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(backgroundMultiRepre, randomGenerator, 1);
         Instances backgroundKnowledgeTrainData = crossval.getTestWekaDataset(backgroundMultiRepre.getNesislDataset());
-        RuleSet ruleSet = MultipleCycles.mineAndTrimmeRule(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+        RuleSet ruleSet = RuleMiner.mineAndTrimmeRule(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
         File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
         /* end of rule mining and trimming */
 
         System.out.println("theory\n" + ruleSet.getTheory());
 
+        System.out.println("!!!!!!!!!! ZEPTAT SE FRANTY JAK JE TO S ORDERED U SEKVENCI DNA");
+
         if(RUN_RULE_EXTRACTION_CORRECTION) {
             crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, 1);
             backgroundKnowledgeTrainData = crossval.getTestWekaDataset(multiRepre.getNesislDataset());
-            ruleSet = MultipleCycles.mineAndTrimmeRule(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+            ruleSet = RuleMiner.mineAndTrimmeRule(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
             ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
             runRuleExtractionCorrection(arg,  wls, multiRepre, ruleSet, ruleFile);
         }else if (multipleCycles) {
@@ -119,7 +167,7 @@ public class Main {
         System.out.println("mu:\t" + MU);
         System.out.println("seed:\t" + SEED);
         System.out.println("percentualAccuracyOfOriginalDataset:\t" + percentualAccuracyOfOriginalDataset);
-        System.out.println("TREPAN_RUN:\t" + TREPAN_RUN);
+        System.out.println("RULE_EXTRACTOR:\t" + RULE_EXTRACTOR);
         System.out.println("end of info");
         System.out.println();
     }
@@ -162,6 +210,9 @@ public class Main {
                 single.runDNC(arg, numberOfRepeats, multiRepre, wls, randomGenerator);
                 break;
             case "KBANN":
+                System.out.println("catch");
+                System.out.println(ruleSet);
+                System.out.println(ruleSet.getTheory());
                 single.runKBANN(arg, numberOfRepeats, multiRepre, wls, randomGenerator, ruleSet, ruleFile);
                 break;
             case "TopGen":

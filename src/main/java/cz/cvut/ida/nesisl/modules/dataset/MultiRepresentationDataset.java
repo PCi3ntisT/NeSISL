@@ -7,10 +7,7 @@ import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.AttributeProprety
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by EL on 18.10.2016.
@@ -65,5 +62,21 @@ public class MultiRepresentationDataset {
 
     public List<Pair<String, Set<String>>> getAmbigious() {
         return Collections.unmodifiableList(ambigious);
+    }
+
+    public MultiRepresentationDataset getCopy() {
+        return new MultiRepresentationDataset(new ArrayList<>(attributes),
+                new ArrayList<>(examples),
+                datasetFile,
+                normalize,
+                nesislDataset.getCopy(),
+                new HashMap<>(mappingExampleToString),
+                new ArrayList<>(ambigious));
+    }
+
+    public void addTrainSample(List<String> valueRepresentation, Map<Fact, Value> sample) {
+        examples.add(valueRepresentation);
+        mappingExampleToString.put(sample,valueRepresentation);
+        nesislDataset.addTrainSampleStateful(sample);
     }
 }

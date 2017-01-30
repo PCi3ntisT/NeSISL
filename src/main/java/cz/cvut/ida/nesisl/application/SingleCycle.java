@@ -3,18 +3,20 @@ package main.java.cz.cvut.ida.nesisl.application;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DynamicNodeCreation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.jripExtractor.JRipExtraction;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.cascadeCorrelation.CascadeCorrelation;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.dynamicNodeCreation.DNCSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.dynamicNodeCreation.DynamicNodeCreation;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANNSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.MissingValueKBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.Regent;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.RegentSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGen;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiCrossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Learnable;
@@ -24,12 +26,13 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentRes
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.Trepan;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.TrepanResults;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSetDescriptionLengthFactor;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.pyramid.Pyramid;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.pyramid.Pyramid;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,12 +52,12 @@ public class SingleCycle {
         this.percentualAccuracyOfOriginalDataset = percentualAccuracyOfOriginalDataset;
     }
 
-    private void runAndStoreExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile) {
-        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSet, ruleFile);
+    private void runAndStoreExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile, RandomGenerator randomGenerator) {
+        List<ExperimentResult> results = runExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, wls, ruleSet, ruleFile,randomGenerator);
         ExperimentResult.storeResults(results, algName, crossval.getOriginalFile(), settingFile, wls);
     }
 
-    private List<ExperimentResult> runExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile) {
+    private List<ExperimentResult> runExperiments(RuleSetInitable<? extends NeuralNetworkOwner> initialize, Learnable learn, int numberOfRepeats, String algName, MultiCrossvalidation crossval, File settingFile, WeightLearningSetting wls, RuleSet ruleSet, File ruleFile, RandomGenerator randomGenerator) {
         System.out.println(numberOfRepeats);
         return IntStream.range(0, numberOfRepeats)
                 //.parallel()
@@ -65,14 +68,14 @@ public class SingleCycle {
                     //Instances wekaDataset = crossval.getTrainWekaDataset(nesislDataset);
 
                     //System.out.println("\n--------- fold " + idx + ":\t rule set learning\n");
-                    //RuleSet ruleSet = WekaJRip.create(wekaDataset).getRuleSet();
+                    //RuleSet ruleSet = WekaJRip.createTest(wekaDataset).getRuleSet();
 
                     // popripade nejaky trimmer nebo relabelling
-                    // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-                    // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-                    // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
+                    // ruleSet = RuleTrimmer.createTest(ruleSet).getRuleSet();
+                    // RuleSet a1 = AntecedentsTrimmer.createTest(ruleSet).getRuleSet();
+                    // Dataset relabeled = Relabeling.createTest(nesislDataset, ruleSet).getDataset();
                     //System.out.println("\n--------- fold " + idx + ":\t ruleset trimming\n");
-                    //ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
+                    //ruleSet = AccuracyTrimmer.createTest(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
 
                     //File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
                     /* end of rule mining and trimming */
@@ -95,12 +98,20 @@ public class SingleCycle {
                     double testRuleAcc = (null == ruleSet) ? 0 : RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
                     System.out.println("\n--------- fold " + idx + ":\t result storing & TREPAN learning\n");
-                    if (Main.TREPAN_RUN) {
+                    switch (Main.RULE_EXTRACTOR) {
+                        case TREPAN:
                         System.out.println("\n--------- fold " + idx + ":\t TREPAN learning \n");
                         TrepanResults trepan = Trepan.create(learnedNetwork, nesislDataset, algName, idx, currentResult.getMyAdress()).run();
                         currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, trepan, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
-                    } else {
-                        currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                            break;
+                        case JRIP:
+                            MultiRepresentationDataset multi = crossval.getMultiRepresentationDataset(idx);
+                            TrepanResults jrip = JRipExtraction.create(learnedNetwork, multi, idx, randomGenerator).run();
+                            currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, jrip, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
+                            break;
+                        default:
+                            System.out.printf("Unknow rule extractor");
+                            currentResult.addExperiment(learnedNetwork, start, end, nesislDataset, ruleSetDescriptionLength, trainRuleAcc, testRuleAcc);
                     }
 
                     // storing initial ruleSet
@@ -128,7 +139,7 @@ public class SingleCycle {
         Learnable learn = (cascadeCorrelation, learningDataset) -> ((CascadeCorrelation) cascadeCorrelation).learn(learningDataset, finalWls, ccSetting);
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, null, null);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, null, null,randomGenerator);
     }
 
     public void runDNC(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator) throws FileNotFoundException {
@@ -145,7 +156,7 @@ public class SingleCycle {
         Learnable learn = (dnc, learningDataset) -> ((DynamicNodeCreation) dnc).learn(learningDataset, finalWls, dncSetting);
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,null,null);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls,null,null, randomGenerator);
     }
 
     public void runPYRAMID(String[] arg, int numberOfRepeats, MultiRepresentationDataset multiRepre, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) {
@@ -161,7 +172,7 @@ public class SingleCycle {
         Learnable learn = (dnc, learningDataset) -> ((Pyramid) dnc).learn(learningDataset, finalWls);
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), finalWls,null,null);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, wls.getFile(), finalWls,null,null, randomGenerator);
     }
 
 
@@ -186,7 +197,7 @@ public class SingleCycle {
 
         //Crossvalidation crossval = Crossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile, randomGenerator);
     }
 
     public void runTopGen(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) throws FileNotFoundException {
@@ -207,7 +218,7 @@ public class SingleCycle {
         Learnable learn = (topGen, learningDataset) -> ((TopGen) topGen).learn(learningDataset, finalWls, TopGenSettings.create(tgSetting));
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile, randomGenerator);
     }
 
     public void runREGENT(String[] arg, int numberOfRepeats, MultiRepresentationDataset dataset, WeightLearningSetting wls, RandomGeneratorImpl randomGenerator, RuleSet ruleSet, File ruleFile) throws FileNotFoundException {
@@ -230,7 +241,7 @@ public class SingleCycle {
         //Learnable learn = (regent, learningDataset) -> ((Regent) regent).learn(learningDataset, finalWls, regentSetting, new KBANNSettings(randomGenerator, regentSetting.getTopGenSettings().getOmega(), regentSetting.getTopGenSettings().perturbationMagnitude()));
 
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(dataset, randomGenerator, numberOfRepeats);
-        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile);
+        runAndStoreExperiments(initialize, learn, numberOfRepeats, algName, crossval, settingFile, finalWls, ruleSet, ruleFile, randomGenerator);
     }
 
 

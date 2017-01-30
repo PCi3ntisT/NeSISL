@@ -3,6 +3,7 @@ package main.java.cz.cvut.ida.nesisl.api.neuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
+import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 
 import java.util.Collection;
@@ -88,4 +89,11 @@ public interface NeuralNetwork {
 
     public Boolean areSoftmaxOutputs();
 
+    /**
+     * returns 0/1 in case of binary, otherwise class value
+     * @param map
+     * @param classAttribute
+     * @return
+     */
+    public String predict(Map<Fact, Value> map, ClassAttribute classAttribute);
 }

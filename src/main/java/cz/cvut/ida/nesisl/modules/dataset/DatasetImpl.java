@@ -33,7 +33,7 @@ public class DatasetImpl implements Dataset {
 
     private final File originalFile;
     private final List<Map<Fact, Value>> trainSamples;
-    private final List<Map<Fact, Value>> nodeTrainSamples;
+    private final List<Map<Fact, Value>> nodeTrainSamples; // aka test fold
     private final List<Fact> inputFacts;
     private final ClassAttribute classAttribute;
 
@@ -189,6 +189,28 @@ public class DatasetImpl implements Dataset {
         return outputFacts.contains(head);
     }
 
+    @Override
+    public Dataset getCopy() {
+        return new DatasetImpl(getInputFactOrder(),
+                getOutputFactOrder(),
+                new ArrayList<>(trainSamples),
+                new ArrayList<>(nodeTrainSamples),
+                originalFile,
+                classAttribute);
+    }
+
+    @Override
+    public long getNumberOfTrainData() {
+        return trainSamples.size();
+    }
+
+    @Override
+    public void addTrainSampleStateful(Map<Fact, Value> sample) {
+        synchronized (trainSamples) {
+            trainSamples.add(sample);
+        }
+    }
+
 
     @Override
     public List<Sample> getTestData(NeuralNetwork network) {
@@ -311,7 +333,7 @@ public class DatasetImpl implements Dataset {
     public static final String ATTRIBUTE_DELIMITER = "\\s+";
     public static final String AMBIGUOUS_DELIMITER = "\\s+";
     public static final String DATA_DELIMITER = ",";
-    public static final String CLASS_VALUES_DELIMITER = ",";
+    public static final String CLASS_VALUES_DELIMITER = ","; // also serves for delimiting values in ordered (ordered nominals)
     public static final String ATTRIBUTE_VALUE_DELIMITER = "==";
     public static final String UNKNOWN_VALUE = "?";
 
@@ -439,7 +461,7 @@ public class DatasetImpl implements Dataset {
         for (int idx = 0; idx < attributes.size(); idx++) {
             if (attributes.get(idx) instanceof ClassAttribute) {
                 classIdx = idx;
-                comments.add(idx);
+                //comments.add(idx);
             } else if (attributes.get(idx) instanceof CommentAttribute) {
                 comments.add(idx);
             } else if (attributes.get(idx) instanceof RealAttribute) {
@@ -462,7 +484,7 @@ public class DatasetImpl implements Dataset {
                                 sample.append(example.get(idx) + ",");
                             }
                         });
-                sample.append(example.get(finalClassIdx));
+                //sample.append(example.get(finalClassIdx));
                 sb.append(sample.toString() + "\n");
             }
         });
@@ -485,7 +507,10 @@ public class DatasetImpl implements Dataset {
     private static String attributesToString(List<AttributeProprety> attributes) {
         StringBuilder sb = new StringBuilder();
         attributes.forEach(attribute -> {
-            if (attribute instanceof NominalAttribute) {
+            if (attribute instanceof ClassAttribute) {
+                //sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
+                sb.append(ATTRIBUTE_TOKEN + "\t" + DatasetImpl.CLASS_TOKEN + "\t{" + valuesToString(attribute) + "}" + "\n");
+            }else if (attribute instanceof NominalAttribute) {
                 sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
             } else if (attribute instanceof RealAttribute) {
                 sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t" + REAL_ATTRIBUTE_TOKEN + "\n");
@@ -493,11 +518,12 @@ public class DatasetImpl implements Dataset {
                 sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
             }
         });
-        attributes.forEach(attribute -> {
+        /*attributes.forEach(attribute -> {
             if (attribute instanceof ClassAttribute) {
-                sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
+                //sb.append(ATTRIBUTE_TOKEN + "\t" + attribute.getOrder() + "\t{" + valuesToString(attribute) + "}" + "\n");
+                sb.append(ATTRIBUTE_TOKEN + "\t" + DatasetImpl.CLASS_TOKEN + "\t{" + valuesToString(attribute) + "}" + "\n");
             }
-        });
+        });*/
         return sb.toString();
     }
 
@@ -507,7 +533,12 @@ public class DatasetImpl implements Dataset {
         StringBuilder sb = new StringBuilder();
         Stream<String> stream = Stream.empty();
         if (attribute instanceof NominalAttribute) {
-            stream = ((NominalAttribute) attribute).getValues().stream();
+            NominalAttribute ordered = (NominalAttribute) attribute;
+            if (ordered.isOrdered()) {
+                stream = ordered.getDefaultOrder().stream();
+            } else {
+                stream = ordered.getValues().stream();
+            }
         } else if (attribute instanceof BinaryAttribute) {
             stream = ((BinaryAttribute) attribute).getValues().stream();
         } else if (attribute instanceof ClassAttribute) {

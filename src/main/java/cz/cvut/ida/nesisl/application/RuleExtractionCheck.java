@@ -1,20 +1,17 @@
 package main.java.cz.cvut.ida.nesisl.application;
 
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.ThresholdClassificator;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANNSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.tresholdClassificator.ThresholdClassificator;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.MultiRepresentationDataset;
 import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.MofNTreeFactory;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTree;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.dot.DotTreeReader;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.Trepan;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.TrepanResults;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.RuleAccuracy;
 
@@ -26,7 +23,7 @@ import java.util.List;
  * Created by EL on 20.1.2017.
  */
 public class RuleExtractionCheck {
-    /*create KBANN
+    /*createTest KBANN
     without pertrubation, run
     TREPAN on
     that and
@@ -109,7 +106,7 @@ public class RuleExtractionCheck {
         System.out.println("TODO vyblejt to do souboru");
 
         //System.out.println("extracted theory");
-        //DotTree tree = DotTreeReader.getDefault().create(trepan.getTreeFile());
+        //DotTree tree = DotTreeReader.getDefault().createTest(trepan.getTreeFile());
         //ruleFile = Tools.storeToTemporaryFile(MofNTreeFactory.getDefault().getTheory(tree, kbann.getNeuralNetwork()));
         //System.out.println(MofNTreeFactory.getDefault().getTheory(tree, kbann.getNeuralNetwork()));
 

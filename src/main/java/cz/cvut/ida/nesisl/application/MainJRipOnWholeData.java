@@ -3,18 +3,18 @@ package main.java.cz.cvut.ida.nesisl.application;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.ActivationFunction;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DNCSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.dynamicNodeCreation.DynamicNodeCreation;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.KBANNSettings;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.MissingValueKBANN;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.Regent;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.regent.RegentSetting;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGen;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.topGen.TopGenSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.cascadeCorrelation.CascadeCorrelation;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.cascadeCorrelation.CascadeCorrelationSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.dynamicNodeCreation.DNCSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.dynamicNodeCreation.DynamicNodeCreation;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.KBANNSettings;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.MissingValueKBANN;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.Regent;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.regent.RegentSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGen;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.topGen.TopGenSettings;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.Crossvalidation;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.experiments.Initable;
@@ -24,8 +24,8 @@ import main.java.cz.cvut.ida.nesisl.modules.experiments.evaluation.ExperimentRes
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.RandomGeneratorImpl;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.Trepan;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.trepan.Trepan;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.TrepanResults;
 import main.java.cz.cvut.ida.nesisl.modules.weka.WekaJRip;
 import main.java.cz.cvut.ida.nesisl.modules.weka.rules.RuleSet;
 import main.java.cz.cvut.ida.nesisl.modules.weka.tools.AccuracyTrimmer;
@@ -97,9 +97,9 @@ public class MainJRipOnWholeData {
         System.out.println(ruleSet.getComplexity());
 
         // popripade nejaky trimmer nebo relabelling
-        // ruleSet = RuleTrimmer.create(ruleSet).getRuleSet();
-        // RuleSet a1 = AntecedentsTrimmer.create(ruleSet).getRuleSet();
-        // Dataset relabeled = Relabeling.create(nesislDataset, ruleSet).getDataset();
+        // ruleSet = RuleTrimmer.createTest(ruleSet).getRuleSet();
+        // RuleSet a1 = AntecedentsTrimmer.createTest(ruleSet).getRuleSet();
+        // Dataset relabeled = Relabeling.createTest(nesislDataset, ruleSet).getDataset();
         Dataset dataset = nesislDataset;
         double percentualAccuracyOfOriginalDataset = 0.7;
         ruleSet = AccuracyTrimmer.create(ruleSet, nesislDataset).getRuleSetWithTrimmedAccuracy(percentualAccuracyOfOriginalDataset);
@@ -114,7 +114,7 @@ public class MainJRipOnWholeData {
         System.out.println("zaroven to predelat tak aby to accuracy orezaneho byla, dejme tomu, 75% puvodni accuracy");
         System.out.println("kolik mel ten JRip ruleset pre oreyanim accuracy?");
 
-        ruleSet = RulesTrimmer.create(ruleSet, 3);
+        ruleSet = RulesTrimmer.createTest(ruleSet, 3);
         System.out.println(ruleSet.getTheory());
         */
 
@@ -307,7 +307,7 @@ public class MainJRipOnWholeData {
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
+        Initable<KBANN> initialize = () -> KBANN.createTest(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 
@@ -332,7 +332,7 @@ public class MainJRipOnWholeData {
 
         List<Pair<Integer, ActivationFunction>> specificRules = new ArrayList<>();
 
-        Initable<KBANN> initialize = () -> KBANN.create(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
+        Initable<KBANN> initialize = () -> KBANN.createTest(ruleFile, dataset, specificRules, kbannSettings, SOFTMAX);
         final WeightLearningSetting finalWls = WeightLearningSetting.turnOffRegularization(wls);
         Learnable learn = (kbann, learningDataset) -> ((KBANN) kbann).learn(learningDataset, finalWls);
 

@@ -5,12 +5,13 @@ import main.java.cz.cvut.ida.nesisl.api.data.Sample;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Results;
 import main.java.cz.cvut.ida.nesisl.application.Main;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.RuleExtractor;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.modules.export.neuralNetwork.tex.TikzExporter;
 import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Pair;
 import main.java.cz.cvut.ida.nesisl.modules.tool.Tools;
-import main.java.cz.cvut.ida.nesisl.modules.trepan.TrepanResults;
+import main.java.cz.cvut.ida.nesisl.modules.extraction.TrepanResults;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
+
+import static main.java.cz.cvut.ida.nesisl.modules.extraction.RuleExtractor.JRIP;
 
 /**
  * Created by EL on 15.3.2016.
@@ -173,7 +176,7 @@ public class ExperimentResult {
         this.setAverageSquaredTotalTrainError(Tools.computeTotalError(train));
         this.setTrainAccuracy(AccuracyCalculation.create(network, train).getAccuracy());
 
-        //this.setRocAuc(RocAucCalculation.create(network, evaluation).computeAUC());
+        //this.setRocAuc(RocAucCalculation.createTest(network, evaluation).computeAUC());
         //this.setThreshold(network.getClassifier().getThreshold());
 
         this.setAccuracy(AccuracyCalculation.create(network, evaluation).getAccuracy());
@@ -248,7 +251,7 @@ public class ExperimentResult {
         process.add(new Pair<>("trainRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTrainRuleSetAccuracy())));
         process.add(new Pair<>("testRuleSetAccuracy", () -> results.stream().mapToDouble(e -> e.getTestRuleSetAccuracy())));
 
-        if (Main.TREPAN_RUN) {
+        if (!RuleExtractor.NONE.equals(Main.RULE_EXTRACTOR)) {
             process.add(new Pair<>("trepanTrainAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTrainAcc())));
             process.add(new Pair<>("trepanTestAcc", () -> results.stream().mapToDouble(e -> e.getTrepanTestAcc())));
             process.add(new Pair<>("trepanTrainFidelity", () -> results.stream().mapToDouble(e -> e.getTrepanTrainFidelity())));
@@ -262,6 +265,21 @@ public class ExperimentResult {
 
     private static void writeName(String algName, PrintWriter writer) {
         appendContent(algName, () -> DoubleStream.empty(), writer);
+        String extractionAlgName = "";
+        switch (Main.RULE_EXTRACTOR){
+            case JRIP:
+                extractionAlgName = "JRip";
+                break;
+            case TREPAN:
+                extractionAlgName = "TREPAN";
+                break;
+            case NONE:
+                extractionAlgName = "NONE";
+                break;
+            default:
+                extractionAlgName = "unknown";
+        }
+        appendContent(extractionAlgName, () -> DoubleStream.empty(), writer);
     }
 
     private static void appendContent(String sectionHeader, StoreableResults storeable, PrintWriter writer) {

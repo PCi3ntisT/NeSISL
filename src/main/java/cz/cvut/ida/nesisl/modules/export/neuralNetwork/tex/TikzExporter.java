@@ -5,9 +5,9 @@ import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Edge;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.NeuralNetwork;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.Node;
 import main.java.cz.cvut.ida.nesisl.modules.export.texFile.TexFile;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.ConstantOne;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Sigmoid;
+import main.java.cz.cvut.ida.nesisl.modules.neural.neuralNetwork.activationFunctions.ConstantOne;
+import main.java.cz.cvut.ida.nesisl.modules.neural.neuralNetwork.activationFunctions.Identity;
+import main.java.cz.cvut.ida.nesisl.modules.neural.neuralNetwork.activationFunctions.Sigmoid;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;

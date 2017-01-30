@@ -22,8 +22,9 @@ public class WekaJRip {
         return ruleSet;
     }
 
-    public static WekaJRip create(Instances dataset,Dataset nesislDataset) {
+    public static WekaJRip create(Instances dataset, Dataset nesislDataset) {
         JRip jrip = new JRip();
+        dataset.setClassIndex(nesislDataset.getClassAttribute().getOrder());
         String[] args = new String[]{};//{"-F","10"};
         System.out.println("TODO add parameters to JRIP");
         try {
@@ -44,7 +45,7 @@ public class WekaJRip {
 
         System.out.println(jrip.toString());
 
-        RuleSet ruleSet = RuleSet.create(jrip.toString(),nesislDataset);
+        RuleSet ruleSet = RuleSet.create(jrip.toString(), nesislDataset);
         return new WekaJRip(ruleSet);
     }
 

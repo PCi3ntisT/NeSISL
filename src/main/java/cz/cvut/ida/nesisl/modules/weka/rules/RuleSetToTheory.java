@@ -1,11 +1,10 @@
 package main.java.cz.cvut.ida.nesisl.modules.weka.rules;
 
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.kbann.RuleFile;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.kbann.RuleFile;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.DatasetImpl;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.BinaryAttribute;
 import main.java.cz.cvut.ida.nesisl.modules.dataset.attributes.ClassAttribute;
 
-import javax.xml.crypto.Data;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +35,7 @@ public class RuleSetToTheory {
                 " => 16=mrMackie (262.0/5.0)\n"
                 ;*/
 
-        /*RuleSet ruleSet = RuleSet.create(input);
+        /*RuleSet ruleSet = RuleSet.createTest(input);
 
         System.out.println("\n" + ruleSet + "\n");
 
@@ -233,6 +232,7 @@ public class RuleSetToTheory {
      * @return
      */
     private static String generateTargetClass(String target, ClassAttribute classAttribute) {
+        //throw new IllegalStateException("velka chyba, pri vice labelech to generuje vsechny trida jako hopefullyNonclassAttribute");
         if (classAttribute.isBinary()) {
             //System.out.println(target + "\t" + classAttribute.getPositiveClass());
 

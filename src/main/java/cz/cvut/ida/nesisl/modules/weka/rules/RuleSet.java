@@ -126,7 +126,9 @@ public class RuleSet {
     }
 
     public boolean isBinaryClassClassification() {
-        return 2 == rules.stream()
+        return classAttribute.isBinary();
+        // wrongly
+        /*return 2 == rules.stream()
                 .map(rule -> rule.getHead())
                 .collect(Collectors.toSet())
                 .size()
@@ -135,7 +137,7 @@ public class RuleSet {
                 1 == rules.stream()
                         .map(rule -> rule.getHead())
                         .collect(Collectors.toSet())
-                        .size();
+                        .size();*/
 
         /*return 1 == rules.stream()
                 .map(rule -> rule.getHead())

@@ -58,6 +58,8 @@ public class RuleAccuracy {
                     System.out.println("tady ta metoda areSameClasses je spatne, dava ocividne furt true");
                     */
 
+                    //System.out.println(sample);
+                    //System.out.println(rule);
                     if (areSameClasses(sample, rule.getHead(), nesislDataset)) {
                         //System.out.println("\ttrue");
                         return true;
@@ -73,9 +75,6 @@ public class RuleAccuracy {
                         implication.getBody().forEach(ante -> System.out.println(ante.getAttribute()+"=="+ante.getValue()));
                         System.out.println("==>\t" + rule.getHead());
                         */
-
-                        System.out.println(sample);
-                        System.out.println(rule);
 
                         return false;
                     }
@@ -115,6 +114,10 @@ public class RuleAccuracy {
             if(!sample.containsKey(fact)){
                 // awfuly added feature because of binary classes
                 fact = new Fact(antecedent.getAttribute());
+                if(!sample.containsKey(fact)){
+                    fact = new Fact(antecedent + DatasetImpl.ATTRIBUTE_VALUE_DELIMITER + ruleSet.getClassAttribute().getPositiveClass());
+                }
+                System.out.println("hej apple\t" + fact + "\t" + sample.get(fact));
                 if (sample.get(fact).isOne() && !BinaryAttribute.isValueTrue(antecedent.getValue())){
                     return false;
                 }else if(sample.get(fact).isZero() && BinaryAttribute.isValueTrue(antecedent.getValue())){

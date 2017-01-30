@@ -1,6 +1,5 @@
 package main.java.cz.cvut.ida.nesisl.modules.tool;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
 import main.java.cz.cvut.ida.nesisl.api.classifiers.Classifier;
 import main.java.cz.cvut.ida.nesisl.api.data.Dataset;
 import main.java.cz.cvut.ida.nesisl.api.data.Sample;
@@ -8,11 +7,11 @@ import main.java.cz.cvut.ida.nesisl.api.logic.Fact;
 import main.java.cz.cvut.ida.nesisl.api.logic.LiteralFactory;
 import main.java.cz.cvut.ida.nesisl.api.neuralNetwork.*;
 import main.java.cz.cvut.ida.nesisl.api.tool.RandomGenerator;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.neuralNetwork.weightLearning.WeightLearningSetting;
 import main.java.cz.cvut.ida.nesisl.api.data.Value;
-import main.java.cz.cvut.ida.nesisl.modules.algorithms.tresholdClassificator.SoftMaxClassifier;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.NodeFactory;
-import main.java.cz.cvut.ida.nesisl.modules.neuralNetwork.activationFunctions.Identity;
+import main.java.cz.cvut.ida.nesisl.modules.neural.algorithms.tresholdClassificator.SoftMaxClassifier;
+import main.java.cz.cvut.ida.nesisl.modules.neural.neuralNetwork.NodeFactory;
+import main.java.cz.cvut.ida.nesisl.modules.neural.neuralNetwork.activationFunctions.Identity;
 
 import java.io.BufferedWriter;
 import java.io.File;

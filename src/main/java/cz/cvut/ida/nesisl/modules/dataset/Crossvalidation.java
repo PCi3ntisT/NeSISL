@@ -52,14 +52,19 @@ public class Crossvalidation {
             List<Map<Fact, Value>> test = selected.getTrainRawData();
 
             List<Map<Fact, Value>> others = new ArrayList<>();
-            for (int îdx = 0; îdx < datasets.size(); îdx++) {
-                if (testFoldIdx == îdx) {
+            for (int idx = 0; idx < datasets.size(); idx++) {
+                if (testFoldIdx == idx) {
                     continue;
                 }
-                others.addAll(datasets.get(îdx).getTrainRawData());
+                others.addAll(datasets.get(idx).getTrainRawData());
             }
 
-            Dataset split = new DatasetImpl(selected.getInputFactOrder(), selected.getOutputFactOrder(), others, test, selected.getOriginalFile(),selected.getClassAttribute());
+            Dataset split = new DatasetImpl(selected.getInputFactOrder(),
+                    selected.getOutputFactOrder(),
+                    others,
+                    test,
+                    selected.getOriginalFile(),
+                    selected.getClassAttribute());
             return split;
     }
 

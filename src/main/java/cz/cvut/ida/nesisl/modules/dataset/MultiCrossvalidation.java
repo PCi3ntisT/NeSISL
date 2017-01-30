@@ -34,20 +34,24 @@ public class MultiCrossvalidation {
     }
 
     public Instances getTrainWekaDataset(Dataset dataset){
-        return getWekaDataset(dataset.getTrainRawData(), dataset);
+        return getWekaDataset(dataset.getTrainRawData(), dataset, multiRepreDataset);
     }
 
     public Instances getTestWekaDataset(Dataset dataset){
-        return getWekaDataset(dataset.getRawTestData(), dataset);
+        return getWekaDataset(dataset.getRawTestData(), dataset, multiRepreDataset);
     }
 
-    private Instances getWekaDataset(List<Map<Fact, Value>> data, Dataset dataset) {
+    public static Instances getTrainWekaDataset(Dataset dataset, MultiRepresentationDataset multiRepreDataset){
+        return getWekaDataset(dataset.getTrainRawData(), dataset, multiRepreDataset);
+    }
+
+    public static Instances getWekaDataset(List<Map<Fact, Value>> data, Dataset dataset, MultiRepresentationDataset multiRepreDataset) {
         Map<Map<Fact, Value>, List<String>> mapping = multiRepreDataset.getMappingExampleToString();
         List<List<String>> selectedExamples = data.stream()
                 .filter(nesislSample -> mapping.containsKey(nesislSample))
                 .map(nesislSample -> mapping.get(nesislSample))
                 .collect(Collectors.toCollection(ArrayList::new));
-        return DatasetImpl.createWekaDataset(multiRepreDataset.getAmbigious(),multiRepreDataset.getAttributes(), selectedExamples, multiRepreDataset.getDatasetFile(),multiRepreDataset.isNormalize());
+        return DatasetImpl.createWekaDataset(multiRepreDataset.getAmbigious(), multiRepreDataset.getAttributes(), selectedExamples, multiRepreDataset.getDatasetFile(), multiRepreDataset.isNormalize());
     }
 
     public File getOriginalFile() {
@@ -57,5 +61,21 @@ public class MultiCrossvalidation {
     public static MultiCrossvalidation createStratified(MultiRepresentationDataset dataset, RandomGeneratorImpl randomGenerator, int numberOfRepeats) {
         Crossvalidation crossvalidation = Crossvalidation.createStratified(dataset.getNesislDataset(),randomGenerator,numberOfRepeats);
         return new MultiCrossvalidation(dataset,crossvalidation);
+    }
+
+    public MultiRepresentationDataset getMultiRepresentationDataset(int idx) {
+        Dataset dataset = getDataset(idx);
+        List<List<String>> examples = dataset.getTrainRawData()
+                .stream()
+                .map(facts -> multiRepreDataset.getMappingExampleToString().get(facts))
+                .collect(Collectors.toCollection(ArrayList::new));
+        // this should make just a multiRepre copy
+        return new MultiRepresentationDataset(multiRepreDataset.getAttributes(),
+                examples,
+                getOriginalFile(),
+                false,
+                dataset,
+                multiRepreDataset.getMappingExampleToString(),
+                multiRepreDataset.getAmbigious());
     }
 }
