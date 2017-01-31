@@ -63,7 +63,7 @@ public class RealDataExperiments {
                 "cnf32-10",*/
                 //"cnf36-10"
                 //"promotor",
-                "wine"
+                "glass"
                 //"cnf6-10"
         };
         //zkontrolovat jestli si drzi dataset samplz fakt jako list samplu nebo jako mnozinu - mel by byt list
@@ -79,7 +79,7 @@ public class RealDataExperiments {
             String wls = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "WLS" + File.separator + wlsFolder + File.separator + "wlsSetting.txt";
             String KBANNinput = folder + "theory";
             String data = folder + "data" + ((nominalized.contains(domain)) ? "Nominalized" : ""); //Nominalized";//Nominalized";
-            data = folder + "crossvalidationData";
+            data = folder + "allData";
             String backgroundData = folder + "backgroundKnowledgeLearnerData";
             //data = folder + "data";
 
@@ -110,7 +110,7 @@ public class RealDataExperiments {
                 //Main.main(new String[]{Main.SET_EXTRACTOR_TOKEN,"jrip","-seed","8","-trimAcc","1.1",Main.CYCLE_TOKEN,"3","KBANN", "10", data, data, wls, KBANNsetting});
                 //Main.main(new String[]{"PYRAMID", numberOfRepeats, data, data, wls, "5"});
 
-                Main.main(new String[]{Main.SET_EXTRACTOR_TOKEN,"jrip",Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
                 //Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
 
 

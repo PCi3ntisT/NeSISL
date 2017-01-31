@@ -33,19 +33,19 @@ public class KBANN implements NeuralNetworkOwner {
 
 
     public static KBANN create(File rawRuleFile, Dataset dataset, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings kbannSettings, boolean softmaxOutputs, boolean pertrubateNetwork) {
-        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs, pertrubateNetwork,dataset);
+        return new KBANN(RuleFile.create(rawRuleFile, dataset), specific, kbannSettings, softmaxOutputs, pertrubateNetwork, dataset);
     }
 
     public KBANN(RuleFile ruleFile, List<Pair<Integer, ActivationFunction>> specific, KBANNSettings settings, boolean areSoftmaxOutputs, boolean pertrubateNetwork, Dataset dataset) {
         this.settings = settings;
-        NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs,dataset);
+        NeuralNetwork networkConstruction = constructNetwork(ruleFile, areSoftmaxOutputs, dataset);
         networkConstruction = addSpecificNodes(specific, networkConstruction);
         networkConstruction = addFullyConnectionToAdjacentLayers(networkConstruction);
         if (settings.isEdgesBetweenAdjacentLayersOnly()) {
             networkConstruction = removeEdgesBetweenNonAdjacentLayers(networkConstruction);
         }
         networkConstruction = fillUnbiased(networkConstruction, (pertrubateNetwork) ? settings.getRandomGenerator() : null);
-        if(pertrubateNetwork) {
+        if (pertrubateNetwork) {
             networkConstruction = perturbeNetworkConnection(networkConstruction, settings);
         }
         this.network = networkConstruction;
@@ -119,7 +119,7 @@ public class KBANN implements NeuralNetworkOwner {
         );
 
         network = createNodeStructure(map, rules, network);
-        network = createEdgeStructure(map, rules, network,dataset);
+        network = createEdgeStructure(map, rules, network, dataset);
 
         return network;
     }
@@ -132,15 +132,15 @@ public class KBANN implements NeuralNetworkOwner {
             switch (rule.getType()) {
                 case CONJUNCTION:
                     //System.out.println("con");
-                    addConjunctionRuleToNetwork(rule, map, network,dataset);
+                    addConjunctionRuleToNetwork(rule, map, network, dataset);
                     break;
                 case DISJUNCTION:
                     //System.out.println("dis");
-                    addDisjunctionRuleToNetwork(rule, map, network,dataset);
+                    addDisjunctionRuleToNetwork(rule, map, network, dataset);
                     break;
                 case N_TRUE:
                     //System.out.println("n");
-                    addNTrueRuleToNetwork(rule, map, network,dataset);
+                    addNTrueRuleToNetwork(rule, map, network, dataset);
                     break;
                 default:
                     throw new IllegalStateException();
@@ -161,6 +161,8 @@ public class KBANN implements NeuralNetworkOwner {
         Node bias = network.getBias();
         // -1*bias - because KBANN activation is s = (netInput_i - bias) and bias has value of 1 here
         network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * (rule.getNTrue() * settings.getOmega() - 1) / 2.0);
+        //this is right
+        //network.addEdgeStateful(new Edge(bias, target, Edge.Type.FORWARD, rule.isModifiable()), -1 * (rule.getNTrue() * settings.getOmega() - 1) / 2.0);
     }
 
     private void addDisjunctionRuleToNetwork(KBANNRule rule, Map<Fact, Node> map, NeuralNetwork network, Dataset dataset) {
@@ -192,6 +194,8 @@ public class KBANN implements NeuralNetworkOwner {
                 -1 *
                         (rule.getBody().stream().filter(l -> l.isPositive()).count() - 1 / 2.0) *
                         settings.getOmega());
+        // this is right
+        //                        (rule.getBody().stream().filter(l -> l.isPositive()).count() - 1 / 2.0) *
     }
 
     private NeuralNetwork createNodeStructure(Map<Fact, Node> map, Rules rules, NeuralNetwork network) {

@@ -138,9 +138,18 @@ public class Main {
 
         System.out.println("" + backgroundMultiRepre.getNesislDataset().getClassAttribute());
 
+        /**/// this is right but testing older version
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(backgroundMultiRepre, randomGenerator, 1);
-        Instances backgroundKnowledgeTrainData = crossval.getTestWekaDataset(backgroundMultiRepre.getNesislDataset());
+        Instances backgroundKnowledgeTrainData = crossval.getTrainWekaDataset(backgroundMultiRepre.getNesislDataset());
         RuleSet ruleSet = RuleMiner.mineAndTrimmeRule(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+        /**/
+
+        /*// older version - train data for JRip are taken from train folds
+        MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, 1);
+        Instances backgroundKnowledgeTrainData = crossval.getTrainWekaDataset(multiRepre.getNesislDataset());
+        RuleSet ruleSet = RuleMiner.mineAndTrimmeRule(multiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
+        */
+
         File ruleFile = Tools.storeToTemporaryFile(ruleSet.getTheory());
         /* end of rule mining and trimming */
 
