@@ -356,6 +356,7 @@ public class Tools {
     public static void storeToFile(String content, String fileName) {
         File file = new File(fileName);
         try {
+            file.getParentFile().mkdirs();
             FileWriter fw = new FileWriter(file);
             fw.write(content);
             fw.close();

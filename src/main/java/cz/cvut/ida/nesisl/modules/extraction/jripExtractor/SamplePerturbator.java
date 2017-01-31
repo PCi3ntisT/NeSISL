@@ -56,7 +56,7 @@ public class SamplePerturbator {
         List<Map<Fact, Value>> samples = originalDataset.getNesislDataset().getTrainRawData();
 
         MultiRepresentationDataset extendedDataset = originalDataset.getShallowCopyWithoutSamples();
-        IntStream.range(0, (int) ((percentageOfResampling / 100)* extendedDataset.getNesislDataset().getNumberOfTrainData()))
+        IntStream.range(0, (int) ((percentageOfResampling / 100)* originalDataset.getNesislDataset().getNumberOfTrainData()))
                 .forEach(idx -> {
                     //pick randomly
                     int randomIdx = randomGenerator.getRandom().nextInt(samples.size());
@@ -71,13 +71,15 @@ public class SamplePerturbator {
 
                     // insert into extended
                     extendedDataset.addTrainSample(perturbated.getLeft(), perturbated.getRight());
-
-
-                    // insert also original sample, just relabeled according to the network
-                    Pair<List<String>, Map<Fact, Value>> relabeled = relabel(sampleRepresentation, sample);
-                    extendedDataset.addTrainSample(relabeled.getLeft(), relabeled.getRight());
-
                 });
+
+        samples.forEach(sample -> {
+            List<String> sampleRepresentation = originalDataset.getMappingExampleToString().get(sample);
+            // insert also original sample, just relabeled according to the network
+            Pair<List<String>, Map<Fact, Value>> relabeled = relabel(sampleRepresentation, sample);
+            extendedDataset.addTrainSample(relabeled.getLeft(), relabeled.getRight());
+
+        });
 
         /*System.out.println("original");
         Instances original = MultiCrossvalidation.getWekaDataset(samples, originalDataset.getNesislDataset(), originalDataset);

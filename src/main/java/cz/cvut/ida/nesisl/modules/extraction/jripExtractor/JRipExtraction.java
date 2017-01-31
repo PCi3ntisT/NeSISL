@@ -45,7 +45,7 @@ public class JRipExtraction {
         double jripTrainAcc = RuleAccuracy.create(ruleSet).computeTrainAccuracy(nesislDataset);
         double jripTestAcc = RuleAccuracy.create(ruleSet).computeTestAccuracy(nesislDataset);
 
-        double jripTestAccOverSampled = RuleAccuracy.create(ruleSet).computeTestAccuracy(overSampledTrainNesisl);
+        double jripTrainAccOverSampled = RuleAccuracy.create(ruleSet).computeTrainAccuracy(overSampledTrainNesisl);
 
         double networkTrainAcc = AccuracyCalculation.createTrain(network, nesislDataset).getAccuracy();
         double networkTestAcc = AccuracyCalculation.createTest(network, nesislDataset).getAccuracy();
@@ -53,7 +53,7 @@ public class JRipExtraction {
 
         System.out.println(jripTrainAcc);
         System.out.println(jripTestAcc);
-        System.out.println(jripTestAccOverSampled);
+        System.out.println(jripTrainAccOverSampled);
         System.out.println(networkTrainAcc);
         System.out.println(networkTestAcc);
         System.out.println(descriptionLength);
@@ -61,7 +61,7 @@ public class JRipExtraction {
         return TrepanResults.create(0l,
                 jripTrainAcc,
                 jripTestAcc,
-                jripTestAccOverSampled, // should be called what it really is
+                jripTrainAccOverSampled, // should be called what it really is
                 0d,
                 networkTrainAcc,
                 networkTestAcc,

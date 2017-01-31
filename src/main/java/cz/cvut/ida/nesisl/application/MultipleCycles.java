@@ -181,8 +181,10 @@ public class MultipleCycles {
 
             if(0 == cycleNumber) {
                 // storing initial ruleSet
+                System.out.println(currentResult.getMyAdress() + File.separator + "initialTheory");
                 Tools.storeToFile(ruleSet.getTheory(), currentResult.getMyAdress() + File.separator + "initialTheory");
                 Tools.storeToFile(ruleSet.toString(), currentResult.getMyAdress() + File.separator + "ruleSet");
+                System.exit(-50);
             }
 
             // computing & forwarding parameters for next cycle

@@ -72,7 +72,7 @@ public class RealDataExperiments {
 
             //String experimentFolder = "." + File.separator + "experiments" + File.separator + "realData" + File.separator;
             //String experimentFolder = "." + File.separator + "experiments" + File.separator + "resampled" + File.separator;
-            String experimentFolder = "." + File.separator + "experiments" + File.separator + "debugSubsampled" + File.separator;
+            String experimentFolder = "." + File.separator + "experiments" + File.separator + "halfRealHalfArtificial" + File.separator + "domains" + File.separator;
             String folder = experimentFolder + domain + File.separator;
             String KBANNsetting = "." + File.separator + "experiments" + File.separator + "settings" + File.separator + "KBANN" + File.separator + "-0-0" + File.separator + "kbannSetting.txt";
             String wlsFolder = "-0-0-0-0-0-0-0-0-0";
@@ -110,8 +110,8 @@ public class RealDataExperiments {
                 //Main.main(new String[]{Main.SET_EXTRACTOR_TOKEN,"jrip","-seed","8","-trimAcc","1.1",Main.CYCLE_TOKEN,"3","KBANN", "10", data, data, wls, KBANNsetting});
                 //Main.main(new String[]{"PYRAMID", numberOfRepeats, data, data, wls, "5"});
 
-                //Main.main(new String[]{Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
-                Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                Main.main(new String[]{Main.SET_EXTRACTOR_TOKEN,"jrip",Main.CYCLE_TOKEN,"10","KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
+                //Main.main(new String[]{"KBANN", numberOfRepeats, data, backgroundData, wls, KBANNsetting});
 
 
                 // old parameters
