@@ -143,6 +143,7 @@ public class Main {
         Instances backgroundKnowledgeTrainData = crossval.getTrainWekaDataset(backgroundMultiRepre.getNesislDataset());
         RuleSet ruleSet = RuleMiner.mineAndTrimmeRule(backgroundMultiRepre.getNesislDataset(), backgroundKnowledgeTrainData);
         /**/
+        // minizmena
 
         /*// older version - train data for JRip are taken from train folds
         MultiCrossvalidation crossval = MultiCrossvalidation.createStratified(multiRepre, randomGenerator, 1);
